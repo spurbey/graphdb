@@ -1,0 +1,247 @@
+{
+  "nodes": [
+    {
+      "id": "commit_623241a",
+      "kind": "Commit",
+      "label": "feat: initial auth module with models and service",
+      "summary": "feat: initial auth module with models and service\n\n- models.py: in-memory user store with create_user and get_user\n- service.py: signup and login with basic validation\n- no hashing, no persistence -- intentionally dumb for iteration | changed 3 file(s): auth/__init__.py, auth/models.py, auth/service.py",
+      "status": "active",
+      "metadata": {
+        "msg": "feat: initial auth module with models and service\n\n- models.py: in-memory user store with create_user and get_user\n- service.py: signup and login with basic validation\n- no hashing, no persistence -- intentionally dumb for iteration",
+        "timestamp": "2026-06-24T17:48:44+05:45",
+        "reasoning": "feat: initial auth module with models and service\n\n- models.py: in-memory user store with create_user and get_user\n- service.py: signup and login with basic validation\n- no hashing, no persistence -- intentionally dumb for iteration | changed 3 file(s): auth/__init__.py, auth/models.py, auth/service.py"
+      }
+    },
+    {
+      "id": "file_auth___init__",
+      "kind": "FileIdentity",
+      "label": "auth/__init__.py",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "file": "auth/__init__.py"
+      }
+    },
+    {
+      "id": "file_auth_models",
+      "kind": "FileIdentity",
+      "label": "auth/models.py",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "file": "auth/models.py"
+      }
+    },
+    {
+      "id": "func_auth_models_create_user",
+      "kind": "FunctionIdentity",
+      "label": "create_user",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "create_user",
+        "file": "auth/models.py"
+      }
+    },
+    {
+      "id": "state_auth_models_create_user_623241a",
+      "kind": "FunctionState",
+      "label": "state_auth_models_create_user_623241a",
+      "summary": "def create_user(username, password):\n    users[username] = password",
+      "status": "active",
+      "metadata": {
+        "code": "def create_user(username, password):\n    users[username] = password",
+        "commit": "623241a"
+      }
+    },
+    {
+      "id": "func_auth_models_get_user",
+      "kind": "FunctionIdentity",
+      "label": "get_user",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "get_user",
+        "file": "auth/models.py"
+      }
+    },
+    {
+      "id": "state_auth_models_get_user_623241a",
+      "kind": "FunctionState",
+      "label": "state_auth_models_get_user_623241a",
+      "summary": "def get_user(username):\n    return users.get(username)",
+      "status": "active",
+      "metadata": {
+        "code": "def get_user(username):\n    return users.get(username)",
+        "commit": "623241a"
+      }
+    },
+    {
+      "id": "file_auth_service",
+      "kind": "FileIdentity",
+      "label": "auth/service.py",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "file": "auth/service.py"
+      }
+    },
+    {
+      "id": "file_auth",
+      "kind": "FileIdentity",
+      "label": "auth",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "file": "auth",
+        "external": "true"
+      }
+    },
+    {
+      "id": "func_auth_service_signup",
+      "kind": "FunctionIdentity",
+      "label": "signup",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "signup",
+        "file": "auth/service.py"
+      }
+    },
+    {
+      "id": "state_auth_service_signup_623241a",
+      "kind": "FunctionState",
+      "label": "state_auth_service_signup_623241a",
+      "summary": "def signup(username, password):\n    if get_user(username):\n        return \"User already exists\"\n    create_user(username, password)\n    return \"Signup successful\"",
+      "status": "active",
+      "metadata": {
+        "code": "def signup(username, password):\n    if get_user(username):\n        return \"User already exists\"\n    create_user(username, password)\n    return \"Signup successful\"",
+        "commit": "623241a"
+      }
+    },
+    {
+      "id": "func_auth_service_login",
+      "kind": "FunctionIdentity",
+      "label": "login",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "login",
+        "file": "auth/service.py"
+      }
+    },
+    {
+      "id": "state_auth_service_login_623241a",
+      "kind": "FunctionState",
+      "label": "state_auth_service_login_623241a",
+      "summary": "def login(username, password):\n    user = get_user(username)\n    if user == password:\n        return \"Login successful\"\n    return \"Invalid credentials\"",
+      "status": "active",
+      "metadata": {
+        "code": "def login(username, password):\n    user = get_user(username)\n    if user == password:\n        return \"Login successful\"\n    return \"Invalid credentials\"",
+        "commit": "623241a"
+      }
+    }
+  ],
+  "edges": [
+    {
+      "source": "commit_623241a",
+      "target": "file_auth___init__",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "commit_623241a",
+      "target": "file_auth_models",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "file_auth_models",
+      "target": "func_auth_models_create_user",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "func_auth_models_create_user",
+      "target": "state_auth_models_create_user_623241a",
+      "kind": "HAS_STATE"
+    },
+    {
+      "source": "commit_623241a",
+      "target": "state_auth_models_create_user_623241a",
+      "kind": "GENERATED"
+    },
+    {
+      "source": "file_auth_models",
+      "target": "func_auth_models_get_user",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "func_auth_models_get_user",
+      "target": "state_auth_models_get_user_623241a",
+      "kind": "HAS_STATE"
+    },
+    {
+      "source": "commit_623241a",
+      "target": "state_auth_models_get_user_623241a",
+      "kind": "GENERATED"
+    },
+    {
+      "source": "func_auth_models_get_user",
+      "target": "func_auth_models_get",
+      "kind": "CALLS"
+    },
+    {
+      "source": "commit_623241a",
+      "target": "file_auth_service",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "file_auth_service",
+      "target": "file_auth",
+      "kind": "IMPORTS"
+    },
+    {
+      "source": "file_auth_service",
+      "target": "func_auth_service_signup",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "func_auth_service_signup",
+      "target": "state_auth_service_signup_623241a",
+      "kind": "HAS_STATE"
+    },
+    {
+      "source": "commit_623241a",
+      "target": "state_auth_service_signup_623241a",
+      "kind": "GENERATED"
+    },
+    {
+      "source": "func_auth_service_signup",
+      "target": "func_auth_service_get_user",
+      "kind": "CALLS"
+    },
+    {
+      "source": "func_auth_service_signup",
+      "target": "func_auth_service_create_user",
+      "kind": "CALLS"
+    },
+    {
+      "source": "file_auth_service",
+      "target": "func_auth_service_login",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "func_auth_service_login",
+      "target": "state_auth_service_login_623241a",
+      "kind": "HAS_STATE"
+    },
+    {
+      "source": "commit_623241a",
+      "target": "state_auth_service_login_623241a",
+      "kind": "GENERATED"
+    },
+    {
+      "source": "func_auth_service_login",
+      "target": "func_auth_service_get_user",
+      "kind": "CALLS"
+    }
+  ]
+}
