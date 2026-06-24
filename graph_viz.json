@@ -4,7 +4,7 @@
       "id": "commit_623241a",
       "kind": "Commit",
       "label": "feat: initial auth module with models and service",
-      "summary": "feat: initial auth module with models and service\n\n- models.py: in-memory user store with create_user and get_user\n- service.py: signup and login with basic validation\n- no hashing, no persistence -- intentionally dumb for iteration | changed 3 file(s): auth/__init__.py, auth/models.py, auth/service.py",
+      "summary": "feat: initial auth module with models and service\n\n- models.py: in-memory user store with create_user and get_user\n- service.py: signup and login with basic validation\n- no hashing, no persistence -- intentionally dumb for iteration | changed 3 file(s): auth/__init__.py, auth/models.py, auth/service",
       "status": "active",
       "metadata": {
         "msg": "feat: initial auth module with models and service\n\n- models.py: in-memory user store with create_user and get_user\n- service.py: signup and login with basic validation\n- no hashing, no persistence -- intentionally dumb for iteration",
@@ -140,6 +140,725 @@
         "code": "def login(username, password):\n    user = get_user(username)\n    if user == password:\n        return \"Login successful\"\n    return \"Invalid credentials\"",
         "commit": "623241a"
       }
+    },
+    {
+      "id": "commit_34344c3",
+      "kind": "Commit",
+      "label": "feat: tree-sitter ingestion, HelixDB writes, semantic pass, ",
+      "summary": "feat: tree-sitter ingestion, HelixDB writes, semantic pass, viz dump\n\n- scalable_ingest.py: replaced ast with tree-sitter; extracts CONTAINS,\n  IMPORTS, INHERITS, CALLS edges; writes all nodes/edges live to HelixDB\n  (localhost:6969) via helix-db SDK; keeps graph_payload.json + graph_viz.json\n  as a",
+      "status": "active",
+      "metadata": {
+        "msg": "feat: tree-sitter ingestion, HelixDB writes, semantic pass, viz dump\n\n- scalable_ingest.py: replaced ast with tree-sitter; extracts CONTAINS,\n  IMPORTS, INHERITS, CALLS edges; writes all nodes/edges live to HelixDB\n  (localhost:6969) via helix-db SDK; keeps graph_payload.json + graph_viz.json\n  as artefacts\n\n- semantic_pass.py: separate post-ingestion pass; traverses Commit->GENERATED->\n  FunctionState in HelixDB; analyses code structurally (params, calls, branches,\n  returns) to derive per-function Concept nodes and a ChangeNode summary;\n  attaches Rationale from commit message body; guardrail prevents writing\n  AST-owned node kinds\n\n- dump_viz.py: merges graph_payload.json with semantic nodes from HelixDB into\n  graph_viz.json for tools/harness_graph_viz.html\n\n- tools/harness_graph_viz.html: force-directed graph explorer (load JSON)",
+        "timestamp": "2026-06-24T22:56:02+05:45",
+        "reasoning": "feat: tree-sitter ingestion, HelixDB writes, semantic pass, viz dump\n\n- scalable_ingest.py: replaced ast with tree-sitter; extracts CONTAINS,\n  IMPORTS, INHERITS, CALLS edges; writes all nodes/edges live to HelixDB\n  (localhost:6969) via helix-db SDK; keeps graph_payload.json + graph_viz.json\n  as artefacts\n\n- semantic_pass.py: separate post-ingestion pass; traverses Commit->GENERATED->\n  FunctionState in HelixDB; analyses code structurally (params, calls, branches,\n  returns) to derive per-function Concept nodes and a ChangeNode summary;\n  attaches Rationale from commit message body; guardrail prevents writing\n  AST-owned node kinds\n\n- dump_viz.py: merges graph_payload.json with semantic nodes from HelixDB into\n  graph_viz.json for tools/harness_graph_viz.html\n\n- tools/harness_graph_viz.html: force-directed graph explorer (load JSON) | changed 6 file(s): dump_viz.py, graph_payload.json, graph_viz.json, scalable_ingest.py, semantic_pass.py ..."
+      }
+    },
+    {
+      "id": "file_dump_viz",
+      "kind": "FileIdentity",
+      "label": "dump_viz.py",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "file": "dump_viz.py"
+      }
+    },
+    {
+      "id": "file_json",
+      "kind": "FileIdentity",
+      "label": "json",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "file": "json",
+        "external": "true"
+      }
+    },
+    {
+      "id": "file_helixdb",
+      "kind": "FileIdentity",
+      "label": "helixdb",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "file": "helixdb",
+        "external": "true"
+      }
+    },
+    {
+      "id": "func_dump_viz__label",
+      "kind": "FunctionIdentity",
+      "label": "_label",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "_label",
+        "file": "dump_viz.py"
+      }
+    },
+    {
+      "id": "state_dump_viz__label_34344c3",
+      "kind": "FunctionState",
+      "label": "state_dump_viz__label_34344c3",
+      "summary": "def _label(kind, r):\n    if kind == \"ChangeNode\": return \"ChangeNode: \" + r.get(\"commit\", \"\")\n    return r.get(\"text\", \"\")[:60] or r.get(\"node_id\", \"\")",
+      "status": "active",
+      "metadata": {
+        "code": "def _label(kind, r):\n    if kind == \"ChangeNode\": return \"ChangeNode: \" + r.get(\"commit\", \"\")\n    return r.get(\"text\", \"\")[:60] or r.get(\"node_id\", \"\")",
+        "commit": "34344c3"
+      }
+    },
+    {
+      "id": "func_dump_viz__summary",
+      "kind": "FunctionIdentity",
+      "label": "_summary",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "_summary",
+        "file": "dump_viz.py"
+      }
+    },
+    {
+      "id": "state_dump_viz__summary_34344c3",
+      "kind": "FunctionState",
+      "label": "state_dump_viz__summary_34344c3",
+      "summary": "def _summary(kind, r):\n    if kind == \"ChangeNode\": return r.get(\"summary\", \"\")[:400]\n    return r.get(\"text\", \"\")",
+      "status": "active",
+      "metadata": {
+        "code": "def _summary(kind, r):\n    if kind == \"ChangeNode\": return r.get(\"summary\", \"\")[:400]\n    return r.get(\"text\", \"\")",
+        "commit": "34344c3"
+      }
+    },
+    {
+      "id": "func_dump_viz_dump",
+      "kind": "FunctionIdentity",
+      "label": "dump",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "dump",
+        "file": "dump_viz.py"
+      }
+    },
+    {
+      "id": "state_dump_viz_dump_34344c3",
+      "kind": "FunctionState",
+      "label": "state_dump_viz_dump_34344c3",
+      "summary": "def dump():\n    # ── load structural graph from ingest artefact ─────────────────────────\n    with open(\"graph_payload.json\", encoding=\"utf-8\") as f:\n        payload = json.load(f)\n\n    viz_nodes = []",
+      "status": "active",
+      "metadata": {
+        "code": "def dump():\n    # ── load structural graph from ingest artefact ─────────────────────────\n    with open(\"graph_payload.json\", encoding=\"utf-8\") as f:\n        payload = json.load(f)\n\n    viz_nodes = []\n    for n in payload[\"nodes\"]:\n        kind  = n[\"type\"]\n        label = n.get(\"name\") or (n.get(\"msg\", \"\").splitlines() or [\"\"])[0] or n.get(\"file\") or n[\"id\"]\n        summary = n.get(\"reasoning\") or n.get(\"code\", \"\")[:200]\n        viz_nodes.append({\n            \"id\": n[\"id\"], \"kind\": kind, \"label\": label[:60],\n            \"summary\": summary[:300], \"status\": \"active\",\n            \"metadata\": {k: v for k, v in n.items() if k not in (\"type\", \"id\")},\n        })\n    viz_edges = [{\"source\": e[\"from\"], \"target\": e[\"to\"], \"kind\": e[\"label\"]}\n                 for e in payload[\"edges\"]]\n\n    existing_ids = {n[\"id\"] for n in viz_nodes}\n\n    # ── append semantic nodes from HelixDB ─────────────────────────────────\n    c = Client(HELIX_URL)\n\n    for kind in SEMANTIC_KINDS:\n        batch = read_batch().var_as(\"n\", g().n_with_label(kind).value_map()).returning([\"n\"])\n        rows = c.query().dynamic(batch.to_dynamic_request()).send().get(\"n\", {}).get(\"properties\", [])\n        for r in rows:\n            nid = r.get(\"node_id\", \"\")\n            if not nid or nid in existing_ids:\n                continue\n            viz_nodes.append({\n                \"id\": nid, \"kind\": kind,\n                \"label\":   _label(kind, r),\n                \"summary\": _summary(kind, r),\n                \"status\":  \"semantic\",\n                \"metadata\": {k: v for k, v in r.items() if not k.startswith(\"$\")},\n            })\n            existing_ids.add(nid)\n\n    # ── append semantic edges from HelixDB ─────────────────────────────────\n    seen = {(e[\"source\"], e[\"target\"], e[\"kind\"]) for e in viz_edges}\n\n    for label, src_kind in [(\"HAS_CHANGE\", \"Commit\"), (\"HAS_SEMANTIC\", \"Commit\"),\n                             (\"DESCRIBES\", \"ChangeNode\")]:\n        batch = (\n            read_batch()\n            .var_as(\"tgts\", g().n_with_label(src_kind).out_e(label).out_n().value_map())\n            .var_as(\"srcs\", g().n_with_label(src_kind).value_map())\n            .returning([\"srcs\", \"tgts\"])\n        )\n        try:\n            result = c.query().dynamic(batch.to_dynamic_request()).send()\n            src_rows = result.get(\"srcs\", {}).get(\"properties\", [])\n            tgt_rows = result.get(\"tgts\", {}).get(\"properties\", [])\n            for src_r, tgt_r in zip(src_rows, tgt_rows):\n                s, t = src_r.get(\"node_id\", \"\"), tgt_r.get(\"node_id\", \"\")\n                key = (s, t, label)\n                if s and t and key not in seen:\n                    viz_edges.append({\"source\": s, \"target\": t, \"kind\": label})\n                    seen.add(key)\n        except Exception:\n            pass\n\n    out = {\"nodes\": viz_nodes, \"edges\": viz_edges}\n    with open(\"graph_viz.json\", \"w\", encoding=\"utf-8\") as f:\n        json.dump(out, f, indent=2, ensure_ascii=False)\n\n    print(f\"graph_viz.json: {len(viz_nodes)} nodes, {len(viz_edges)} edges\")\n    print(\"Open tools/harness_graph_viz.html -> Load JSON -> graph_viz.json\")",
+        "commit": "34344c3"
+      }
+    },
+    {
+      "id": "file_semantic_pass",
+      "kind": "FileIdentity",
+      "label": "semantic_pass.py",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "file": "semantic_pass.py"
+      }
+    },
+    {
+      "id": "file_ast",
+      "kind": "FileIdentity",
+      "label": "ast",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "file": "ast",
+        "external": "true"
+      }
+    },
+    {
+      "id": "file_re",
+      "kind": "FileIdentity",
+      "label": "re",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "file": "re",
+        "external": "true"
+      }
+    },
+    {
+      "id": "file_helixdb",
+      "kind": "FileIdentity",
+      "label": "helixdb",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "file": "helixdb",
+        "external": "true"
+      }
+    },
+    {
+      "id": "func_semantic_pass__c",
+      "kind": "FunctionIdentity",
+      "label": "_c",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "_c",
+        "file": "semantic_pass.py"
+      }
+    },
+    {
+      "id": "state_semantic_pass__c_34344c3",
+      "kind": "FunctionState",
+      "label": "state_semantic_pass__c_34344c3",
+      "summary": "def _c():\n    return Client(HELIX_URL)",
+      "status": "active",
+      "metadata": {
+        "code": "def _c():\n    return Client(HELIX_URL)",
+        "commit": "34344c3"
+      }
+    },
+    {
+      "id": "func_semantic_pass__ensure_indexes",
+      "kind": "FunctionIdentity",
+      "label": "_ensure_indexes",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "_ensure_indexes",
+        "file": "semantic_pass.py"
+      }
+    },
+    {
+      "id": "state_semantic_pass__ensure_indexes_34344c3",
+      "kind": "FunctionState",
+      "label": "state_semantic_pass__ensure_indexes_34344c3",
+      "summary": "def _ensure_indexes(c):\n    batch = write_batch()\n    for kind in (\"ChangeNode\", \"Concept\", \"Rationale\"):\n        batch = batch.var_as(\n            f\"idx_{kind}\",\n            g().create_index_if_not_e",
+      "status": "active",
+      "metadata": {
+        "code": "def _ensure_indexes(c):\n    batch = write_batch()\n    for kind in (\"ChangeNode\", \"Concept\", \"Rationale\"):\n        batch = batch.var_as(\n            f\"idx_{kind}\",\n            g().create_index_if_not_exists(IndexSpec.node_unique_equality(kind, \"node_id\"))\n        )\n    c.query().dynamic(\n        batch.returning([\"idx_ChangeNode\", \"idx_Concept\", \"idx_Rationale\"]).to_dynamic_request()\n    ).send()",
+        "commit": "34344c3"
+      }
+    },
+    {
+      "id": "func_semantic_pass__get_commits",
+      "kind": "FunctionIdentity",
+      "label": "_get_commits",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "_get_commits",
+        "file": "semantic_pass.py"
+      }
+    },
+    {
+      "id": "state_semantic_pass__get_commits_34344c3",
+      "kind": "FunctionState",
+      "label": "state_semantic_pass__get_commits_34344c3",
+      "summary": "def _get_commits(c) -> list[dict]:\n    batch = read_batch().var_as(\"rows\", g().n_with_label(\"Commit\").value_map()).returning([\"rows\"])\n    return c.query().dynamic(batch.to_dynamic_request()).send().g",
+      "status": "active",
+      "metadata": {
+        "code": "def _get_commits(c) -> list[dict]:\n    batch = read_batch().var_as(\"rows\", g().n_with_label(\"Commit\").value_map()).returning([\"rows\"])\n    return c.query().dynamic(batch.to_dynamic_request()).send().get(\"rows\", {}).get(\"properties\", [])",
+        "commit": "34344c3"
+      }
+    },
+    {
+      "id": "func_semantic_pass__get_states_for_commit",
+      "kind": "FunctionIdentity",
+      "label": "_get_states_for_commit",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "_get_states_for_commit",
+        "file": "semantic_pass.py"
+      }
+    },
+    {
+      "id": "state_semantic_pass__get_states_for_commit_34344c3",
+      "kind": "FunctionState",
+      "label": "state_semantic_pass__get_states_for_commit_34344c3",
+      "summary": "def _get_states_for_commit(c, commit_node_id: str) -> list[dict]:\n    \"\"\"Traverse Commit --GENERATED--> FunctionState, filtered by commit node_id.\"\"\"\n    p = define_params({\"cid\": param.string()})\n   ",
+      "status": "active",
+      "metadata": {
+        "code": "def _get_states_for_commit(c, commit_node_id: str) -> list[dict]:\n    \"\"\"Traverse Commit --GENERATED--> FunctionState, filtered by commit node_id.\"\"\"\n    p = define_params({\"cid\": param.string()})\n    batch = (\n        read_batch()\n        .var_as(\"commit\", g().n_with_label(\"Commit\").where(Predicate.eq_param(\"node_id\", \"cid\")))\n        .var_as(\"states\", g().n(NodeRef.var(\"commit\")).out_e(\"GENERATED\").out_n().value_map())\n        .returning([\"states\"])\n    )\n    result = c.query().dynamic(batch.to_dynamic_request(p, {\"cid\": commit_node_id})).send()\n    return result.get(\"states\", {}).get(\"properties\", [])",
+        "commit": "34344c3"
+      }
+    },
+    {
+      "id": "func_semantic_pass__upsert",
+      "kind": "FunctionIdentity",
+      "label": "_upsert",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "_upsert",
+        "file": "semantic_pass.py"
+      }
+    },
+    {
+      "id": "state_semantic_pass__upsert_34344c3",
+      "kind": "FunctionState",
+      "label": "state_semantic_pass__upsert_34344c3",
+      "summary": "def _upsert(c, kind: str, node_id: str, props: dict):\n    \"\"\"Semantic nodes are always replaced — they are derived, not source-of-truth.\"\"\"\n    assert kind not in _AST_OWNED, f\"guardrail: cannot write",
+      "status": "active",
+      "metadata": {
+        "code": "def _upsert(c, kind: str, node_id: str, props: dict):\n    \"\"\"Semantic nodes are always replaced — they are derived, not source-of-truth.\"\"\"\n    assert kind not in _AST_OWNED, f\"guardrail: cannot write AST kind '{kind}'\"\n    # Drop existing then re-insert so re-runs always reflect latest reasoning.\n    p_del = define_params({\"nid\": param.string()})\n    del_batch = (\n        write_batch()\n        .var_as(\"n\", g().n_with_label(kind).where(Predicate.eq_param(\"node_id\", \"nid\")).drop())\n        .returning([\"n\"])\n    )\n    try:\n        c.query().dynamic(del_batch.to_dynamic_request(p_del, {\"nid\": node_id})).send()\n    except Exception:\n        pass\n    all_props = {\n        \"node_id\": PropertyInput.value(node_id),\n        **{k: PropertyInput.value(str(v)[:4000]) for k, v in props.items()},\n    }\n    c.query().dynamic(\n        write_batch().var_as(\"n\", g().add_n(kind, all_props)).returning([\"n\"]).to_dynamic_request()\n    ).send()",
+        "commit": "34344c3"
+      }
+    },
+    {
+      "id": "func_semantic_pass__edge",
+      "kind": "FunctionIdentity",
+      "label": "_edge",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "_edge",
+        "file": "semantic_pass.py"
+      }
+    },
+    {
+      "id": "state_semantic_pass__edge_34344c3",
+      "kind": "FunctionState",
+      "label": "state_semantic_pass__edge_34344c3",
+      "summary": "def _edge(c, src_id: str, src_kind: str, tgt_id: str, tgt_kind: str, label: str):\n    batch = (\n        write_batch()\n        .var_as(\"src\", g().n_with_label(src_kind).where(Predicate.eq_param(\"node_i",
+      "status": "active",
+      "metadata": {
+        "code": "def _edge(c, src_id: str, src_kind: str, tgt_id: str, tgt_kind: str, label: str):\n    batch = (\n        write_batch()\n        .var_as(\"src\", g().n_with_label(src_kind).where(Predicate.eq_param(\"node_id\", \"src_id\")))\n        .var_as(\"tgt\", g().n_with_label(tgt_kind).where(Predicate.eq_param(\"node_id\", \"tgt_id\")))\n        .var_as(\"e\",   g().n(NodeRef.var(\"src\")).add_e(label, NodeRef.var(\"tgt\"), {}))\n        .returning([\"e\"])\n    )\n    try:\n        c.query().dynamic(\n            batch.to_dynamic_request(_EDGE_PARAMS, {\"src_id\": src_id, \"tgt_id\": tgt_id})\n        ).send()\n    except Exception:\n        pass",
+        "commit": "34344c3"
+      }
+    },
+    {
+      "id": "func_semantic_pass__analyse_function",
+      "kind": "FunctionIdentity",
+      "label": "_analyse_function",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "_analyse_function",
+        "file": "semantic_pass.py"
+      }
+    },
+    {
+      "id": "state_semantic_pass__analyse_function_34344c3",
+      "kind": "FunctionState",
+      "label": "state_semantic_pass__analyse_function_34344c3",
+      "summary": "def _analyse_function(code: str) -> dict:\n    \"\"\"\n    Read the function's AST and derive:\n    - params: list of parameter names\n    - calls: functions this function calls\n    - returns_something: bool",
+      "status": "active",
+      "metadata": {
+        "code": "def _analyse_function(code: str) -> dict:\n    \"\"\"\n    Read the function's AST and derive:\n    - params: list of parameter names\n    - calls: functions this function calls\n    - returns_something: bool\n    - branches: number of if/for/while/try blocks (complexity proxy)\n    - one_liner: a plain-English description derived purely from structure\n    \"\"\"\n    try:\n        tree = ast.parse(code)\n    except SyntaxError:\n        return {\"one_liner\": \"unparseable function\", \"calls\": [], \"params\": [], \"branches\": 0}\n\n    func = next((n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)), None)\n    if not func:\n        return {\"one_liner\": code.splitlines()[0], \"calls\": [], \"params\": [], \"branches\": 0}\n\n    params  = [a.arg for a in func.args.args if a.arg != \"self\"]\n    calls   = sorted({\n        (n.func.id if isinstance(n.func, ast.Name) else\n         n.func.attr if isinstance(n.func, ast.Attribute) else \"\")\n        for n in ast.walk(func) if isinstance(n, ast.Call)\n    } - {\"\"})\n    returns = any(isinstance(n, ast.Return) and n.value for n in ast.walk(func))\n    branches = sum(\n        1 for n in ast.walk(func)\n        if isinstance(n, (ast.If, ast.For, ast.While, ast.Try, ast.ExceptHandler))\n    )\n\n    # Build one_liner from structure\n    parts = []\n    if params:\n        parts.append(f\"accepts ({', '.join(params)})\")\n    if calls:\n        parts.append(f\"calls {', '.join(calls[:4])}\")\n    if branches:\n        parts.append(f\"{branches} branch(es)\")\n    if returns:\n        parts.append(\"returns a value\")\n    else:\n        parts.append(\"no return value\")\n\n    one_liner = f\"`{func.name}` -- \" + \"; \".join(parts) if parts else f\"`{func.name}`\"\n    return {\"one_liner\": one_liner, \"calls\": calls, \"params\": params,\n            \"branches\": branches, \"returns\": returns}",
+        "commit": "34344c3"
+      }
+    },
+    {
+      "id": "func_semantic_pass__concept_text",
+      "kind": "FunctionIdentity",
+      "label": "_concept_text",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "_concept_text",
+        "file": "semantic_pass.py"
+      }
+    },
+    {
+      "id": "state_semantic_pass__concept_text_34344c3",
+      "kind": "FunctionState",
+      "label": "state_semantic_pass__concept_text_34344c3",
+      "summary": "def _concept_text(msg: str) -> str:\n    m = _CC_RE.match(msg.strip().splitlines()[0])\n    if m:\n        type_, scope, breaking, summary = m.groups()\n        prefix = \"BREAKING: \" if breaking else \"\"\n ",
+      "status": "active",
+      "metadata": {
+        "code": "def _concept_text(msg: str) -> str:\n    m = _CC_RE.match(msg.strip().splitlines()[0])\n    if m:\n        type_, scope, breaking, summary = m.groups()\n        prefix = \"BREAKING: \" if breaking else \"\"\n        scope_str = f\"({scope[1:-1]})\" if scope else \"\"\n        return f\"{prefix}{type_.upper()}{scope_str}: {summary.strip()}\"\n    return msg.strip().splitlines()[0][:80]",
+        "commit": "34344c3"
+      }
+    },
+    {
+      "id": "func_semantic_pass__rationale_text",
+      "kind": "FunctionIdentity",
+      "label": "_rationale_text",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "_rationale_text",
+        "file": "semantic_pass.py"
+      }
+    },
+    {
+      "id": "state_semantic_pass__rationale_text_34344c3",
+      "kind": "FunctionState",
+      "label": "state_semantic_pass__rationale_text_34344c3",
+      "summary": "def _rationale_text(msg: str) -> str:\n    body = [l.strip() for l in msg.strip().splitlines()[1:] if l.strip()]\n    return \" \".join(body)[:500] if body else f\"Introduces: {msg.strip().splitlines()[0]}",
+      "status": "active",
+      "metadata": {
+        "code": "def _rationale_text(msg: str) -> str:\n    body = [l.strip() for l in msg.strip().splitlines()[1:] if l.strip()]\n    return \" \".join(body)[:500] if body else f\"Introduces: {msg.strip().splitlines()[0]}\"",
+        "commit": "34344c3"
+      }
+    },
+    {
+      "id": "func_semantic_pass__change_summary",
+      "kind": "FunctionIdentity",
+      "label": "_change_summary",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "_change_summary",
+        "file": "semantic_pass.py"
+      }
+    },
+    {
+      "id": "state_semantic_pass__change_summary_34344c3",
+      "kind": "FunctionState",
+      "label": "state_semantic_pass__change_summary_34344c3",
+      "summary": "def _change_summary(msg: str, states: list[dict]) -> str:\n    \"\"\"\n    Derive a ChangeNode reasoning string from commit message + actual function code.\n    \"\"\"\n    analyses = [_analyse_function(s[\"code",
+      "status": "active",
+      "metadata": {
+        "code": "def _change_summary(msg: str, states: list[dict]) -> str:\n    \"\"\"\n    Derive a ChangeNode reasoning string from commit message + actual function code.\n    \"\"\"\n    analyses = [_analyse_function(s[\"code\"]) for s in states if s.get(\"code\")]\n    func_lines = [a[\"one_liner\"] for a in analyses]\n\n    parts = [f\"Commit: {msg.strip().splitlines()[0]}\"]\n    if func_lines:\n        parts.append(f\"Functions introduced/changed ({len(func_lines)}):\")\n        parts.extend(f\"  * {line}\" for line in func_lines)\n\n    all_calls = sorted({c for a in analyses for c in a[\"calls\"]})\n    if all_calls:\n        parts.append(f\"Cross-function calls detected: {', '.join(all_calls[:8])}\")\n\n    total_branches = sum(a[\"branches\"] for a in analyses)\n    if total_branches:\n        parts.append(f\"Total control-flow branches: {total_branches}\")\n\n    body_lines = [l.strip() for l in msg.strip().splitlines()[1:] if l.strip()]\n    if body_lines:\n        parts.append(f\"Author notes: {' '.join(body_lines)[:300]}\")\n\n    return \"\\n\".join(parts)",
+        "commit": "34344c3"
+      }
+    },
+    {
+      "id": "func_semantic_pass_run_semantic_pass",
+      "kind": "FunctionIdentity",
+      "label": "run_semantic_pass",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "run_semantic_pass",
+        "file": "semantic_pass.py"
+      }
+    },
+    {
+      "id": "state_semantic_pass_run_semantic_pass_34344c3",
+      "kind": "FunctionState",
+      "label": "state_semantic_pass_run_semantic_pass_34344c3",
+      "summary": "def run_semantic_pass():\n    c = _c()\n    _ensure_indexes(c)\n\n    commits = _get_commits(c)\n    real_commits = [r for r in commits if r.get(\"node_id\", \"\").startswith(\"commit_\")]\n\n    if not real_commi",
+      "status": "active",
+      "metadata": {
+        "code": "def run_semantic_pass():\n    c = _c()\n    _ensure_indexes(c)\n\n    commits = _get_commits(c)\n    real_commits = [r for r in commits if r.get(\"node_id\", \"\").startswith(\"commit_\")]\n\n    if not real_commits:\n        print(\"No commits in HelixDB. Run scalable_ingest.py first.\")\n        return\n\n    print(f\"Semantic pass over {len(real_commits)} commit(s)...\\n\")\n\n    for row in real_commits:\n        commit_id = row[\"node_id\"]\n        msg       = row.get(\"msg\", \"\")\n        hash_     = commit_id.replace(\"commit_\", \"\")\n        print(f\"  [{hash_}] {msg.splitlines()[0][:60]}\")\n\n        states = _get_states_for_commit(c, commit_id)\n        print(f\"         -> {len(states)} FunctionState(s) found\")\n\n        # ChangeNode: what changed + code-derived reasoning\n        change_id = f\"change_{commit_id}\"\n        summary   = _change_summary(msg, states)\n        _upsert(c, \"ChangeNode\", change_id, {\"summary\": summary, \"commit\": commit_id})\n        _edge(c, commit_id, \"Commit\", change_id, \"ChangeNode\", \"HAS_CHANGE\")\n\n        # Per-function semantic nodes attached to ChangeNode\n        for state in states:\n            code = state.get(\"code\", \"\")\n            sid  = state.get(\"node_id\", \"\")\n            if not code or not sid:\n                continue\n            analysis = _analyse_function(code)\n            sem_id = f\"sem_{sid}\"\n            _upsert(c, \"Concept\", sem_id, {\n                \"text\":     analysis[\"one_liner\"],\n                \"calls\":    \", \".join(analysis[\"calls\"]),\n                \"branches\": str(analysis[\"branches\"]),\n                \"commit\":   commit_id,\n            })\n            _edge(c, change_id, \"ChangeNode\", sem_id, \"Concept\", \"DESCRIBES\")\n\n        # Commit-level Concept + Rationale\n        concept_id   = f\"concept_{commit_id}\"\n        rationale_id = f\"rationale_{commit_id}\"\n        _upsert(c, \"Concept\",   concept_id,   {\"text\": _concept_text(msg),   \"commit\": commit_id})\n        _upsert(c, \"Rationale\", rationale_id, {\"text\": _rationale_text(msg), \"commit\": commit_id})\n        _edge(c, commit_id, \"Commit\", concept_id,   \"Concept\",   \"HAS_SEMANTIC\")\n        _edge(c, commit_id, \"Commit\", rationale_id, \"Rationale\", \"HAS_SEMANTIC\")\n\n        print(f\"         -> ChangeNode, {len(states)} Concept(s), Rationale written\")\n\n    print(\"\\nSemantic pass complete.\")",
+        "commit": "34344c3"
+      }
+    },
+    {
+      "id": "change_commit_623241a",
+      "kind": "ChangeNode",
+      "label": "ChangeNode: commit_623241a",
+      "summary": "Commit: feat: initial auth module with models and service\nFunctions introduced/changed (4):\n  * `create_user` -- accepts (username, password); no return value\n  * `get_user` -- accepts (username); calls get; returns a value\n  * `signup` -- accepts (username, password); calls create_user, get_user; 1 branch(es); returns a value\n  * `login` -- accepts (username, password); calls get_user; 1 branch(e",
+      "status": "semantic",
+      "metadata": {
+        "summary": "Commit: feat: initial auth module with models and service\nFunctions introduced/changed (4):\n  * `create_user` -- accepts (username, password); no return value\n  * `get_user` -- accepts (username); calls get; returns a value\n  * `signup` -- accepts (username, password); calls create_user, get_user; 1 branch(es); returns a value\n  * `login` -- accepts (username, password); calls get_user; 1 branch(es); returns a value\nCross-function calls detected: create_user, get, get_user\nTotal control-flow branches: 2\nAuthor notes: - models.py: in-memory user store with create_user and get_user - service.py: signup and login with basic validation - no hashing, no persistence -- intentionally dumb for iteration",
+        "commit": "commit_623241a",
+        "node_id": "change_commit_623241a"
+      }
+    },
+    {
+      "id": "change_commit_34344c3",
+      "kind": "ChangeNode",
+      "label": "ChangeNode: commit_34344c3",
+      "summary": "Commit: feat: tree-sitter ingestion, HelixDB writes, semantic pass, viz dump\nFunctions introduced/changed (14):\n  * `_label` -- accepts (kind, r); calls get; 1 branch(es); returns a value\n  * `_summary` -- accepts (kind, r); calls get; 1 branch(es); returns a value\n  * `dump` -- calls Client, _label, _summary, add; 9 branch(es); no return value\n  * `_c` -- calls Client; returns a value\n  * `_ensur",
+      "status": "semantic",
+      "metadata": {
+        "summary": "Commit: feat: tree-sitter ingestion, HelixDB writes, semantic pass, viz dump\nFunctions introduced/changed (14):\n  * `_label` -- accepts (kind, r); calls get; 1 branch(es); returns a value\n  * `_summary` -- accepts (kind, r); calls get; 1 branch(es); returns a value\n  * `dump` -- calls Client, _label, _summary, add; 9 branch(es); no return value\n  * `_c` -- calls Client; returns a value\n  * `_ensure_indexes` -- accepts (c); calls create_index_if_not_exists, dynamic, g, node_unique_equality; 1 branch(es); no return value\n  * `_get_commits` -- accepts (c); calls dynamic, g, get, n_with_label; returns a value\n  * `_get_states_for_commit` -- accepts (c, commit_node_id); calls define_params, dynamic, eq_param, g; returns a value\n  * `_upsert` -- accepts (c, kind, node_id, props); calls add_n, define_params, drop, dynamic; 2 branch(es); no return value\n  * `_edge` -- accepts (c, src_id, src_kind, tgt_id, tgt_kind, label); calls add_e, dynamic, eq_param, g; 2 branch(es); no return value\n  * `_analyse_function` -- accepts (code); calls any, append, isinstance, join; 7 branch(es); returns a value\n  * `_concept_text` -- accepts (msg); calls groups, match, splitlines, strip; 1 branch(es); returns a value\n  * `_rationale_text` -- accepts (msg); calls join, splitlines, strip; returns a value\n  * `_change_summary` -- accepts (msg, states); calls _analyse_function, append, extend, get; 4 branch(es); returns a value\n  * `run_semantic_pass` -- calls _analyse_function, _c, _change_summary, _concept_text; 4 branch(es); no return value\nCross-function calls detected: Client, _analyse_function, _c, _change_summary, _concept_text, _edge, _ensure_indexes, _get_commits\nTotal control-flow branches: 32\nAuthor notes: - scalable_ingest.py: replaced ast with tree-sitter; extracts CONTAINS, IMPORTS, INHERITS, CALLS edges; writes all nodes/edges live to HelixDB (localhost:6969) via helix-db SDK; keeps graph_payload.json + graph_viz.json as artefacts - semantic_pass.py: separate post-ingestion pass; traverses Commit-",
+        "node_id": "change_commit_34344c3",
+        "commit": "commit_34344c3"
+      }
+    },
+    {
+      "id": "sem_state_auth_models_create_user_623241a",
+      "kind": "Concept",
+      "label": "`create_user` -- accepts (username, password); no return val",
+      "summary": "`create_user` -- accepts (username, password); no return value",
+      "status": "semantic",
+      "metadata": {
+        "branches": "0",
+        "text": "`create_user` -- accepts (username, password); no return value",
+        "node_id": "sem_state_auth_models_create_user_623241a",
+        "commit": "commit_623241a",
+        "calls": ""
+      }
+    },
+    {
+      "id": "sem_state_auth_models_get_user_623241a",
+      "kind": "Concept",
+      "label": "`get_user` -- accepts (username); calls get; returns a value",
+      "summary": "`get_user` -- accepts (username); calls get; returns a value",
+      "status": "semantic",
+      "metadata": {
+        "node_id": "sem_state_auth_models_get_user_623241a",
+        "commit": "commit_623241a",
+        "branches": "0",
+        "text": "`get_user` -- accepts (username); calls get; returns a value",
+        "calls": "get"
+      }
+    },
+    {
+      "id": "sem_state_auth_service_signup_623241a",
+      "kind": "Concept",
+      "label": "`signup` -- accepts (username, password); calls create_user,",
+      "summary": "`signup` -- accepts (username, password); calls create_user, get_user; 1 branch(es); returns a value",
+      "status": "semantic",
+      "metadata": {
+        "calls": "create_user, get_user",
+        "commit": "commit_623241a",
+        "node_id": "sem_state_auth_service_signup_623241a",
+        "branches": "1",
+        "text": "`signup` -- accepts (username, password); calls create_user, get_user; 1 branch(es); returns a value"
+      }
+    },
+    {
+      "id": "sem_state_auth_service_login_623241a",
+      "kind": "Concept",
+      "label": "`login` -- accepts (username, password); calls get_user; 1 b",
+      "summary": "`login` -- accepts (username, password); calls get_user; 1 branch(es); returns a value",
+      "status": "semantic",
+      "metadata": {
+        "node_id": "sem_state_auth_service_login_623241a",
+        "text": "`login` -- accepts (username, password); calls get_user; 1 branch(es); returns a value",
+        "calls": "get_user",
+        "branches": "1",
+        "commit": "commit_623241a"
+      }
+    },
+    {
+      "id": "concept_commit_623241a",
+      "kind": "Concept",
+      "label": "FEAT: initial auth module with models and service",
+      "summary": "FEAT: initial auth module with models and service",
+      "status": "semantic",
+      "metadata": {
+        "node_id": "concept_commit_623241a",
+        "text": "FEAT: initial auth module with models and service",
+        "commit": "commit_623241a"
+      }
+    },
+    {
+      "id": "sem_state_dump_viz__label_34344c3",
+      "kind": "Concept",
+      "label": "`_label` -- accepts (kind, r); calls get; 1 branch(es); retu",
+      "summary": "`_label` -- accepts (kind, r); calls get; 1 branch(es); returns a value",
+      "status": "semantic",
+      "metadata": {
+        "commit": "commit_34344c3",
+        "text": "`_label` -- accepts (kind, r); calls get; 1 branch(es); returns a value",
+        "calls": "get",
+        "branches": "1",
+        "node_id": "sem_state_dump_viz__label_34344c3"
+      }
+    },
+    {
+      "id": "sem_state_dump_viz__summary_34344c3",
+      "kind": "Concept",
+      "label": "`_summary` -- accepts (kind, r); calls get; 1 branch(es); re",
+      "summary": "`_summary` -- accepts (kind, r); calls get; 1 branch(es); returns a value",
+      "status": "semantic",
+      "metadata": {
+        "commit": "commit_34344c3",
+        "calls": "get",
+        "text": "`_summary` -- accepts (kind, r); calls get; 1 branch(es); returns a value",
+        "node_id": "sem_state_dump_viz__summary_34344c3",
+        "branches": "1"
+      }
+    },
+    {
+      "id": "sem_state_dump_viz_dump_34344c3",
+      "kind": "Concept",
+      "label": "`dump` -- calls Client, _label, _summary, add; 9 branch(es);",
+      "summary": "`dump` -- calls Client, _label, _summary, add; 9 branch(es); no return value",
+      "status": "semantic",
+      "metadata": {
+        "node_id": "sem_state_dump_viz_dump_34344c3",
+        "calls": "Client, _label, _summary, add, append, dump, dynamic, g, get, items, len, load, n_with_label, open, out_e, out_n, print, query, read_batch, returning, send, splitlines, startswith, to_dynamic_request, value_map, var_as, zip",
+        "branches": "9",
+        "commit": "commit_34344c3",
+        "text": "`dump` -- calls Client, _label, _summary, add; 9 branch(es); no return value"
+      }
+    },
+    {
+      "id": "sem_state_semantic_pass__c_34344c3",
+      "kind": "Concept",
+      "label": "`_c` -- calls Client; returns a value",
+      "summary": "`_c` -- calls Client; returns a value",
+      "status": "semantic",
+      "metadata": {
+        "branches": "0",
+        "commit": "commit_34344c3",
+        "node_id": "sem_state_semantic_pass__c_34344c3",
+        "text": "`_c` -- calls Client; returns a value",
+        "calls": "Client"
+      }
+    },
+    {
+      "id": "sem_state_semantic_pass__ensure_indexes_34344c3",
+      "kind": "Concept",
+      "label": "`_ensure_indexes` -- accepts (c); calls create_index_if_not_",
+      "summary": "`_ensure_indexes` -- accepts (c); calls create_index_if_not_exists, dynamic, g, node_unique_equality; 1 branch(es); no return value",
+      "status": "semantic",
+      "metadata": {
+        "branches": "1",
+        "commit": "commit_34344c3",
+        "node_id": "sem_state_semantic_pass__ensure_indexes_34344c3",
+        "text": "`_ensure_indexes` -- accepts (c); calls create_index_if_not_exists, dynamic, g, node_unique_equality; 1 branch(es); no return value",
+        "calls": "create_index_if_not_exists, dynamic, g, node_unique_equality, query, returning, send, to_dynamic_request, var_as, write_batch"
+      }
+    },
+    {
+      "id": "sem_state_semantic_pass__get_commits_34344c3",
+      "kind": "Concept",
+      "label": "`_get_commits` -- accepts (c); calls dynamic, g, get, n_with",
+      "summary": "`_get_commits` -- accepts (c); calls dynamic, g, get, n_with_label; returns a value",
+      "status": "semantic",
+      "metadata": {
+        "calls": "dynamic, g, get, n_with_label, query, read_batch, returning, send, to_dynamic_request, value_map, var_as",
+        "text": "`_get_commits` -- accepts (c); calls dynamic, g, get, n_with_label; returns a value",
+        "node_id": "sem_state_semantic_pass__get_commits_34344c3",
+        "branches": "0",
+        "commit": "commit_34344c3"
+      }
+    },
+    {
+      "id": "sem_state_semantic_pass__get_states_for_commit_34344c3",
+      "kind": "Concept",
+      "label": "`_get_states_for_commit` -- accepts (c, commit_node_id); cal",
+      "summary": "`_get_states_for_commit` -- accepts (c, commit_node_id); calls define_params, dynamic, eq_param, g; returns a value",
+      "status": "semantic",
+      "metadata": {
+        "text": "`_get_states_for_commit` -- accepts (c, commit_node_id); calls define_params, dynamic, eq_param, g; returns a value",
+        "node_id": "sem_state_semantic_pass__get_states_for_commit_34344c3",
+        "calls": "define_params, dynamic, eq_param, g, get, n, n_with_label, out_e, out_n, query, read_batch, returning, send, string, to_dynamic_request, value_map, var, var_as, where",
+        "branches": "0",
+        "commit": "commit_34344c3"
+      }
+    },
+    {
+      "id": "sem_state_semantic_pass__upsert_34344c3",
+      "kind": "Concept",
+      "label": "`_upsert` -- accepts (c, kind, node_id, props); calls add_n,",
+      "summary": "`_upsert` -- accepts (c, kind, node_id, props); calls add_n, define_params, drop, dynamic; 2 branch(es); no return value",
+      "status": "semantic",
+      "metadata": {
+        "branches": "2",
+        "text": "`_upsert` -- accepts (c, kind, node_id, props); calls add_n, define_params, drop, dynamic; 2 branch(es); no return value",
+        "calls": "add_n, define_params, drop, dynamic, eq_param, g, items, n_with_label, query, returning, send, str, string, to_dynamic_request, value, var_as, where, write_batch",
+        "node_id": "sem_state_semantic_pass__upsert_34344c3",
+        "commit": "commit_34344c3"
+      }
+    },
+    {
+      "id": "sem_state_semantic_pass__edge_34344c3",
+      "kind": "Concept",
+      "label": "`_edge` -- accepts (c, src_id, src_kind, tgt_id, tgt_kind, l",
+      "summary": "`_edge` -- accepts (c, src_id, src_kind, tgt_id, tgt_kind, label); calls add_e, dynamic, eq_param, g; 2 branch(es); no return value",
+      "status": "semantic",
+      "metadata": {
+        "node_id": "sem_state_semantic_pass__edge_34344c3",
+        "text": "`_edge` -- accepts (c, src_id, src_kind, tgt_id, tgt_kind, label); calls add_e, dynamic, eq_param, g; 2 branch(es); no return value",
+        "calls": "add_e, dynamic, eq_param, g, n, n_with_label, query, returning, send, to_dynamic_request, var, var_as, where, write_batch",
+        "branches": "2",
+        "commit": "commit_34344c3"
+      }
+    },
+    {
+      "id": "sem_state_semantic_pass__analyse_function_34344c3",
+      "kind": "Concept",
+      "label": "`_analyse_function` -- accepts (code); calls any, append, is",
+      "summary": "`_analyse_function` -- accepts (code); calls any, append, isinstance, join; 7 branch(es); returns a value",
+      "status": "semantic",
+      "metadata": {
+        "branches": "7",
+        "commit": "commit_34344c3",
+        "calls": "any, append, isinstance, join, next, parse, sorted, splitlines, sum, walk",
+        "node_id": "sem_state_semantic_pass__analyse_function_34344c3",
+        "text": "`_analyse_function` -- accepts (code); calls any, append, isinstance, join; 7 branch(es); returns a value"
+      }
+    },
+    {
+      "id": "sem_state_semantic_pass__concept_text_34344c3",
+      "kind": "Concept",
+      "label": "`_concept_text` -- accepts (msg); calls groups, match, split",
+      "summary": "`_concept_text` -- accepts (msg); calls groups, match, splitlines, strip; 1 branch(es); returns a value",
+      "status": "semantic",
+      "metadata": {
+        "node_id": "sem_state_semantic_pass__concept_text_34344c3",
+        "text": "`_concept_text` -- accepts (msg); calls groups, match, splitlines, strip; 1 branch(es); returns a value",
+        "branches": "1",
+        "commit": "commit_34344c3",
+        "calls": "groups, match, splitlines, strip, upper"
+      }
+    },
+    {
+      "id": "sem_state_semantic_pass__rationale_text_34344c3",
+      "kind": "Concept",
+      "label": "`_rationale_text` -- accepts (msg); calls join, splitlines, ",
+      "summary": "`_rationale_text` -- accepts (msg); calls join, splitlines, strip; returns a value",
+      "status": "semantic",
+      "metadata": {
+        "commit": "commit_34344c3",
+        "node_id": "sem_state_semantic_pass__rationale_text_34344c3",
+        "text": "`_rationale_text` -- accepts (msg); calls join, splitlines, strip; returns a value",
+        "calls": "join, splitlines, strip",
+        "branches": "0"
+      }
+    },
+    {
+      "id": "sem_state_semantic_pass__change_summary_34344c3",
+      "kind": "Concept",
+      "label": "`_change_summary` -- accepts (msg, states); calls _analyse_f",
+      "summary": "`_change_summary` -- accepts (msg, states); calls _analyse_function, append, extend, get; 4 branch(es); returns a value",
+      "status": "semantic",
+      "metadata": {
+        "branches": "4",
+        "text": "`_change_summary` -- accepts (msg, states); calls _analyse_function, append, extend, get; 4 branch(es); returns a value",
+        "commit": "commit_34344c3",
+        "node_id": "sem_state_semantic_pass__change_summary_34344c3",
+        "calls": "_analyse_function, append, extend, get, join, len, sorted, splitlines, strip, sum"
+      }
+    },
+    {
+      "id": "sem_state_semantic_pass_run_semantic_pass_34344c3",
+      "kind": "Concept",
+      "label": "`run_semantic_pass` -- calls _analyse_function, _c, _change_",
+      "summary": "`run_semantic_pass` -- calls _analyse_function, _c, _change_summary, _concept_text; 4 branch(es); no return value",
+      "status": "semantic",
+      "metadata": {
+        "branches": "4",
+        "commit": "commit_34344c3",
+        "node_id": "sem_state_semantic_pass_run_semantic_pass_34344c3",
+        "text": "`run_semantic_pass` -- calls _analyse_function, _c, _change_summary, _concept_text; 4 branch(es); no return value",
+        "calls": "_analyse_function, _c, _change_summary, _concept_text, _edge, _ensure_indexes, _get_commits, _get_states_for_commit, _rationale_text, _upsert, get, join, len, print, replace, splitlines, startswith, str"
+      }
+    },
+    {
+      "id": "concept_commit_34344c3",
+      "kind": "Concept",
+      "label": "FEAT: tree-sitter ingestion, HelixDB writes, semantic pass, ",
+      "summary": "FEAT: tree-sitter ingestion, HelixDB writes, semantic pass, viz dump",
+      "status": "semantic",
+      "metadata": {
+        "text": "FEAT: tree-sitter ingestion, HelixDB writes, semantic pass, viz dump",
+        "node_id": "concept_commit_34344c3",
+        "commit": "commit_34344c3"
+      }
+    },
+    {
+      "id": "rationale_commit_623241a",
+      "kind": "Rationale",
+      "label": "- models.py: in-memory user store with create_user and get_u",
+      "summary": "- models.py: in-memory user store with create_user and get_user - service.py: signup and login with basic validation - no hashing, no persistence -- intentionally dumb for iteration",
+      "status": "semantic",
+      "metadata": {
+        "node_id": "rationale_commit_623241a",
+        "text": "- models.py: in-memory user store with create_user and get_user - service.py: signup and login with basic validation - no hashing, no persistence -- intentionally dumb for iteration",
+        "commit": "commit_623241a"
+      }
+    },
+    {
+      "id": "rationale_commit_34344c3",
+      "kind": "Rationale",
+      "label": "- scalable_ingest.py: replaced ast with tree-sitter; extract",
+      "summary": "- scalable_ingest.py: replaced ast with tree-sitter; extracts CONTAINS, IMPORTS, INHERITS, CALLS edges; writes all nodes/edges live to HelixDB (localhost:6969) via helix-db SDK; keeps graph_payload.json + graph_viz.json as artefacts - semantic_pass.py: separate post-ingestion pass; traverses Commit->GENERATED-> FunctionState in HelixDB; analyses code structurally (params, calls, branches, returns) to derive per-function Concept nodes and a ChangeNode summary; attaches Rationale from commit messa",
+      "status": "semantic",
+      "metadata": {
+        "commit": "commit_34344c3",
+        "text": "- scalable_ingest.py: replaced ast with tree-sitter; extracts CONTAINS, IMPORTS, INHERITS, CALLS edges; writes all nodes/edges live to HelixDB (localhost:6969) via helix-db SDK; keeps graph_payload.json + graph_viz.json as artefacts - semantic_pass.py: separate post-ingestion pass; traverses Commit->GENERATED-> FunctionState in HelixDB; analyses code structurally (params, calls, branches, returns) to derive per-function Concept nodes and a ChangeNode summary; attaches Rationale from commit messa",
+        "node_id": "rationale_commit_34344c3"
+      }
     }
   ],
   "edges": [
@@ -184,11 +903,6 @@
       "kind": "GENERATED"
     },
     {
-      "source": "func_auth_models_get_user",
-      "target": "func_auth_models_get",
-      "kind": "CALLS"
-    },
-    {
       "source": "commit_623241a",
       "target": "file_auth_service",
       "kind": "CONTAINS"
@@ -215,12 +929,12 @@
     },
     {
       "source": "func_auth_service_signup",
-      "target": "func_auth_service_get_user",
+      "target": "func_auth_models_get_user",
       "kind": "CALLS"
     },
     {
       "source": "func_auth_service_signup",
-      "target": "func_auth_service_create_user",
+      "target": "func_auth_models_create_user",
       "kind": "CALLS"
     },
     {
@@ -240,8 +954,473 @@
     },
     {
       "source": "func_auth_service_login",
-      "target": "func_auth_service_get_user",
+      "target": "func_auth_models_get_user",
       "kind": "CALLS"
+    },
+    {
+      "source": "commit_34344c3",
+      "target": "file_dump_viz",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "file_dump_viz",
+      "target": "file_json",
+      "kind": "IMPORTS"
+    },
+    {
+      "source": "file_dump_viz",
+      "target": "file_helixdb",
+      "kind": "IMPORTS"
+    },
+    {
+      "source": "file_dump_viz",
+      "target": "func_dump_viz__label",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "func_dump_viz__label",
+      "target": "state_dump_viz__label_34344c3",
+      "kind": "HAS_STATE"
+    },
+    {
+      "source": "commit_34344c3",
+      "target": "state_dump_viz__label_34344c3",
+      "kind": "GENERATED"
+    },
+    {
+      "source": "file_dump_viz",
+      "target": "func_dump_viz__summary",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "func_dump_viz__summary",
+      "target": "state_dump_viz__summary_34344c3",
+      "kind": "HAS_STATE"
+    },
+    {
+      "source": "commit_34344c3",
+      "target": "state_dump_viz__summary_34344c3",
+      "kind": "GENERATED"
+    },
+    {
+      "source": "file_dump_viz",
+      "target": "func_dump_viz_dump",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "func_dump_viz_dump",
+      "target": "state_dump_viz_dump_34344c3",
+      "kind": "HAS_STATE"
+    },
+    {
+      "source": "commit_34344c3",
+      "target": "state_dump_viz_dump_34344c3",
+      "kind": "GENERATED"
+    },
+    {
+      "source": "func_dump_viz_dump",
+      "target": "func_dump_viz__label",
+      "kind": "CALLS"
+    },
+    {
+      "source": "func_dump_viz_dump",
+      "target": "func_dump_viz__summary",
+      "kind": "CALLS"
+    },
+    {
+      "source": "func_dump_viz_dump",
+      "target": "func_dump_viz_dump",
+      "kind": "CALLS"
+    },
+    {
+      "source": "commit_34344c3",
+      "target": "file_semantic_pass",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "file_semantic_pass",
+      "target": "file_ast",
+      "kind": "IMPORTS"
+    },
+    {
+      "source": "file_semantic_pass",
+      "target": "file_re",
+      "kind": "IMPORTS"
+    },
+    {
+      "source": "file_semantic_pass",
+      "target": "file_helixdb",
+      "kind": "IMPORTS"
+    },
+    {
+      "source": "file_semantic_pass",
+      "target": "func_semantic_pass__c",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "func_semantic_pass__c",
+      "target": "state_semantic_pass__c_34344c3",
+      "kind": "HAS_STATE"
+    },
+    {
+      "source": "commit_34344c3",
+      "target": "state_semantic_pass__c_34344c3",
+      "kind": "GENERATED"
+    },
+    {
+      "source": "file_semantic_pass",
+      "target": "func_semantic_pass__ensure_indexes",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "func_semantic_pass__ensure_indexes",
+      "target": "state_semantic_pass__ensure_indexes_34344c3",
+      "kind": "HAS_STATE"
+    },
+    {
+      "source": "commit_34344c3",
+      "target": "state_semantic_pass__ensure_indexes_34344c3",
+      "kind": "GENERATED"
+    },
+    {
+      "source": "file_semantic_pass",
+      "target": "func_semantic_pass__get_commits",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "func_semantic_pass__get_commits",
+      "target": "state_semantic_pass__get_commits_34344c3",
+      "kind": "HAS_STATE"
+    },
+    {
+      "source": "commit_34344c3",
+      "target": "state_semantic_pass__get_commits_34344c3",
+      "kind": "GENERATED"
+    },
+    {
+      "source": "file_semantic_pass",
+      "target": "func_semantic_pass__get_states_for_commit",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "func_semantic_pass__get_states_for_commit",
+      "target": "state_semantic_pass__get_states_for_commit_34344c3",
+      "kind": "HAS_STATE"
+    },
+    {
+      "source": "commit_34344c3",
+      "target": "state_semantic_pass__get_states_for_commit_34344c3",
+      "kind": "GENERATED"
+    },
+    {
+      "source": "file_semantic_pass",
+      "target": "func_semantic_pass__upsert",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "func_semantic_pass__upsert",
+      "target": "state_semantic_pass__upsert_34344c3",
+      "kind": "HAS_STATE"
+    },
+    {
+      "source": "commit_34344c3",
+      "target": "state_semantic_pass__upsert_34344c3",
+      "kind": "GENERATED"
+    },
+    {
+      "source": "file_semantic_pass",
+      "target": "func_semantic_pass__edge",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "func_semantic_pass__edge",
+      "target": "state_semantic_pass__edge_34344c3",
+      "kind": "HAS_STATE"
+    },
+    {
+      "source": "commit_34344c3",
+      "target": "state_semantic_pass__edge_34344c3",
+      "kind": "GENERATED"
+    },
+    {
+      "source": "file_semantic_pass",
+      "target": "func_semantic_pass__analyse_function",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "func_semantic_pass__analyse_function",
+      "target": "state_semantic_pass__analyse_function_34344c3",
+      "kind": "HAS_STATE"
+    },
+    {
+      "source": "commit_34344c3",
+      "target": "state_semantic_pass__analyse_function_34344c3",
+      "kind": "GENERATED"
+    },
+    {
+      "source": "file_semantic_pass",
+      "target": "func_semantic_pass__concept_text",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "func_semantic_pass__concept_text",
+      "target": "state_semantic_pass__concept_text_34344c3",
+      "kind": "HAS_STATE"
+    },
+    {
+      "source": "commit_34344c3",
+      "target": "state_semantic_pass__concept_text_34344c3",
+      "kind": "GENERATED"
+    },
+    {
+      "source": "file_semantic_pass",
+      "target": "func_semantic_pass__rationale_text",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "func_semantic_pass__rationale_text",
+      "target": "state_semantic_pass__rationale_text_34344c3",
+      "kind": "HAS_STATE"
+    },
+    {
+      "source": "commit_34344c3",
+      "target": "state_semantic_pass__rationale_text_34344c3",
+      "kind": "GENERATED"
+    },
+    {
+      "source": "file_semantic_pass",
+      "target": "func_semantic_pass__change_summary",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "func_semantic_pass__change_summary",
+      "target": "state_semantic_pass__change_summary_34344c3",
+      "kind": "HAS_STATE"
+    },
+    {
+      "source": "commit_34344c3",
+      "target": "state_semantic_pass__change_summary_34344c3",
+      "kind": "GENERATED"
+    },
+    {
+      "source": "func_semantic_pass__change_summary",
+      "target": "func_semantic_pass__analyse_function",
+      "kind": "CALLS"
+    },
+    {
+      "source": "file_semantic_pass",
+      "target": "func_semantic_pass_run_semantic_pass",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "func_semantic_pass_run_semantic_pass",
+      "target": "state_semantic_pass_run_semantic_pass_34344c3",
+      "kind": "HAS_STATE"
+    },
+    {
+      "source": "commit_34344c3",
+      "target": "state_semantic_pass_run_semantic_pass_34344c3",
+      "kind": "GENERATED"
+    },
+    {
+      "source": "func_semantic_pass_run_semantic_pass",
+      "target": "func_semantic_pass__c",
+      "kind": "CALLS"
+    },
+    {
+      "source": "func_semantic_pass_run_semantic_pass",
+      "target": "func_semantic_pass__ensure_indexes",
+      "kind": "CALLS"
+    },
+    {
+      "source": "func_semantic_pass_run_semantic_pass",
+      "target": "func_semantic_pass__get_commits",
+      "kind": "CALLS"
+    },
+    {
+      "source": "func_semantic_pass_run_semantic_pass",
+      "target": "func_semantic_pass__get_states_for_commit",
+      "kind": "CALLS"
+    },
+    {
+      "source": "func_semantic_pass_run_semantic_pass",
+      "target": "func_semantic_pass__change_summary",
+      "kind": "CALLS"
+    },
+    {
+      "source": "func_semantic_pass_run_semantic_pass",
+      "target": "func_semantic_pass__upsert",
+      "kind": "CALLS"
+    },
+    {
+      "source": "func_semantic_pass_run_semantic_pass",
+      "target": "func_semantic_pass__edge",
+      "kind": "CALLS"
+    },
+    {
+      "source": "func_semantic_pass_run_semantic_pass",
+      "target": "func_semantic_pass__analyse_function",
+      "kind": "CALLS"
+    },
+    {
+      "source": "func_semantic_pass_run_semantic_pass",
+      "target": "func_semantic_pass__upsert",
+      "kind": "CALLS"
+    },
+    {
+      "source": "func_semantic_pass_run_semantic_pass",
+      "target": "func_semantic_pass__edge",
+      "kind": "CALLS"
+    },
+    {
+      "source": "func_semantic_pass_run_semantic_pass",
+      "target": "func_semantic_pass__upsert",
+      "kind": "CALLS"
+    },
+    {
+      "source": "func_semantic_pass_run_semantic_pass",
+      "target": "func_semantic_pass__concept_text",
+      "kind": "CALLS"
+    },
+    {
+      "source": "func_semantic_pass_run_semantic_pass",
+      "target": "func_semantic_pass__upsert",
+      "kind": "CALLS"
+    },
+    {
+      "source": "func_semantic_pass_run_semantic_pass",
+      "target": "func_semantic_pass__rationale_text",
+      "kind": "CALLS"
+    },
+    {
+      "source": "func_semantic_pass_run_semantic_pass",
+      "target": "func_semantic_pass__edge",
+      "kind": "CALLS"
+    },
+    {
+      "source": "func_semantic_pass_run_semantic_pass",
+      "target": "func_semantic_pass__edge",
+      "kind": "CALLS"
+    },
+    {
+      "source": "commit_623241a",
+      "target": "change_commit_623241a",
+      "kind": "HAS_CHANGE"
+    },
+    {
+      "source": "commit_34344c3",
+      "target": "change_commit_34344c3",
+      "kind": "HAS_CHANGE"
+    },
+    {
+      "source": "commit_623241a",
+      "target": "concept_commit_623241a",
+      "kind": "HAS_SEMANTIC"
+    },
+    {
+      "source": "commit_623241a",
+      "target": "rationale_commit_623241a",
+      "kind": "HAS_SEMANTIC"
+    },
+    {
+      "source": "commit_34344c3",
+      "target": "concept_commit_34344c3",
+      "kind": "HAS_SEMANTIC"
+    },
+    {
+      "source": "commit_34344c3",
+      "target": "rationale_commit_34344c3",
+      "kind": "HAS_SEMANTIC"
+    },
+    {
+      "source": "change_commit_623241a",
+      "target": "sem_state_auth_models_create_user_623241a",
+      "kind": "DESCRIBES"
+    },
+    {
+      "source": "change_commit_623241a",
+      "target": "sem_state_auth_models_get_user_623241a",
+      "kind": "DESCRIBES"
+    },
+    {
+      "source": "change_commit_623241a",
+      "target": "sem_state_auth_service_signup_623241a",
+      "kind": "DESCRIBES"
+    },
+    {
+      "source": "change_commit_623241a",
+      "target": "sem_state_auth_service_login_623241a",
+      "kind": "DESCRIBES"
+    },
+    {
+      "source": "change_commit_34344c3",
+      "target": "sem_state_dump_viz__label_34344c3",
+      "kind": "DESCRIBES"
+    },
+    {
+      "source": "change_commit_34344c3",
+      "target": "sem_state_dump_viz__summary_34344c3",
+      "kind": "DESCRIBES"
+    },
+    {
+      "source": "change_commit_34344c3",
+      "target": "sem_state_dump_viz_dump_34344c3",
+      "kind": "DESCRIBES"
+    },
+    {
+      "source": "change_commit_34344c3",
+      "target": "sem_state_semantic_pass__c_34344c3",
+      "kind": "DESCRIBES"
+    },
+    {
+      "source": "change_commit_34344c3",
+      "target": "sem_state_semantic_pass__ensure_indexes_34344c3",
+      "kind": "DESCRIBES"
+    },
+    {
+      "source": "change_commit_34344c3",
+      "target": "sem_state_semantic_pass__get_commits_34344c3",
+      "kind": "DESCRIBES"
+    },
+    {
+      "source": "change_commit_34344c3",
+      "target": "sem_state_semantic_pass__get_states_for_commit_34344c3",
+      "kind": "DESCRIBES"
+    },
+    {
+      "source": "change_commit_34344c3",
+      "target": "sem_state_semantic_pass__upsert_34344c3",
+      "kind": "DESCRIBES"
+    },
+    {
+      "source": "change_commit_34344c3",
+      "target": "sem_state_semantic_pass__edge_34344c3",
+      "kind": "DESCRIBES"
+    },
+    {
+      "source": "change_commit_34344c3",
+      "target": "sem_state_semantic_pass__analyse_function_34344c3",
+      "kind": "DESCRIBES"
+    },
+    {
+      "source": "change_commit_34344c3",
+      "target": "sem_state_semantic_pass__concept_text_34344c3",
+      "kind": "DESCRIBES"
+    },
+    {
+      "source": "change_commit_34344c3",
+      "target": "sem_state_semantic_pass__rationale_text_34344c3",
+      "kind": "DESCRIBES"
+    },
+    {
+      "source": "change_commit_34344c3",
+      "target": "sem_state_semantic_pass__change_summary_34344c3",
+      "kind": "DESCRIBES"
+    },
+    {
+      "source": "change_commit_34344c3",
+      "target": "sem_state_semantic_pass_run_semantic_pass_34344c3",
+      "kind": "DESCRIBES"
     }
   ]
 }

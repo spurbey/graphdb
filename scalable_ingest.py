@@ -92,10 +92,14 @@ def _text(node, src: bytes) -> str:
     return src[node.start_byte:node.end_byte].decode("utf-8", errors="replace")
 
 
-def extract_graph(file_path: str, source: str, commit_hash: str, state_tracker: dict):
+def extract_graph(file_path: str, source: str, commit_hash: str, state_tracker: dict,
+                  func_registry: dict | None = None):
     """Return (nodes, edges) for one file at one commit.
     Each edge carries from_kind/to_kind so _insert_edge can do indexed lookups.
+    func_registry: name -> node_id, shared across files for cross-file CALLS resolution.
     """
+    if func_registry is None:
+        func_registry = {}
     src = source.encode("utf-8")
     tree = _parser.parse(src)
     root = tree.root_node
@@ -171,6 +175,9 @@ def extract_graph(file_path: str, source: str, commit_hash: str, state_tracker: 
             nodes.append({"kind": K_STATE, "node_id": state_id,
                           "props": {"code": code[:4000], "commit": commit_hash}})
 
+            # register this function for cross-file CALLS resolution
+            func_registry[func_name] = func_id
+
             edges.append({"from": scope_id, "from_kind": scope_kind,
                           "label": "CONTAINS", "to": func_id, "to_kind": K_FUNC})
             edges.append({"from": func_id, "from_kind": K_FUNC,
@@ -190,9 +197,11 @@ def extract_graph(file_path: str, source: str, commit_hash: str, state_tracker: 
                     fn_field = n.child_by_field_name("function")
                     if fn_field:
                         callee = _text(fn_field, src).split("(")[0].split(".")[-1]
-                        callee_id = f"func_{safe}_{callee}"
-                        edges.append({"from": func_id, "from_kind": K_FUNC,
-                                      "label": "CALLS", "to": callee_id, "to_kind": K_FUNC})
+                        # only emit edge if callee is a known user-defined function
+                        if callee in func_registry:
+                            callee_id = func_registry[callee]
+                            edges.append({"from": func_id, "from_kind": K_FUNC,
+                                          "label": "CALLS", "to": callee_id, "to_kind": K_FUNC})
                 for child in n.children:
                     collect_calls(child)
 
@@ -229,6 +238,7 @@ def run_ingestion():
 
     master_nodes, master_edges = [], []
     state_tracker = {}
+    func_registry = {}   # func_name -> node_id, shared across all files/commits
 
     print("Starting ingestion...\n")
 
@@ -260,7 +270,7 @@ def run_ingestion():
             try:
                 blob   = commit.tree / file_path
                 source = blob.data_stream.read().decode("utf-8")
-                nodes, edges = extract_graph(file_path, source, h, state_tracker)
+                nodes, edges = extract_graph(file_path, source, h, state_tracker, func_registry)
                 master_nodes.extend(nodes)
                 master_edges.extend(edges)
 
