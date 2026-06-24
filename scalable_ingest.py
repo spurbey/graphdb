@@ -29,6 +29,10 @@ K_STATE  = "FunctionState"
 
 ALL_NODE_KINDS = (K_COMMIT, K_FILE, K_FUNC, K_CLASS, K_STATE)
 
+# Files that are part of the ingestion tooling — never ingest these
+_SKIP_FILES = {"scalable_ingest.py", "semantic_pass.py", "dump_viz.py",
+               "level_1_parser.py", "ingestion_process.txt"}
+
 
 # ── HelixDB helpers ───────────────────────────────────────────────────────────
 
@@ -66,7 +70,8 @@ def _upsert_node(c, kind: str, node_id: str, props: dict):
 
 
 # params schema for edge writes
-_EDGE_PARAMS = define_params({"src_id": param.string(), "tgt_id": param.string()})
+_SKIP_FILES = {"scalable_ingest.py", "semantic_pass.py", "dump_viz.py",
+               "level_1_parser.py", "ingestion_process.txt"}
 
 
 def _insert_edge(c, from_id: str, to_id: str, label: str, src_kind: str, tgt_kind: str):
@@ -239,6 +244,7 @@ def run_ingestion():
     master_nodes, master_edges = [], []
     state_tracker = {}
     func_registry = {}   # func_name -> node_id, shared across all files/commits
+    prev_commit_id = None  # for NEXT_COMMIT chain
 
     print("Starting ingestion...\n")
 
@@ -251,7 +257,7 @@ def run_ingestion():
             else [d.b_path for d in commit.parents[0].diff(commit) if d.b_path]
         )
         py_files = [f for f in changed_files
-                    if f.endswith(".py") and f != "scalable_ingest.py"]
+                    if f.endswith(".py") and f.split("/")[-1] not in _SKIP_FILES]
 
         commit_node = {
             "kind": K_COMMIT,
@@ -264,6 +270,14 @@ def run_ingestion():
         }
         master_nodes.append(commit_node)
         _upsert_node(c, K_COMMIT, commit_node["node_id"], commit_node["props"])
+
+        # chain commits in timeline order
+        if prev_commit_id:
+            chain_edge = {"from": prev_commit_id, "from_kind": K_COMMIT,
+                          "label": "NEXT_COMMIT", "to": commit_node["node_id"], "to_kind": K_COMMIT}
+            master_edges.append(chain_edge)
+            _insert_edge(c, prev_commit_id, commit_node["node_id"], "NEXT_COMMIT", K_COMMIT, K_COMMIT)
+        prev_commit_id = commit_node["node_id"]
 
         for file_path in py_files:
             print(f"  -> {file_path}")
