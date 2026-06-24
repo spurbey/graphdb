@@ -6,7 +6,7 @@ Rebuild graph_viz.json for the visualizer by merging:
 Open tools/harness_graph_viz.html -> Load JSON -> select graph_viz.json
 """
 import json
-from helixdb import Client, g, read_batch
+from helixdb import Client, g, read_batch, define_params, param, Predicate
 
 HELIX_URL = "http://127.0.0.1:6969"
 
@@ -67,26 +67,39 @@ def dump():
     # ── append semantic edges from HelixDB ─────────────────────────────────
     seen = {(e["source"], e["target"], e["kind"]) for e in viz_edges}
 
+    # For each semantic edge type, get all (src_node_id, tgt_node_id) pairs
+    # by reading the source nodes and traversing outgoing edges one-by-one.
     for label, src_kind in [("HAS_CHANGE", "Commit"), ("HAS_SEMANTIC", "Commit"),
                              ("DESCRIBES", "ChangeNode")]:
-        batch = (
-            read_batch()
-            .var_as("tgts", g().n_with_label(src_kind).out_e(label).out_n().value_map())
-            .var_as("srcs", g().n_with_label(src_kind).value_map())
-            .returning(["srcs", "tgts"])
-        )
-        try:
-            result = c.query().dynamic(batch.to_dynamic_request()).send()
-            src_rows = result.get("srcs", {}).get("properties", [])
-            tgt_rows = result.get("tgts", {}).get("properties", [])
-            for src_r, tgt_r in zip(src_rows, tgt_rows):
-                s, t = src_r.get("node_id", ""), tgt_r.get("node_id", "")
-                key = (s, t, label)
-                if s and t and key not in seen:
-                    viz_edges.append({"source": s, "target": t, "kind": label})
-                    seen.add(key)
-        except Exception:
-            pass
+        # get all source nodes
+        src_batch = read_batch().var_as("n", g().n_with_label(src_kind).value_map()).returning(["n"])
+        src_rows = c.query().dynamic(src_batch.to_dynamic_request()).send().get("n", {}).get("properties", [])
+        for src_r in src_rows:
+            src_nid = src_r.get("node_id", "")
+            if not src_nid or src_nid not in existing_ids:
+                continue
+            # traverse outgoing edges of this label from this specific node
+            p = define_params({"sid": param.string()})
+            tgt_batch = (
+                read_batch()
+                .var_as("tgts",
+                    g().n_with_label(src_kind)
+                       .where(Predicate.eq_param("node_id", "sid"))
+                       .out_e(label).out_n().value_map()
+                )
+                .returning(["tgts"])
+            )
+            try:
+                result = c.query().dynamic(tgt_batch.to_dynamic_request(p, {"sid": src_nid})).send()
+                tgt_rows = result.get("tgts", {}).get("properties", [])
+                for tgt_r in tgt_rows:
+                    tgt_nid = tgt_r.get("node_id", "")
+                    key = (src_nid, tgt_nid, label)
+                    if tgt_nid and tgt_nid in existing_ids and key not in seen:
+                        viz_edges.append({"source": src_nid, "target": tgt_nid, "kind": label})
+                        seen.add(key)
+            except Exception:
+                pass
 
     out = {"nodes": viz_nodes, "edges": viz_edges}
     with open("graph_viz.json", "w", encoding="utf-8") as f:
