@@ -70,7 +70,7 @@ def dump():
     # For each semantic edge type, get all (src_node_id, tgt_node_id) pairs
     # by reading the source nodes and traversing outgoing edges one-by-one.
     for label, src_kind in [("HAS_CHANGE", "Commit"), ("HAS_SEMANTIC", "Commit"),
-                             ("DESCRIBES", "ChangeNode")]:
+                             ("DESCRIBES", "ChangeNode"), ("NEXT_COMMIT", "Commit")]:
         # get all source nodes
         src_batch = read_batch().var_as("n", g().n_with_label(src_kind).value_map()).returning(["n"])
         src_rows = c.query().dynamic(src_batch.to_dynamic_request()).send().get("n", {}).get("properties", [])
