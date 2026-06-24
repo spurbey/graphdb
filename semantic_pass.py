@@ -1,0 +1,262 @@
+"""
+Semantic pass — runs AFTER scalable_ingest.py.
+
+For each Commit in HelixDB:
+  1. Traverses GENERATED edges to collect all FunctionState nodes.
+  2. Analyses the code structurally (AST) to derive per-function summaries.
+  3. Writes a ChangeNode that describes WHAT changed (from code) and WHY (from commit msg).
+  4. Attaches Concept + Rationale semantic nodes to the Commit anchor.
+
+Guardrail: never creates or modifies AST-owned node kinds.
+
+Usage:
+    python semantic_pass.py
+"""
+
+import ast
+import re
+from helixdb import (
+    Client, g, write_batch, read_batch,
+    define_params, param, PropertyInput, IndexSpec,
+    Predicate, NodeRef,
+)
+
+HELIX_URL = "http://127.0.0.1:6969"
+
+_AST_OWNED = {"Commit", "FileIdentity", "FunctionIdentity", "ClassIdentity", "FunctionState"}
+_EDGE_PARAMS = define_params({"src_id": param.string(), "tgt_id": param.string()})
+
+
+# ── HelixDB helpers ───────────────────────────────────────────────────────────
+
+def _c():
+    return Client(HELIX_URL)
+
+
+def _ensure_indexes(c):
+    batch = write_batch()
+    for kind in ("ChangeNode", "Concept", "Rationale"):
+        batch = batch.var_as(
+            f"idx_{kind}",
+            g().create_index_if_not_exists(IndexSpec.node_unique_equality(kind, "node_id"))
+        )
+    c.query().dynamic(
+        batch.returning(["idx_ChangeNode", "idx_Concept", "idx_Rationale"]).to_dynamic_request()
+    ).send()
+
+
+def _get_commits(c) -> list[dict]:
+    batch = read_batch().var_as("rows", g().n_with_label("Commit").value_map()).returning(["rows"])
+    return c.query().dynamic(batch.to_dynamic_request()).send().get("rows", {}).get("properties", [])
+
+
+def _get_states_for_commit(c, commit_node_id: str) -> list[dict]:
+    """Traverse Commit --GENERATED--> FunctionState, filtered by commit node_id."""
+    p = define_params({"cid": param.string()})
+    batch = (
+        read_batch()
+        .var_as("commit", g().n_with_label("Commit").where(Predicate.eq_param("node_id", "cid")))
+        .var_as("states", g().n(NodeRef.var("commit")).out_e("GENERATED").out_n().value_map())
+        .returning(["states"])
+    )
+    result = c.query().dynamic(batch.to_dynamic_request(p, {"cid": commit_node_id})).send()
+    return result.get("states", {}).get("properties", [])
+
+
+def _upsert(c, kind: str, node_id: str, props: dict):
+    """Semantic nodes are always replaced — they are derived, not source-of-truth."""
+    assert kind not in _AST_OWNED, f"guardrail: cannot write AST kind '{kind}'"
+    # Drop existing then re-insert so re-runs always reflect latest reasoning.
+    p_del = define_params({"nid": param.string()})
+    del_batch = (
+        write_batch()
+        .var_as("n", g().n_with_label(kind).where(Predicate.eq_param("node_id", "nid")).drop())
+        .returning(["n"])
+    )
+    try:
+        c.query().dynamic(del_batch.to_dynamic_request(p_del, {"nid": node_id})).send()
+    except Exception:
+        pass
+    all_props = {
+        "node_id": PropertyInput.value(node_id),
+        **{k: PropertyInput.value(str(v)[:4000]) for k, v in props.items()},
+    }
+    c.query().dynamic(
+        write_batch().var_as("n", g().add_n(kind, all_props)).returning(["n"]).to_dynamic_request()
+    ).send()
+
+
+def _edge(c, src_id: str, src_kind: str, tgt_id: str, tgt_kind: str, label: str):
+    batch = (
+        write_batch()
+        .var_as("src", g().n_with_label(src_kind).where(Predicate.eq_param("node_id", "src_id")))
+        .var_as("tgt", g().n_with_label(tgt_kind).where(Predicate.eq_param("node_id", "tgt_id")))
+        .var_as("e",   g().n(NodeRef.var("src")).add_e(label, NodeRef.var("tgt"), {}))
+        .returning(["e"])
+    )
+    try:
+        c.query().dynamic(
+            batch.to_dynamic_request(_EDGE_PARAMS, {"src_id": src_id, "tgt_id": tgt_id})
+        ).send()
+    except Exception:
+        pass
+
+
+# ── code analysis (structural, no LLM) ───────────────────────────────────────
+
+def _analyse_function(code: str) -> dict:
+    """
+    Read the function's AST and derive:
+    - params: list of parameter names
+    - calls: functions this function calls
+    - returns_something: bool
+    - branches: number of if/for/while/try blocks (complexity proxy)
+    - one_liner: a plain-English description derived purely from structure
+    """
+    try:
+        tree = ast.parse(code)
+    except SyntaxError:
+        return {"one_liner": "unparseable function", "calls": [], "params": [], "branches": 0}
+
+    func = next((n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)), None)
+    if not func:
+        return {"one_liner": code.splitlines()[0], "calls": [], "params": [], "branches": 0}
+
+    params  = [a.arg for a in func.args.args if a.arg != "self"]
+    calls   = sorted({
+        (n.func.id if isinstance(n.func, ast.Name) else
+         n.func.attr if isinstance(n.func, ast.Attribute) else "")
+        for n in ast.walk(func) if isinstance(n, ast.Call)
+    } - {""})
+    returns = any(isinstance(n, ast.Return) and n.value for n in ast.walk(func))
+    branches = sum(
+        1 for n in ast.walk(func)
+        if isinstance(n, (ast.If, ast.For, ast.While, ast.Try, ast.ExceptHandler))
+    )
+
+    # Build one_liner from structure
+    parts = []
+    if params:
+        parts.append(f"accepts ({', '.join(params)})")
+    if calls:
+        parts.append(f"calls {', '.join(calls[:4])}")
+    if branches:
+        parts.append(f"{branches} branch(es)")
+    if returns:
+        parts.append("returns a value")
+    else:
+        parts.append("no return value")
+
+    one_liner = f"`{func.name}` -- " + "; ".join(parts) if parts else f"`{func.name}`"
+    return {"one_liner": one_liner, "calls": calls, "params": params,
+            "branches": branches, "returns": returns}
+
+
+_CC_RE = re.compile(
+    r"^(feat|fix|refactor|chore|docs|test|perf|style|ci|build|revert)"
+    r"(\([^)]+\))?(!)?:\s*(.+)", re.IGNORECASE
+)
+
+def _concept_text(msg: str) -> str:
+    m = _CC_RE.match(msg.strip().splitlines()[0])
+    if m:
+        type_, scope, breaking, summary = m.groups()
+        prefix = "BREAKING: " if breaking else ""
+        scope_str = f"({scope[1:-1]})" if scope else ""
+        return f"{prefix}{type_.upper()}{scope_str}: {summary.strip()}"
+    return msg.strip().splitlines()[0][:80]
+
+
+def _rationale_text(msg: str) -> str:
+    body = [l.strip() for l in msg.strip().splitlines()[1:] if l.strip()]
+    return " ".join(body)[:500] if body else f"Introduces: {msg.strip().splitlines()[0]}"
+
+
+def _change_summary(msg: str, states: list[dict]) -> str:
+    """
+    Derive a ChangeNode reasoning string from commit message + actual function code.
+    """
+    analyses = [_analyse_function(s["code"]) for s in states if s.get("code")]
+    func_lines = [a["one_liner"] for a in analyses]
+
+    parts = [f"Commit: {msg.strip().splitlines()[0]}"]
+    if func_lines:
+        parts.append(f"Functions introduced/changed ({len(func_lines)}):")
+        parts.extend(f"  * {line}" for line in func_lines)
+
+    all_calls = sorted({c for a in analyses for c in a["calls"]})
+    if all_calls:
+        parts.append(f"Cross-function calls detected: {', '.join(all_calls[:8])}")
+
+    total_branches = sum(a["branches"] for a in analyses)
+    if total_branches:
+        parts.append(f"Total control-flow branches: {total_branches}")
+
+    body_lines = [l.strip() for l in msg.strip().splitlines()[1:] if l.strip()]
+    if body_lines:
+        parts.append(f"Author notes: {' '.join(body_lines)[:300]}")
+
+    return "\n".join(parts)
+
+
+# ── main ──────────────────────────────────────────────────────────────────────
+
+def run_semantic_pass():
+    c = _c()
+    _ensure_indexes(c)
+
+    commits = _get_commits(c)
+    real_commits = [r for r in commits if r.get("node_id", "").startswith("commit_")]
+
+    if not real_commits:
+        print("No commits in HelixDB. Run scalable_ingest.py first.")
+        return
+
+    print(f"Semantic pass over {len(real_commits)} commit(s)...\n")
+
+    for row in real_commits:
+        commit_id = row["node_id"]
+        msg       = row.get("msg", "")
+        hash_     = commit_id.replace("commit_", "")
+        print(f"  [{hash_}] {msg.splitlines()[0][:60]}")
+
+        states = _get_states_for_commit(c, commit_id)
+        print(f"         -> {len(states)} FunctionState(s) found")
+
+        # ChangeNode: what changed + code-derived reasoning
+        change_id = f"change_{commit_id}"
+        summary   = _change_summary(msg, states)
+        _upsert(c, "ChangeNode", change_id, {"summary": summary, "commit": commit_id})
+        _edge(c, commit_id, "Commit", change_id, "ChangeNode", "HAS_CHANGE")
+
+        # Per-function semantic nodes attached to ChangeNode
+        for state in states:
+            code = state.get("code", "")
+            sid  = state.get("node_id", "")
+            if not code or not sid:
+                continue
+            analysis = _analyse_function(code)
+            sem_id = f"sem_{sid}"
+            _upsert(c, "Concept", sem_id, {
+                "text":     analysis["one_liner"],
+                "calls":    ", ".join(analysis["calls"]),
+                "branches": str(analysis["branches"]),
+                "commit":   commit_id,
+            })
+            _edge(c, change_id, "ChangeNode", sem_id, "Concept", "DESCRIBES")
+
+        # Commit-level Concept + Rationale
+        concept_id   = f"concept_{commit_id}"
+        rationale_id = f"rationale_{commit_id}"
+        _upsert(c, "Concept",   concept_id,   {"text": _concept_text(msg),   "commit": commit_id})
+        _upsert(c, "Rationale", rationale_id, {"text": _rationale_text(msg), "commit": commit_id})
+        _edge(c, commit_id, "Commit", concept_id,   "Concept",   "HAS_SEMANTIC")
+        _edge(c, commit_id, "Commit", rationale_id, "Rationale", "HAS_SEMANTIC")
+
+        print(f"         -> ChangeNode, {len(states)} Concept(s), Rationale written")
+
+    print("\nSemantic pass complete.")
+
+
+if __name__ == "__main__":
+    run_semantic_pass()

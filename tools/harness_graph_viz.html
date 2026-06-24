@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Semantic Harness Graph Explorer</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body { font-family: ui-monospace, "Cascadia Code", monospace; background: #0d1117; color: #c9d1d9; height: 100vh; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* ── toolbar ── */
+  #toolbar { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; padding: 8px 14px; background: #161b22; border-bottom: 1px solid #30363d; flex-wrap: wrap; }
+  #toolbar h1 { font-size: 13px; color: #58a6ff; white-space: nowrap; margin-right: 4px; }
+  .sep { width: 1px; height: 20px; background: #30363d; flex-shrink: 0; }
+  button { background: #21262d; border: 1px solid #30363d; color: #c9d1d9; padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+  button:hover { background: #30363d; }
+  button.active { background: #1f6feb; border-color: #388bfd; color: #fff; }
+  input[type=text], select { background: #0d1117; border: 1px solid #30363d; color: #c9d1d9; padding: 4px 8px; border-radius: 6px; font-size: 12px; }
+  input[type=text] { width: 180px; }
+  label { font-size: 12px; display: flex; align-items: center; gap: 5px; cursor: pointer; }
+  #fileLabel { background: #21262d; border: 1px solid #30363d; color: #58a6ff; padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; }
+  #fileLabel:hover { background: #30363d; }
+  #statsBar { font-size: 11px; color: #8b949e; margin-left: auto; white-space: nowrap; }
+
+  /* ── main area ── */
+  #main { flex: 1 1 0; display: flex; overflow: hidden; }
+
+  /* ── canvas ── */
+  #canvas-wrap { flex: 1 1 0; position: relative; overflow: hidden; }
+  svg { width: 100%; height: 100%; }
+
+  /* ── sidebar ── */
+  #sidebar { flex: 0 0 280px; background: #161b22; border-left: 1px solid #30363d; overflow-y: auto; padding: 14px; font-size: 12px; }
+  #sidebar h2 { font-size: 12px; color: #8b949e; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; }
+  .prop { margin-bottom: 6px; }
+  .prop-key { color: #8b949e; }
+  .prop-val { color: #e6edf3; word-break: break-all; }
+  .tag { display: inline-block; padding: 1px 6px; border-radius: 4px; font-size: 11px; margin: 1px; }
+  #neighborList { margin-top: 10px; }
+  .neighbor-item { padding: 4px 6px; border-radius: 4px; cursor: pointer; margin-bottom: 2px; display: flex; align-items: center; gap: 6px; }
+  .neighbor-item:hover { background: #21262d; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  #emptyState { color: #484f58; font-size: 12px; margin-top: 20px; line-height: 1.6; }
+
+  /* ── legend ── */
+  #legend { display: flex; flex-wrap: wrap; gap: 6px 12px; padding: 8px 14px; background: #161b22; border-top: 1px solid #30363d; font-size: 11px; }
+  .leg-item { display: flex; align-items: center; gap: 4px; }
+  .leg-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── tooltip ── */
+  #tooltip { position: fixed; background: #1c2128; border: 1px solid #30363d; border-radius: 6px; padding: 7px 10px; font-size: 11px; pointer-events: none; display: none; max-width: 260px; line-height: 1.5; z-index: 100; }
+  #tooltip .tt-kind { color: #8b949e; margin-bottom: 2px; }
+  #tooltip .tt-label { color: #e6edf3; font-weight: bold; margin-bottom: 3px; }
+  #tooltip .tt-summary { color: #c9d1d9; }
+</style>
+</head>
+<body>
+
+<div id="toolbar">
+  <h1>Semantic Harness Graph</h1>
+  <div class="sep"></div>
+  <label id="fileLabel">Load JSON<input type="file" id="fileInput" accept=".json" style="display:none" /></label>
+  <div class="sep"></div>
+  <input type="text" id="searchBox" placeholder="Filter nodes…" />
+  <select id="kindFilter"><option value="">All kinds</option></select>
+  <select id="statusFilter"><option value="">All status</option></select>
+  <div class="sep"></div>
+  <label><input type="checkbox" id="showLabels" /> Labels</label>
+  <label><input type="checkbox" id="showIsolated" /> Isolated</label>
+  <div class="sep"></div>
+  <button id="resetBtn">Reset view</button>
+  <span id="statsBar">No data loaded</span>
+</div>
+
+<div id="main">
+  <div id="canvas-wrap">
+    <svg id="svg">
+      <defs>
+        <marker id="arrow" markerWidth="8" markerHeight="8" refX="12" refY="3" orient="auto" markerUnits="userSpaceOnUse">
+          <path d="M0,0 L0,6 L8,3 z" fill="#444c56" />
+        </marker>
+      </defs>
+      <g id="root">
+        <g id="edgeLayer"></g>
+        <g id="nodeLayer"></g>
+        <g id="labelLayer"></g>
+      </g>
+    </svg>
+  </div>
+
+  <div id="sidebar">
+    <div id="emptyState">
+      Load a <strong>harness_graph.json</strong> file to explore the knowledge graph.<br><br>
+      Generate it with:<br>
+      <code style="color:#58a6ff">python tools/export_harness_graph.py</code>
+    </div>
+    <div id="inspectorWrap" style="display:none">
+      <h2 id="inspectorKind"></h2>
+      <div id="inspectorBody"></div>
+      <div id="neighborList"></div>
+    </div>
+  </div>
+</div>
+
+<div id="legend"></div>
+<div id="tooltip"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+<script>
+// ── Colour palette keyed by node kind ──────────────────────────────────────
+const KIND_COLOR = {
+  Repo:              "#2ea043",
+  File:              "#57ab5a",
+  Symbol:            "#4493f8",
+  CodeRegion:        "#79c0ff",
+  FileVersion:       "#a5d6ff",
+  SymbolVersion:     "#cae8ff",
+  CodeRegionVersion: "#ddf4ff",
+  Commit:            "#e3b341",
+  Hunk:              "#d29922",
+  WorkWindow:        "#f0883e",
+  UserIntent:        "#ffa657",
+  AgentAction:       "#ffb86c",
+  ToolObservation:   "#ffd700",
+  ReasoningFrame:    "#ff79c6",
+  RelationOccurrence:"#c9d1d9",
+  DocSection:        "#8b949e",
+  DocString:         "#6e7681",
+  HarnessCard:       "#bc8cff",
+  ExternalAmoRef:    "#484f58",
+  // legacy/fallback
+  Decision:          "#80dec6",
+  Bug:               "#ff7b72",
+  Fix:               "#7ee787",
+  TestRun:           "#58a6ff",
+};
+
+const EDGE_COLOR = {
+  CONTAINS:           "#2ea043",
+  DEFINES:            "#4493f8",
+  IMPORTS:            "#57ab5a",
+  CALLS:              "#a371f7",
+  CHANGED_IN:         "#e3b341",
+  MAPS_TO_SYMBOL:     "#79c0ff",
+  MAPS_TO_CODE_REGION:"#a5d6ff",
+  CO_CHANGED_WITH:    "#f0883e",
+  MOTIVATED_BY:       "#ffa657",
+  VALIDATED_BY:       "#7ee787",
+  RENAMED_TO:         "#ff7b72",
+  MOVED_TO:           "#ffd700",
+  DOCUMENTS_FILE:     "#8b949e",
+  DOCUMENTS_SYMBOL:   "#6e7681",
+  MENTIONS_FILE:      "#c9d1d9",
+  MENTIONS_SYMBOL:    "#c9d1d9",
+  SUPPORTS_CARD:      "#bc8cff",
+  IMPORTED_FROM_AMO:  "#484f58",
+  DERIVED_FROM_WORK_WINDOW: "#ff79c6",
+};
+
+function kindColor(kind) { return KIND_COLOR[kind] || "#484f58"; }
+function edgeColor(kind) { return EDGE_COLOR[kind] || "#30363d"; }
+
+// ── State ──────────────────────────────────────────────────────────────────
+let graphData = null;      // raw {nodes, edges}
+let simulation = null;
+let transform = d3.zoomIdentity;
+let selectedId = null;
+
+// ── SVG setup ──────────────────────────────────────────────────────────────
+const svg   = d3.select("#svg");
+const root  = svg.select("#root");
+const edgeG = root.select("#edgeLayer");
+const nodeG = root.select("#nodeLayer");
+const lblG  = root.select("#labelLayer");
+
+const zoom = d3.zoom()
+  .scaleExtent([0.05, 8])
+  .on("zoom", e => { transform = e.transform; root.attr("transform", e.transform); });
+svg.call(zoom);
+
+// ── File input ─────────────────────────────────────────────────────────────
+document.getElementById("fileInput").addEventListener("change", e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      loadGraph(data);
+    } catch(err) {
+      alert("Invalid JSON: " + err.message);
+    }
+  };
+  reader.readAsText(file);
+});
+
+// ── Controls ───────────────────────────────────────────────────────────────
+document.getElementById("searchBox").addEventListener("input", applyFilters);
+document.getElementById("kindFilter").addEventListener("change", applyFilters);
+document.getElementById("statusFilter").addEventListener("change", applyFilters);
+document.getElementById("showLabels").addEventListener("change", applyFilters);
+document.getElementById("showIsolated").addEventListener("change", applyFilters);
+document.getElementById("resetBtn").addEventListener("click", () => {
+  svg.transition().duration(400).call(zoom.transform, d3.zoomIdentity);
+});
+
+// ── Load graph ─────────────────────────────────────────────────────────────
+function loadGraph(data) {
+  graphData = data;
+
+  // populate filters
+  const kinds   = [...new Set(data.nodes.map(n => n.kind))].sort();
+  const statuses = [...new Set(data.nodes.map(n => n.status))].sort();
+  populateSelect("kindFilter",   kinds,    "All kinds");
+  populateSelect("statusFilter", statuses, "All status");
+
+  buildLegend(kinds);
+  applyFilters();
+}
+
+function populateSelect(id, values, placeholder) {
+  const sel = document.getElementById(id);
+  sel.innerHTML = `<option value="">${placeholder}</option>` +
+    values.map(v => `<option value="${esc(v)}">${esc(v)}</option>`).join("");
+}
+
+// ── Filter + render ────────────────────────────────────────────────────────
+function applyFilters() {
+  if (!graphData) return;
+
+  const query     = document.getElementById("searchBox").value.toLowerCase();
+  const kindF     = document.getElementById("kindFilter").value;
+  const statusF   = document.getElementById("statusFilter").value;
+  const showIso   = document.getElementById("showIsolated").checked;
+
+  // which nodes pass
+  let visNodes = graphData.nodes.filter(n => {
+    if (kindF   && n.kind   !== kindF)   return false;
+    if (statusF && n.status !== statusF) return false;
+    if (query && !((n.label||"").toLowerCase().includes(query) ||
+                   (n.summary||"").toLowerCase().includes(query) ||
+                   (n.kind||"").toLowerCase().includes(query))) return false;
+    return true;
+  });
+
+  const visIds = new Set(visNodes.map(n => n.id));
+
+  // edges between visible nodes
+  let visEdges = graphData.edges.filter(e => visIds.has(e.source) && visIds.has(e.target));
+
+  if (!showIso) {
+    const connected = new Set();
+    visEdges.forEach(e => { connected.add(e.source); connected.add(e.target); });
+    visNodes = visNodes.filter(n => connected.has(n.id));
+    visEdges = visEdges.filter(e => visNodes.find(n => n.id === e.source));
+  }
+
+  updateStats(visNodes.length, visEdges.length);
+  render(visNodes, visEdges);
+}
+
+// ── Render ─────────────────────────────────────────────────────────────────
+function render(nodes, edges) {
+  // clone for d3 mutability (d3 adds x/y/vx/vy)
+  const ns = nodes.map(n => ({ ...n }));
+  const es = edges.map(e => ({ ...e }));
+
+  // stop old simulation
+  if (simulation) simulation.stop();
+
+  // radius by kind tier
+  const r = n => {
+    if (["Repo"].includes(n.kind)) return 14;
+    if (["File","DocSection","DocString"].includes(n.kind)) return 8;
+    if (["Symbol","CodeRegion"].includes(n.kind)) return 7;
+    if (["Commit","WorkWindow"].includes(n.kind)) return 9;
+    if (["Hunk"].includes(n.kind)) return 5;
+    return 6;
+  };
+
+  // edge strength
+  const linkStrength = e => {
+    if (["CONTAINS","DEFINES"].includes(e.kind)) return 0.7;
+    if (["IMPORTS","CALLS"].includes(e.kind)) return 0.4;
+    return 0.2;
+  };
+
+  const w = document.getElementById("canvas-wrap").offsetWidth;
+  const h = document.getElementById("canvas-wrap").offsetHeight;
+
+  simulation = d3.forceSimulation(ns)
+    .force("link", d3.forceLink(es).id(d => d.id).distance(d => {
+      if (d.kind === "CONTAINS") return 55;
+      if (["DEFINES","IMPORTS"].includes(d.kind)) return 70;
+      return 100;
+    }).strength(d => linkStrength(d)))
+    .force("charge", d3.forceManyBody().strength(-180))
+    .force("center", d3.forceCenter(w / 2, h / 2))
+    .force("collision", d3.forceCollide().radius(d => r(d) + 4));
+
+  // ── edges ──
+  const link = edgeG.selectAll("line").data(es, e => `${e.source.id||e.source}-${e.target.id||e.target}-${e.kind}`);
+  link.exit().remove();
+  const linkEnter = link.enter().append("line")
+    .attr("stroke", d => edgeColor(d.kind))
+    .attr("stroke-width", d => Math.max(0.5, (d.weight || 1) * 1.0))
+    .attr("stroke-opacity", 0.55)
+    .attr("marker-end", "url(#arrow)");
+  const linkAll = linkEnter.merge(link);
+
+  // ── nodes ──
+  const node = nodeG.selectAll("circle").data(ns, d => d.id);
+  node.exit().remove();
+  const nodeEnter = node.enter().append("circle")
+    .attr("r", d => r(d))
+    .attr("fill", d => kindColor(d.kind))
+    .attr("stroke", d => d.id === selectedId ? "#fff" : "none")
+    .attr("stroke-width", 2)
+    .style("cursor", "pointer")
+    .call(d3.drag()
+      .on("start", (event, d) => { if (!event.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
+      .on("drag",  (event, d) => { d.fx = event.x; d.fy = event.y; })
+      .on("end",   (event, d) => { if (!event.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; })
+    )
+    .on("click", (event, d) => { event.stopPropagation(); selectNode(d, ns, es); })
+    .on("mouseover", (event, d) => showTooltip(event, d))
+    .on("mousemove", (event) => moveTooltip(event))
+    .on("mouseout",  () => hideTooltip());
+  const nodeAll = nodeEnter.merge(node)
+    .attr("fill", d => kindColor(d.kind))
+    .attr("stroke", d => d.id === selectedId ? "#fff" : "none");
+
+  // ── labels ──
+  const showLbls = document.getElementById("showLabels").checked;
+  lblG.selectAll("text").remove();
+  let lblAll;
+  if (showLbls) {
+    lblAll = lblG.selectAll("text").data(ns, d => d.id).enter().append("text")
+      .text(d => truncate(d.label, 24))
+      .attr("font-size", 9)
+      .attr("fill", "#8b949e")
+      .attr("dy", d => r(d) + 10)
+      .attr("text-anchor", "middle")
+      .style("pointer-events", "none")
+      .style("user-select", "none");
+  }
+
+  // deselect on bg click
+  svg.on("click", () => { selectedId = null; clearInspector(); nodeAll.attr("stroke","none"); });
+
+  simulation.on("tick", () => {
+    linkAll
+      .attr("x1", d => d.source.x)
+      .attr("y1", d => d.source.y)
+      .attr("x2", d => d.target.x)
+      .attr("y2", d => d.target.y);
+    nodeAll.attr("cx", d => d.x).attr("cy", d => d.y);
+    if (showLbls && lblAll) lblAll.attr("x", d => d.x).attr("y", d => d.y);
+  });
+}
+
+// ── Inspector ──────────────────────────────────────────────────────────────
+function selectNode(d, ns, es) {
+  selectedId = d.id;
+
+  nodeG.selectAll("circle")
+    .attr("stroke", n => n.id === d.id ? "#fff" : "none")
+    .attr("stroke-width", 2);
+
+  document.getElementById("emptyState").style.display = "none";
+  const wrap = document.getElementById("inspectorWrap");
+  wrap.style.display = "block";
+
+  document.getElementById("inspectorKind").textContent = d.kind;
+
+  const body = document.getElementById("inspectorBody");
+  body.innerHTML = `
+    <div class="prop"><span class="prop-key">label: </span><span class="prop-val">${esc(d.label)}</span></div>
+    <div class="prop"><span class="prop-key">id: </span><span class="prop-val" style="font-size:10px;color:#484f58">${esc(d.id)}</span></div>
+    <div class="prop"><span class="prop-key">repo: </span><span class="prop-val">${esc(d.repo_id||"")}</span></div>
+    <div class="prop"><span class="prop-key">status: </span><span class="tag" style="background:${statusBg(d.status)};color:#fff">${esc(d.status)}</span></div>
+    ${d.summary ? `<div class="prop" style="margin-top:8px"><span class="prop-key">summary: </span><br><span class="prop-val">${esc(d.summary)}</span></div>` : ""}
+    ${renderMeta(d.metadata)}
+  `;
+
+  // neighbors
+  const outE = es.filter(e => (e.source.id||e.source) === d.id);
+  const inE  = es.filter(e => (e.target.id||e.target) === d.id);
+  const nodeById = Object.fromEntries(ns.map(n => [n.id, n]));
+
+  const nl = document.getElementById("neighborList");
+  nl.innerHTML = "";
+  if (outE.length + inE.length === 0) { nl.innerHTML = `<div style="color:#484f58;margin-top:8px">No visible connections</div>`; return; }
+
+  nl.innerHTML = `<div style="color:#8b949e;font-size:11px;margin:10px 0 6px;text-transform:uppercase;letter-spacing:.06em">Connections</div>`;
+
+  const addNeighbor = (neighbor, edgeKind, dir) => {
+    if (!neighbor) return;
+    const item = document.createElement("div");
+    item.className = "neighbor-item";
+    item.innerHTML = `
+      <span class="dot" style="background:${kindColor(neighbor.kind)}"></span>
+      <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${esc(neighbor.label)}">${esc(truncate(neighbor.label, 28))}</span>
+      <span style="color:${edgeColor(edgeKind)};font-size:10px;flex-shrink:0">${dir} ${esc(edgeKind)}</span>
+    `;
+    item.addEventListener("click", () => selectNode(neighbor, ns, es));
+    nl.appendChild(item);
+  };
+
+  outE.forEach(e => addNeighbor(nodeById[e.target.id||e.target], e.kind, "→"));
+  inE.forEach(e  => addNeighbor(nodeById[e.source.id||e.source], e.kind, "←"));
+}
+
+function clearInspector() {
+  document.getElementById("emptyState").style.display = "";
+  document.getElementById("inspectorWrap").style.display = "none";
+}
+
+function renderMeta(meta) {
+  if (!meta || Object.keys(meta).length === 0) return "";
+  const entries = Object.entries(meta).slice(0, 8);
+  return `<div style="margin-top:8px;border-top:1px solid #21262d;padding-top:8px">` +
+    entries.map(([k,v]) => {
+      const val = typeof v === "object" ? JSON.stringify(v) : String(v);
+      return `<div class="prop"><span class="prop-key">${esc(k)}: </span><span class="prop-val" style="font-size:10px">${esc(truncate(val,80))}</span></div>`;
+    }).join("") + "</div>";
+}
+
+// ── Tooltip ────────────────────────────────────────────────────────────────
+const tooltip = document.getElementById("tooltip");
+function showTooltip(event, d) {
+  tooltip.innerHTML = `
+    <div class="tt-kind">${esc(d.kind)}</div>
+    <div class="tt-label">${esc(d.label)}</div>
+    ${d.summary ? `<div class="tt-summary">${esc(truncate(d.summary, 120))}</div>` : ""}
+  `;
+  tooltip.style.display = "block";
+  moveTooltip(event);
+}
+function moveTooltip(event) {
+  tooltip.style.left = (event.clientX + 14) + "px";
+  tooltip.style.top  = (event.clientY - 10) + "px";
+}
+function hideTooltip() { tooltip.style.display = "none"; }
+
+// ── Legend ─────────────────────────────────────────────────────────────────
+function buildLegend(kinds) {
+  const leg = document.getElementById("legend");
+  leg.innerHTML = kinds.map(k =>
+    `<div class="leg-item"><span class="leg-dot" style="background:${kindColor(k)}"></span>${esc(k)}</div>`
+  ).join("");
+}
+
+// ── Stats bar ──────────────────────────────────────────────────────────────
+function updateStats(n, e) {
+  document.getElementById("statsBar").textContent = `${n} nodes · ${e} edges`;
+}
+
+// ── Helpers ────────────────────────────────────────────────────────────────
+function esc(s) {
+  return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function truncate(s, n) { return s && s.length > n ? s.slice(0, n) + "…" : s; }
+function statusBg(s) {
+  const m = { active:"#1a7f37", draft:"#30363d", committed:"#1f6feb", superseded:"#6e7681", contested:"#b62324", abandoned:"#484f58" };
+  return m[s] || "#30363d";
+}
+</script>
+</body>
+</html>
