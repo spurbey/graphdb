@@ -166,15 +166,323 @@
       }
     },
     {
+      "id": "commit_c901594",
+      "kind": "Commit",
+      "label": "fix: skip tooling files from ingestion, add NEXT_COMMIT time",
+      "summary": "fix: skip tooling files from ingestion, add NEXT_COMMIT timeline chain\n\n- scalable_ingest: _SKIP_FILES list excludes ingestion scripts from being\n  parsed as code nodes; NEXT_COMMIT edges link commits in timeline order\n- dump_viz: includes NEXT_COMMIT in semantic edge traversal | changed 4 file(s): ",
+      "status": "active",
+      "metadata": {
+        "msg": "fix: skip tooling files from ingestion, add NEXT_COMMIT timeline chain\n\n- scalable_ingest: _SKIP_FILES list excludes ingestion scripts from being\n  parsed as code nodes; NEXT_COMMIT edges link commits in timeline order\n- dump_viz: includes NEXT_COMMIT in semantic edge traversal",
+        "timestamp": "2026-06-25T01:23:24+05:45",
+        "reasoning": "fix: skip tooling files from ingestion, add NEXT_COMMIT timeline chain\n\n- scalable_ingest: _SKIP_FILES list excludes ingestion scripts from being\n  parsed as code nodes; NEXT_COMMIT edges link commits in timeline order\n- dump_viz: includes NEXT_COMMIT in semantic edge traversal | changed 4 file(s): dump_viz.py, graph_payload.json, graph_viz.json, scalable_ingest.py"
+      }
+    },
+    {
+      "id": "commit_eef5695",
+      "kind": "Commit",
+      "label": "feat: add validation, error handling, and account management",
+      "summary": "feat: add validation, error handling, and account management to auth module\n\n- models: add user_exists, delete_user, list_users with validation\n- service: add custom exceptions (AuthError, ValidationError, AuthenticationError)\n- service: add logout and delete_account functions\n- service: return stru",
+      "status": "active",
+      "metadata": {
+        "msg": "feat: add validation, error handling, and account management to auth module\n\n- models: add user_exists, delete_user, list_users with validation\n- service: add custom exceptions (AuthError, ValidationError, AuthenticationError)\n- service: add logout and delete_account functions\n- service: return structured JSON responses instead of plain strings\n- service: validate username format (alphanumeric, min 3 chars)\n- models: enforce password min length (6 chars)",
+        "timestamp": "2026-06-25T13:28:28+05:45",
+        "reasoning": "feat: add validation, error handling, and account management to auth module\n\n- models: add user_exists, delete_user, list_users with validation\n- service: add custom exceptions (AuthError, ValidationError, AuthenticationError)\n- service: add logout and delete_account functions\n- service: return structured JSON responses instead of plain strings\n- service: validate username format (alphanumeric, min 3 chars)\n- models: enforce password min length (6 chars) | changed 2 file(s): auth/models.py, auth/service.py"
+      }
+    },
+    {
+      "id": "file_auth_models",
+      "kind": "FileIdentity",
+      "label": "auth/models.py",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "file": "auth/models.py"
+      }
+    },
+    {
+      "id": "func_auth_models_create_user",
+      "kind": "FunctionIdentity",
+      "label": "create_user",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "create_user",
+        "file": "auth/models.py"
+      }
+    },
+    {
+      "id": "state_auth_models_create_user_eef5695",
+      "kind": "FunctionState",
+      "label": "state_auth_models_create_user_eef5695",
+      "summary": "def create_user(username, password):\n    \"\"\"Create a new user with username and password.\"\"\"\n    if not username or not password:\n        raise ValueError(\"Username and password cannot be empty\")\n    ",
+      "status": "active",
+      "metadata": {
+        "code": "def create_user(username, password):\n    \"\"\"Create a new user with username and password.\"\"\"\n    if not username or not password:\n        raise ValueError(\"Username and password cannot be empty\")\n    if len(password) < 6:\n        raise ValueError(\"Password must be at least 6 characters\")\n    users[username] = password\n    return True",
+        "commit": "eef5695"
+      }
+    },
+    {
+      "id": "func_auth_models_get_user",
+      "kind": "FunctionIdentity",
+      "label": "get_user",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "get_user",
+        "file": "auth/models.py"
+      }
+    },
+    {
+      "id": "state_auth_models_get_user_eef5695",
+      "kind": "FunctionState",
+      "label": "state_auth_models_get_user_eef5695",
+      "summary": "def get_user(username):\n    \"\"\"Retrieve user password by username.\"\"\"\n    return users.get(username)",
+      "status": "active",
+      "metadata": {
+        "code": "def get_user(username):\n    \"\"\"Retrieve user password by username.\"\"\"\n    return users.get(username)",
+        "commit": "eef5695"
+      }
+    },
+    {
+      "id": "func_auth_models_delete_user",
+      "kind": "FunctionIdentity",
+      "label": "delete_user",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "delete_user",
+        "file": "auth/models.py"
+      }
+    },
+    {
+      "id": "state_auth_models_delete_user_eef5695",
+      "kind": "FunctionState",
+      "label": "state_auth_models_delete_user_eef5695",
+      "summary": "def delete_user(username):\n    \"\"\"Delete a user by username.\"\"\"\n    if username in users:\n        del users[username]\n        return True\n    return False",
+      "status": "active",
+      "metadata": {
+        "code": "def delete_user(username):\n    \"\"\"Delete a user by username.\"\"\"\n    if username in users:\n        del users[username]\n        return True\n    return False",
+        "commit": "eef5695"
+      }
+    },
+    {
+      "id": "func_auth_models_list_users",
+      "kind": "FunctionIdentity",
+      "label": "list_users",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "list_users",
+        "file": "auth/models.py"
+      }
+    },
+    {
+      "id": "state_auth_models_list_users_eef5695",
+      "kind": "FunctionState",
+      "label": "state_auth_models_list_users_eef5695",
+      "summary": "def list_users():\n    \"\"\"List all registered usernames.\"\"\"\n    return list(users.keys())",
+      "status": "active",
+      "metadata": {
+        "code": "def list_users():\n    \"\"\"List all registered usernames.\"\"\"\n    return list(users.keys())",
+        "commit": "eef5695"
+      }
+    },
+    {
+      "id": "func_auth_models_user_exists",
+      "kind": "FunctionIdentity",
+      "label": "user_exists",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "user_exists",
+        "file": "auth/models.py"
+      }
+    },
+    {
+      "id": "state_auth_models_user_exists_eef5695",
+      "kind": "FunctionState",
+      "label": "state_auth_models_user_exists_eef5695",
+      "summary": "def user_exists(username):\n    \"\"\"Check if user exists.\"\"\"\n    return username in users",
+      "status": "active",
+      "metadata": {
+        "code": "def user_exists(username):\n    \"\"\"Check if user exists.\"\"\"\n    return username in users",
+        "commit": "eef5695"
+      }
+    },
+    {
+      "id": "file_auth_service",
+      "kind": "FileIdentity",
+      "label": "auth/service.py",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "file": "auth/service.py"
+      }
+    },
+    {
+      "id": "file_auth",
+      "kind": "FileIdentity",
+      "label": "auth",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "file": "auth",
+        "external": "true"
+      }
+    },
+    {
+      "id": "class_auth_service_AuthError",
+      "kind": "ClassIdentity",
+      "label": "AuthError",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "AuthError",
+        "file": "auth/service.py"
+      }
+    },
+    {
+      "id": "class_auth_service_ValidationError",
+      "kind": "ClassIdentity",
+      "label": "ValidationError",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "ValidationError",
+        "file": "auth/service.py"
+      }
+    },
+    {
+      "id": "class_auth_service_AuthenticationError",
+      "kind": "ClassIdentity",
+      "label": "AuthenticationError",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "AuthenticationError",
+        "file": "auth/service.py"
+      }
+    },
+    {
+      "id": "func_auth_service_validate_username",
+      "kind": "FunctionIdentity",
+      "label": "validate_username",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "validate_username",
+        "file": "auth/service.py"
+      }
+    },
+    {
+      "id": "state_auth_service_validate_username_eef5695",
+      "kind": "FunctionState",
+      "label": "state_auth_service_validate_username_eef5695",
+      "summary": "def validate_username(username):\n    \"\"\"Validate username format.\"\"\"\n    if not username:\n        raise ValidationError(\"Username cannot be empty\")\n    if len(username) < 3:\n        raise ValidationEr",
+      "status": "active",
+      "metadata": {
+        "code": "def validate_username(username):\n    \"\"\"Validate username format.\"\"\"\n    if not username:\n        raise ValidationError(\"Username cannot be empty\")\n    if len(username) < 3:\n        raise ValidationError(\"Username must be at least 3 characters\")\n    if not username.isalnum():\n        raise ValidationError(\"Username must be alphanumeric\")\n    return True",
+        "commit": "eef5695"
+      }
+    },
+    {
+      "id": "func_auth_service_signup",
+      "kind": "FunctionIdentity",
+      "label": "signup",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "signup",
+        "file": "auth/service.py"
+      }
+    },
+    {
+      "id": "state_auth_service_signup_eef5695",
+      "kind": "FunctionState",
+      "label": "state_auth_service_signup_eef5695",
+      "summary": "def signup(username, password):\n    \"\"\"Register a new user with validation.\"\"\"\n    try:\n        validate_username(username)\n        \n        if user_exists(username):\n            raise ValidationError",
+      "status": "active",
+      "metadata": {
+        "code": "def signup(username, password):\n    \"\"\"Register a new user with validation.\"\"\"\n    try:\n        validate_username(username)\n        \n        if user_exists(username):\n            raise ValidationError(\"User already exists\")\n        \n        create_user(username, password)\n        return {\"success\": True, \"message\": \"Signup successful\", \"username\": username}\n    \n    except (ValidationError, ValueError) as e:\n        return {\"success\": False, \"error\": str(e)}",
+        "commit": "eef5695"
+      }
+    },
+    {
+      "id": "func_auth_service_login",
+      "kind": "FunctionIdentity",
+      "label": "login",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "login",
+        "file": "auth/service.py"
+      }
+    },
+    {
+      "id": "state_auth_service_login_eef5695",
+      "kind": "FunctionState",
+      "label": "state_auth_service_login_eef5695",
+      "summary": "def login(username, password):\n    \"\"\"Authenticate user and return success status.\"\"\"\n    try:\n        if not username or not password:\n            raise AuthenticationError(\"Username and password req",
+      "status": "active",
+      "metadata": {
+        "code": "def login(username, password):\n    \"\"\"Authenticate user and return success status.\"\"\"\n    try:\n        if not username or not password:\n            raise AuthenticationError(\"Username and password required\")\n        \n        stored_password = get_user(username)\n        \n        if stored_password is None:\n            raise AuthenticationError(\"User not found\")\n        \n        if stored_password != password:\n            raise AuthenticationError(\"Invalid password\")\n        \n        return {\"success\": True, \"message\": \"Login successful\", \"username\": username}\n    \n    except AuthenticationError as e:\n        return {\"success\": False, \"error\": str(e)}",
+        "commit": "eef5695"
+      }
+    },
+    {
+      "id": "func_auth_service_logout",
+      "kind": "FunctionIdentity",
+      "label": "logout",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "logout",
+        "file": "auth/service.py"
+      }
+    },
+    {
+      "id": "state_auth_service_logout_eef5695",
+      "kind": "FunctionState",
+      "label": "state_auth_service_logout_eef5695",
+      "summary": "def logout(username):\n    \"\"\"Logout user (placeholder for session management).\"\"\"\n    if user_exists(username):\n        return {\"success\": True, \"message\": f\"User {username} logged out\"}\n    return {\"",
+      "status": "active",
+      "metadata": {
+        "code": "def logout(username):\n    \"\"\"Logout user (placeholder for session management).\"\"\"\n    if user_exists(username):\n        return {\"success\": True, \"message\": f\"User {username} logged out\"}\n    return {\"success\": False, \"error\": \"User not found\"}",
+        "commit": "eef5695"
+      }
+    },
+    {
+      "id": "func_auth_service_delete_account",
+      "kind": "FunctionIdentity",
+      "label": "delete_account",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "name": "delete_account",
+        "file": "auth/service.py"
+      }
+    },
+    {
+      "id": "state_auth_service_delete_account_eef5695",
+      "kind": "FunctionState",
+      "label": "state_auth_service_delete_account_eef5695",
+      "summary": "def delete_account(username, password):\n    \"\"\"Delete user account with password verification.\"\"\"\n    try:\n        login_result = login(username, password)\n        if not login_result[\"success\"]:\n    ",
+      "status": "active",
+      "metadata": {
+        "code": "def delete_account(username, password):\n    \"\"\"Delete user account with password verification.\"\"\"\n    try:\n        login_result = login(username, password)\n        if not login_result[\"success\"]:\n            raise AuthenticationError(\"Authentication failed\")\n        \n        if delete_user(username):\n            return {\"success\": True, \"message\": \"Account deleted successfully\"}\n        \n        return {\"success\": False, \"error\": \"Failed to delete account\"}\n    \n    except AuthenticationError as e:\n        return {\"success\": False, \"error\": str(e)}",
+        "commit": "eef5695"
+      }
+    },
+    {
       "id": "change_commit_623241a",
       "kind": "ChangeNode",
       "label": "ChangeNode: commit_623241a",
       "summary": "Commit: feat: initial auth module with models and service\nFunctions introduced/changed (4):\n  * `create_user` -- accepts (username, password); no return value\n  * `get_user` -- accepts (username); calls get; returns a value\n  * `signup` -- accepts (username, password); calls create_user, get_user; 1 branch(es); returns a value\n  * `login` -- accepts (username, password); calls get_user; 1 branch(e",
       "status": "semantic",
       "metadata": {
+        "summary": "Commit: feat: initial auth module with models and service\nFunctions introduced/changed (4):\n  * `create_user` -- accepts (username, password); no return value\n  * `get_user` -- accepts (username); calls get; returns a value\n  * `signup` -- accepts (username, password); calls create_user, get_user; 1 branch(es); returns a value\n  * `login` -- accepts (username, password); calls get_user; 1 branch(es); returns a value\nCross-function calls detected: create_user, get, get_user\nTotal control-flow branches: 2\nAuthor notes: - models.py: in-memory user store with create_user and get_user - service.py: signup and login with basic validation - no hashing, no persistence -- intentionally dumb for iteration",
         "commit": "commit_623241a",
-        "node_id": "change_commit_623241a",
-        "summary": "Commit: feat: initial auth module with models and service\nFunctions introduced/changed (4):\n  * `create_user` -- accepts (username, password); no return value\n  * `get_user` -- accepts (username); calls get; returns a value\n  * `signup` -- accepts (username, password); calls create_user, get_user; 1 branch(es); returns a value\n  * `login` -- accepts (username, password); calls get_user; 1 branch(es); returns a value\nCross-function calls detected: create_user, get, get_user\nTotal control-flow branches: 2\nAuthor notes: - models.py: in-memory user store with create_user and get_user - service.py: signup and login with basic validation - no hashing, no persistence -- intentionally dumb for iteration"
+        "node_id": "change_commit_623241a"
       }
     },
     {
@@ -185,8 +493,8 @@
       "status": "semantic",
       "metadata": {
         "commit": "commit_34344c3",
-        "node_id": "change_commit_34344c3",
-        "summary": "Commit: feat: tree-sitter ingestion, HelixDB writes, semantic pass, viz dump\nFunctions introduced/changed (14):\n  * `_label` -- accepts (kind, r); calls get; 1 branch(es); returns a value\n  * `_summary` -- accepts (kind, r); calls get; 1 branch(es); returns a value\n  * `dump` -- calls Client, _label, _summary, add; 9 branch(es); no return value\n  * `_c` -- calls Client; returns a value\n  * `_ensure_indexes` -- accepts (c); calls create_index_if_not_exists, dynamic, g, node_unique_equality; 1 branch(es); no return value\n  * `_get_commits` -- accepts (c); calls dynamic, g, get, n_with_label; returns a value\n  * `_get_states_for_commit` -- accepts (c, commit_node_id); calls define_params, dynamic, eq_param, g; returns a value\n  * `_upsert` -- accepts (c, kind, node_id, props); calls add_n, define_params, drop, dynamic; 2 branch(es); no return value\n  * `_edge` -- accepts (c, src_id, src_kind, tgt_id, tgt_kind, label); calls add_e, dynamic, eq_param, g; 2 branch(es); no return value\n  * `_analyse_function` -- accepts (code); calls any, append, isinstance, join; 7 branch(es); returns a value\n  * `_concept_text` -- accepts (msg); calls groups, match, splitlines, strip; 1 branch(es); returns a value\n  * `_rationale_text` -- accepts (msg); calls join, splitlines, strip; returns a value\n  * `_change_summary` -- accepts (msg, states); calls _analyse_function, append, extend, get; 4 branch(es); returns a value\n  * `run_semantic_pass` -- calls _analyse_function, _c, _change_summary, _concept_text; 4 branch(es); no return value\nCross-function calls detected: Client, _analyse_function, _c, _change_summary, _concept_text, _edge, _ensure_indexes, _get_commits\nTotal control-flow branches: 32\nAuthor notes: - scalable_ingest.py: replaced ast with tree-sitter; extracts CONTAINS, IMPORTS, INHERITS, CALLS edges; writes all nodes/edges live to HelixDB (localhost:6969) via helix-db SDK; keeps graph_payload.json + graph_viz.json as artefacts - semantic_pass.py: separate post-ingestion pass; traverses Commit-"
+        "summary": "Commit: feat: tree-sitter ingestion, HelixDB writes, semantic pass, viz dump\nFunctions introduced/changed (14):\n  * `_label` -- accepts (kind, r); calls get; 1 branch(es); returns a value\n  * `_summary` -- accepts (kind, r); calls get; 1 branch(es); returns a value\n  * `dump` -- calls Client, _label, _summary, add; 9 branch(es); no return value\n  * `_c` -- calls Client; returns a value\n  * `_ensure_indexes` -- accepts (c); calls create_index_if_not_exists, dynamic, g, node_unique_equality; 1 branch(es); no return value\n  * `_get_commits` -- accepts (c); calls dynamic, g, get, n_with_label; returns a value\n  * `_get_states_for_commit` -- accepts (c, commit_node_id); calls define_params, dynamic, eq_param, g; returns a value\n  * `_upsert` -- accepts (c, kind, node_id, props); calls add_n, define_params, drop, dynamic; 2 branch(es); no return value\n  * `_edge` -- accepts (c, src_id, src_kind, tgt_id, tgt_kind, label); calls add_e, dynamic, eq_param, g; 2 branch(es); no return value\n  * `_analyse_function` -- accepts (code); calls any, append, isinstance, join; 7 branch(es); returns a value\n  * `_concept_text` -- accepts (msg); calls groups, match, splitlines, strip; 1 branch(es); returns a value\n  * `_rationale_text` -- accepts (msg); calls join, splitlines, strip; returns a value\n  * `_change_summary` -- accepts (msg, states); calls _analyse_function, append, extend, get; 4 branch(es); returns a value\n  * `run_semantic_pass` -- calls _analyse_function, _c, _change_summary, _concept_text; 4 branch(es); no return value\nCross-function calls detected: Client, _analyse_function, _c, _change_summary, _concept_text, _edge, _ensure_indexes, _get_commits\nTotal control-flow branches: 32\nAuthor notes: - scalable_ingest.py: replaced ast with tree-sitter; extracts CONTAINS, IMPORTS, INHERITS, CALLS edges; writes all nodes/edges live to HelixDB (localhost:6969) via helix-db SDK; keeps graph_payload.json + graph_viz.json as artefacts - semantic_pass.py: separate post-ingestion pass; traverses Commit-",
+        "node_id": "change_commit_34344c3"
       }
     },
     {
@@ -196,9 +504,33 @@
       "summary": "Commit: fix: cross-file CALLS resolution, filter stdlib noise, fix semantic edges in viz\nAuthor notes: - scalable_ingest: func_registry shared across files per commit; CALLS edges only emitted for known user-defined functions (filters out get/append/print etc) - dump_viz: replaced broken zip-based edge approach with per-node traversal using parameterized HelixDB queries; semantic edges now correct",
       "status": "semantic",
       "metadata": {
+        "summary": "Commit: fix: cross-file CALLS resolution, filter stdlib noise, fix semantic edges in viz\nAuthor notes: - scalable_ingest: func_registry shared across files per commit; CALLS edges only emitted for known user-defined functions (filters out get/append/print etc) - dump_viz: replaced broken zip-based edge approach with per-node traversal using parameterized HelixDB queries; semantic edges now correctly ",
         "commit": "commit_364d736",
-        "node_id": "change_commit_364d736",
-        "summary": "Commit: fix: cross-file CALLS resolution, filter stdlib noise, fix semantic edges in viz\nAuthor notes: - scalable_ingest: func_registry shared across files per commit; CALLS edges only emitted for known user-defined functions (filters out get/append/print etc) - dump_viz: replaced broken zip-based edge approach with per-node traversal using parameterized HelixDB queries; semantic edges now correctly "
+        "node_id": "change_commit_364d736"
+      }
+    },
+    {
+      "id": "change_commit_c901594",
+      "kind": "ChangeNode",
+      "label": "ChangeNode: commit_c901594",
+      "summary": "Commit: fix: skip tooling files from ingestion, add NEXT_COMMIT timeline chain\nAuthor notes: - scalable_ingest: _SKIP_FILES list excludes ingestion scripts from being parsed as code nodes; NEXT_COMMIT edges link commits in timeline order - dump_viz: includes NEXT_COMMIT in semantic edge traversal",
+      "status": "semantic",
+      "metadata": {
+        "node_id": "change_commit_c901594",
+        "summary": "Commit: fix: skip tooling files from ingestion, add NEXT_COMMIT timeline chain\nAuthor notes: - scalable_ingest: _SKIP_FILES list excludes ingestion scripts from being parsed as code nodes; NEXT_COMMIT edges link commits in timeline order - dump_viz: includes NEXT_COMMIT in semantic edge traversal",
+        "commit": "commit_c901594"
+      }
+    },
+    {
+      "id": "change_commit_eef5695",
+      "kind": "ChangeNode",
+      "label": "ChangeNode: commit_eef5695",
+      "summary": "Commit: feat: add validation, error handling, and account management to auth module\nAuthor notes: - models: add user_exists, delete_user, list_users with validation - service: add custom exceptions (AuthError, ValidationError, AuthenticationError) - service: add logout and delete_account functions - service: return structured JSON responses instead of plain strings - service: validate username f",
+      "status": "semantic",
+      "metadata": {
+        "commit": "commit_eef5695",
+        "node_id": "change_commit_eef5695",
+        "summary": "Commit: feat: add validation, error handling, and account management to auth module\nAuthor notes: - models: add user_exists, delete_user, list_users with validation - service: add custom exceptions (AuthError, ValidationError, AuthenticationError) - service: add logout and delete_account functions - service: return structured JSON responses instead of plain strings - service: validate username f"
       }
     },
     {
@@ -208,11 +540,11 @@
       "summary": "`create_user` -- accepts (username, password); no return value",
       "status": "semantic",
       "metadata": {
-        "calls": "",
-        "branches": "0",
-        "commit": "commit_623241a",
         "node_id": "sem_state_auth_models_create_user_623241a",
-        "text": "`create_user` -- accepts (username, password); no return value"
+        "calls": "",
+        "text": "`create_user` -- accepts (username, password); no return value",
+        "branches": "0",
+        "commit": "commit_623241a"
       }
     },
     {
@@ -222,11 +554,11 @@
       "summary": "`get_user` -- accepts (username); calls get; returns a value",
       "status": "semantic",
       "metadata": {
-        "calls": "get",
-        "branches": "0",
         "node_id": "sem_state_auth_models_get_user_623241a",
         "commit": "commit_623241a",
-        "text": "`get_user` -- accepts (username); calls get; returns a value"
+        "text": "`get_user` -- accepts (username); calls get; returns a value",
+        "branches": "0",
+        "calls": "get"
       }
     },
     {
@@ -237,10 +569,10 @@
       "status": "semantic",
       "metadata": {
         "node_id": "sem_state_auth_service_signup_623241a",
-        "calls": "create_user, get_user",
         "branches": "1",
-        "commit": "commit_623241a",
-        "text": "`signup` -- accepts (username, password); calls create_user, get_user; 1 branch(es); returns a value"
+        "text": "`signup` -- accepts (username, password); calls create_user, get_user; 1 branch(es); returns a value",
+        "calls": "create_user, get_user",
+        "commit": "commit_623241a"
       }
     },
     {
@@ -251,10 +583,10 @@
       "status": "semantic",
       "metadata": {
         "text": "`login` -- accepts (username, password); calls get_user; 1 branch(es); returns a value",
-        "node_id": "sem_state_auth_service_login_623241a",
         "commit": "commit_623241a",
-        "branches": "1",
-        "calls": "get_user"
+        "calls": "get_user",
+        "node_id": "sem_state_auth_service_login_623241a",
+        "branches": "1"
       }
     },
     {
@@ -264,9 +596,9 @@
       "summary": "FEAT: initial auth module with models and service",
       "status": "semantic",
       "metadata": {
-        "node_id": "concept_commit_623241a",
+        "commit": "commit_623241a",
         "text": "FEAT: initial auth module with models and service",
-        "commit": "commit_623241a"
+        "node_id": "concept_commit_623241a"
       }
     },
     {
@@ -276,11 +608,11 @@
       "summary": "`_label` -- accepts (kind, r); calls get; 1 branch(es); returns a value",
       "status": "semantic",
       "metadata": {
-        "branches": "1",
-        "calls": "get",
-        "commit": "commit_34344c3",
         "text": "`_label` -- accepts (kind, r); calls get; 1 branch(es); returns a value",
-        "node_id": "sem_state_dump_viz__label_34344c3"
+        "node_id": "sem_state_dump_viz__label_34344c3",
+        "calls": "get",
+        "branches": "1",
+        "commit": "commit_34344c3"
       }
     },
     {
@@ -290,11 +622,11 @@
       "summary": "`_summary` -- accepts (kind, r); calls get; 1 branch(es); returns a value",
       "status": "semantic",
       "metadata": {
-        "calls": "get",
         "branches": "1",
-        "text": "`_summary` -- accepts (kind, r); calls get; 1 branch(es); returns a value",
+        "calls": "get",
         "commit": "commit_34344c3",
-        "node_id": "sem_state_dump_viz__summary_34344c3"
+        "node_id": "sem_state_dump_viz__summary_34344c3",
+        "text": "`_summary` -- accepts (kind, r); calls get; 1 branch(es); returns a value"
       }
     },
     {
@@ -304,11 +636,11 @@
       "summary": "`dump` -- calls Client, _label, _summary, add; 9 branch(es); no return value",
       "status": "semantic",
       "metadata": {
+        "commit": "commit_34344c3",
+        "branches": "9",
         "text": "`dump` -- calls Client, _label, _summary, add; 9 branch(es); no return value",
         "calls": "Client, _label, _summary, add, append, dump, dynamic, g, get, items, len, load, n_with_label, open, out_e, out_n, print, query, read_batch, returning, send, splitlines, startswith, to_dynamic_request, value_map, var_as, zip",
-        "branches": "9",
-        "node_id": "sem_state_dump_viz_dump_34344c3",
-        "commit": "commit_34344c3"
+        "node_id": "sem_state_dump_viz_dump_34344c3"
       }
     },
     {
@@ -318,10 +650,10 @@
       "summary": "`_c` -- calls Client; returns a value",
       "status": "semantic",
       "metadata": {
-        "node_id": "sem_state_semantic_pass__c_34344c3",
+        "branches": "0",
         "text": "`_c` -- calls Client; returns a value",
         "calls": "Client",
-        "branches": "0",
+        "node_id": "sem_state_semantic_pass__c_34344c3",
         "commit": "commit_34344c3"
       }
     },
@@ -333,10 +665,10 @@
       "status": "semantic",
       "metadata": {
         "branches": "1",
-        "calls": "create_index_if_not_exists, dynamic, g, node_unique_equality, query, returning, send, to_dynamic_request, var_as, write_batch",
-        "commit": "commit_34344c3",
         "node_id": "sem_state_semantic_pass__ensure_indexes_34344c3",
-        "text": "`_ensure_indexes` -- accepts (c); calls create_index_if_not_exists, dynamic, g, node_unique_equality; 1 branch(es); no return value"
+        "calls": "create_index_if_not_exists, dynamic, g, node_unique_equality, query, returning, send, to_dynamic_request, var_as, write_batch",
+        "text": "`_ensure_indexes` -- accepts (c); calls create_index_if_not_exists, dynamic, g, node_unique_equality; 1 branch(es); no return value",
+        "commit": "commit_34344c3"
       }
     },
     {
@@ -346,11 +678,11 @@
       "summary": "`_get_commits` -- accepts (c); calls dynamic, g, get, n_with_label; returns a value",
       "status": "semantic",
       "metadata": {
-        "commit": "commit_34344c3",
-        "node_id": "sem_state_semantic_pass__get_commits_34344c3",
         "text": "`_get_commits` -- accepts (c); calls dynamic, g, get, n_with_label; returns a value",
+        "commit": "commit_34344c3",
+        "branches": "0",
         "calls": "dynamic, g, get, n_with_label, query, read_batch, returning, send, to_dynamic_request, value_map, var_as",
-        "branches": "0"
+        "node_id": "sem_state_semantic_pass__get_commits_34344c3"
       }
     },
     {
@@ -360,11 +692,11 @@
       "summary": "`_get_states_for_commit` -- accepts (c, commit_node_id); calls define_params, dynamic, eq_param, g; returns a value",
       "status": "semantic",
       "metadata": {
-        "node_id": "sem_state_semantic_pass__get_states_for_commit_34344c3",
         "branches": "0",
-        "text": "`_get_states_for_commit` -- accepts (c, commit_node_id); calls define_params, dynamic, eq_param, g; returns a value",
         "commit": "commit_34344c3",
-        "calls": "define_params, dynamic, eq_param, g, get, n, n_with_label, out_e, out_n, query, read_batch, returning, send, string, to_dynamic_request, value_map, var, var_as, where"
+        "node_id": "sem_state_semantic_pass__get_states_for_commit_34344c3",
+        "calls": "define_params, dynamic, eq_param, g, get, n, n_with_label, out_e, out_n, query, read_batch, returning, send, string, to_dynamic_request, value_map, var, var_as, where",
+        "text": "`_get_states_for_commit` -- accepts (c, commit_node_id); calls define_params, dynamic, eq_param, g; returns a value"
       }
     },
     {
@@ -374,11 +706,11 @@
       "summary": "`_upsert` -- accepts (c, kind, node_id, props); calls add_n, define_params, drop, dynamic; 2 branch(es); no return value",
       "status": "semantic",
       "metadata": {
-        "commit": "commit_34344c3",
-        "text": "`_upsert` -- accepts (c, kind, node_id, props); calls add_n, define_params, drop, dynamic; 2 branch(es); no return value",
-        "node_id": "sem_state_semantic_pass__upsert_34344c3",
         "calls": "add_n, define_params, drop, dynamic, eq_param, g, items, n_with_label, query, returning, send, str, string, to_dynamic_request, value, var_as, where, write_batch",
-        "branches": "2"
+        "branches": "2",
+        "commit": "commit_34344c3",
+        "node_id": "sem_state_semantic_pass__upsert_34344c3",
+        "text": "`_upsert` -- accepts (c, kind, node_id, props); calls add_n, define_params, drop, dynamic; 2 branch(es); no return value"
       }
     },
     {
@@ -388,11 +720,11 @@
       "summary": "`_edge` -- accepts (c, src_id, src_kind, tgt_id, tgt_kind, label); calls add_e, dynamic, eq_param, g; 2 branch(es); no return value",
       "status": "semantic",
       "metadata": {
-        "calls": "add_e, dynamic, eq_param, g, n, n_with_label, query, returning, send, to_dynamic_request, var, var_as, where, write_batch",
-        "commit": "commit_34344c3",
-        "text": "`_edge` -- accepts (c, src_id, src_kind, tgt_id, tgt_kind, label); calls add_e, dynamic, eq_param, g; 2 branch(es); no return value",
         "branches": "2",
-        "node_id": "sem_state_semantic_pass__edge_34344c3"
+        "commit": "commit_34344c3",
+        "calls": "add_e, dynamic, eq_param, g, n, n_with_label, query, returning, send, to_dynamic_request, var, var_as, where, write_batch",
+        "node_id": "sem_state_semantic_pass__edge_34344c3",
+        "text": "`_edge` -- accepts (c, src_id, src_kind, tgt_id, tgt_kind, label); calls add_e, dynamic, eq_param, g; 2 branch(es); no return value"
       }
     },
     {
@@ -402,10 +734,10 @@
       "summary": "`_analyse_function` -- accepts (code); calls any, append, isinstance, join; 7 branch(es); returns a value",
       "status": "semantic",
       "metadata": {
-        "text": "`_analyse_function` -- accepts (code); calls any, append, isinstance, join; 7 branch(es); returns a value",
         "calls": "any, append, isinstance, join, next, parse, sorted, splitlines, sum, walk",
-        "branches": "7",
         "commit": "commit_34344c3",
+        "text": "`_analyse_function` -- accepts (code); calls any, append, isinstance, join; 7 branch(es); returns a value",
+        "branches": "7",
         "node_id": "sem_state_semantic_pass__analyse_function_34344c3"
       }
     },
@@ -416,10 +748,10 @@
       "summary": "`_concept_text` -- accepts (msg); calls groups, match, splitlines, strip; 1 branch(es); returns a value",
       "status": "semantic",
       "metadata": {
-        "node_id": "sem_state_semantic_pass__concept_text_34344c3",
-        "text": "`_concept_text` -- accepts (msg); calls groups, match, splitlines, strip; 1 branch(es); returns a value",
         "commit": "commit_34344c3",
         "branches": "1",
+        "node_id": "sem_state_semantic_pass__concept_text_34344c3",
+        "text": "`_concept_text` -- accepts (msg); calls groups, match, splitlines, strip; 1 branch(es); returns a value",
         "calls": "groups, match, splitlines, strip, upper"
       }
     },
@@ -430,11 +762,11 @@
       "summary": "`_rationale_text` -- accepts (msg); calls join, splitlines, strip; returns a value",
       "status": "semantic",
       "metadata": {
+        "text": "`_rationale_text` -- accepts (msg); calls join, splitlines, strip; returns a value",
+        "node_id": "sem_state_semantic_pass__rationale_text_34344c3",
         "calls": "join, splitlines, strip",
         "branches": "0",
-        "commit": "commit_34344c3",
-        "text": "`_rationale_text` -- accepts (msg); calls join, splitlines, strip; returns a value",
-        "node_id": "sem_state_semantic_pass__rationale_text_34344c3"
+        "commit": "commit_34344c3"
       }
     },
     {
@@ -445,10 +777,10 @@
       "status": "semantic",
       "metadata": {
         "branches": "4",
-        "commit": "commit_34344c3",
-        "text": "`_change_summary` -- accepts (msg, states); calls _analyse_function, append, extend, get; 4 branch(es); returns a value",
         "node_id": "sem_state_semantic_pass__change_summary_34344c3",
-        "calls": "_analyse_function, append, extend, get, join, len, sorted, splitlines, strip, sum"
+        "text": "`_change_summary` -- accepts (msg, states); calls _analyse_function, append, extend, get; 4 branch(es); returns a value",
+        "calls": "_analyse_function, append, extend, get, join, len, sorted, splitlines, strip, sum",
+        "commit": "commit_34344c3"
       }
     },
     {
@@ -458,11 +790,11 @@
       "summary": "`run_semantic_pass` -- calls _analyse_function, _c, _change_summary, _concept_text; 4 branch(es); no return value",
       "status": "semantic",
       "metadata": {
-        "branches": "4",
         "node_id": "sem_state_semantic_pass_run_semantic_pass_34344c3",
         "calls": "_analyse_function, _c, _change_summary, _concept_text, _edge, _ensure_indexes, _get_commits, _get_states_for_commit, _rationale_text, _upsert, get, join, len, print, replace, splitlines, startswith, str",
-        "commit": "commit_34344c3",
-        "text": "`run_semantic_pass` -- calls _analyse_function, _c, _change_summary, _concept_text; 4 branch(es); no return value"
+        "text": "`run_semantic_pass` -- calls _analyse_function, _c, _change_summary, _concept_text; 4 branch(es); no return value",
+        "branches": "4",
+        "commit": "commit_34344c3"
       }
     },
     {
@@ -472,9 +804,9 @@
       "summary": "FEAT: tree-sitter ingestion, HelixDB writes, semantic pass, viz dump",
       "status": "semantic",
       "metadata": {
-        "commit": "commit_34344c3",
         "text": "FEAT: tree-sitter ingestion, HelixDB writes, semantic pass, viz dump",
-        "node_id": "concept_commit_34344c3"
+        "node_id": "concept_commit_34344c3",
+        "commit": "commit_34344c3"
       }
     },
     {
@@ -484,9 +816,33 @@
       "summary": "FIX: cross-file CALLS resolution, filter stdlib noise, fix semantic edges in viz",
       "status": "semantic",
       "metadata": {
-        "text": "FIX: cross-file CALLS resolution, filter stdlib noise, fix semantic edges in viz",
         "node_id": "concept_commit_364d736",
+        "text": "FIX: cross-file CALLS resolution, filter stdlib noise, fix semantic edges in viz",
         "commit": "commit_364d736"
+      }
+    },
+    {
+      "id": "concept_commit_c901594",
+      "kind": "Concept",
+      "label": "FIX: skip tooling files from ingestion, add NEXT_COMMIT time",
+      "summary": "FIX: skip tooling files from ingestion, add NEXT_COMMIT timeline chain",
+      "status": "semantic",
+      "metadata": {
+        "node_id": "concept_commit_c901594",
+        "text": "FIX: skip tooling files from ingestion, add NEXT_COMMIT timeline chain",
+        "commit": "commit_c901594"
+      }
+    },
+    {
+      "id": "concept_commit_eef5695",
+      "kind": "Concept",
+      "label": "FEAT: add validation, error handling, and account management",
+      "summary": "FEAT: add validation, error handling, and account management to auth module",
+      "status": "semantic",
+      "metadata": {
+        "node_id": "concept_commit_eef5695",
+        "commit": "commit_eef5695",
+        "text": "FEAT: add validation, error handling, and account management to auth module"
       }
     },
     {
@@ -496,8 +852,8 @@
       "summary": "- models.py: in-memory user store with create_user and get_user - service.py: signup and login with basic validation - no hashing, no persistence -- intentionally dumb for iteration",
       "status": "semantic",
       "metadata": {
-        "node_id": "rationale_commit_623241a",
         "commit": "commit_623241a",
+        "node_id": "rationale_commit_623241a",
         "text": "- models.py: in-memory user store with create_user and get_user - service.py: signup and login with basic validation - no hashing, no persistence -- intentionally dumb for iteration"
       }
     },
@@ -520,9 +876,33 @@
       "summary": "- scalable_ingest: func_registry shared across files per commit; CALLS edges only emitted for known user-defined functions (filters out get/append/print etc) - dump_viz: replaced broken zip-based edge approach with per-node traversal using parameterized HelixDB queries; semantic edges now correctly appear",
       "status": "semantic",
       "metadata": {
-        "text": "- scalable_ingest: func_registry shared across files per commit; CALLS edges only emitted for known user-defined functions (filters out get/append/print etc) - dump_viz: replaced broken zip-based edge approach with per-node traversal using parameterized HelixDB queries; semantic edges now correctly appear",
         "node_id": "rationale_commit_364d736",
-        "commit": "commit_364d736"
+        "commit": "commit_364d736",
+        "text": "- scalable_ingest: func_registry shared across files per commit; CALLS edges only emitted for known user-defined functions (filters out get/append/print etc) - dump_viz: replaced broken zip-based edge approach with per-node traversal using parameterized HelixDB queries; semantic edges now correctly appear"
+      }
+    },
+    {
+      "id": "rationale_commit_c901594",
+      "kind": "Rationale",
+      "label": "- scalable_ingest: _SKIP_FILES list excludes ingestion scrip",
+      "summary": "- scalable_ingest: _SKIP_FILES list excludes ingestion scripts from being parsed as code nodes; NEXT_COMMIT edges link commits in timeline order - dump_viz: includes NEXT_COMMIT in semantic edge traversal",
+      "status": "semantic",
+      "metadata": {
+        "text": "- scalable_ingest: _SKIP_FILES list excludes ingestion scripts from being parsed as code nodes; NEXT_COMMIT edges link commits in timeline order - dump_viz: includes NEXT_COMMIT in semantic edge traversal",
+        "commit": "commit_c901594",
+        "node_id": "rationale_commit_c901594"
+      }
+    },
+    {
+      "id": "rationale_commit_eef5695",
+      "kind": "Rationale",
+      "label": "- models: add user_exists, delete_user, list_users with vali",
+      "summary": "- models: add user_exists, delete_user, list_users with validation - service: add custom exceptions (AuthError, ValidationError, AuthenticationError) - service: add logout and delete_account functions - service: return structured JSON responses instead of plain strings - service: validate username format (alphanumeric, min 3 chars) - models: enforce password min length (6 chars)",
+      "status": "semantic",
+      "metadata": {
+        "text": "- models: add user_exists, delete_user, list_users with validation - service: add custom exceptions (AuthError, ValidationError, AuthenticationError) - service: add logout and delete_account functions - service: return structured JSON responses instead of plain strings - service: validate username format (alphanumeric, min 3 chars) - models: enforce password min length (6 chars)",
+        "node_id": "rationale_commit_eef5695",
+        "commit": "commit_eef5695"
       }
     }
   ],
@@ -633,6 +1013,266 @@
       "kind": "NEXT_COMMIT"
     },
     {
+      "source": "commit_364d736",
+      "target": "commit_c901594",
+      "kind": "NEXT_COMMIT"
+    },
+    {
+      "source": "commit_c901594",
+      "target": "commit_eef5695",
+      "kind": "NEXT_COMMIT"
+    },
+    {
+      "source": "commit_eef5695",
+      "target": "file_auth_models",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "file_auth_models",
+      "target": "func_auth_models_create_user",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "func_auth_models_create_user",
+      "target": "state_auth_models_create_user_eef5695",
+      "kind": "HAS_STATE"
+    },
+    {
+      "source": "commit_eef5695",
+      "target": "state_auth_models_create_user_eef5695",
+      "kind": "GENERATED"
+    },
+    {
+      "source": "state_auth_models_create_user_eef5695",
+      "target": "state_auth_models_create_user_623241a",
+      "kind": "PREVIOUS_VERSION"
+    },
+    {
+      "source": "file_auth_models",
+      "target": "func_auth_models_get_user",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "func_auth_models_get_user",
+      "target": "state_auth_models_get_user_eef5695",
+      "kind": "HAS_STATE"
+    },
+    {
+      "source": "commit_eef5695",
+      "target": "state_auth_models_get_user_eef5695",
+      "kind": "GENERATED"
+    },
+    {
+      "source": "state_auth_models_get_user_eef5695",
+      "target": "state_auth_models_get_user_623241a",
+      "kind": "PREVIOUS_VERSION"
+    },
+    {
+      "source": "file_auth_models",
+      "target": "func_auth_models_delete_user",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "func_auth_models_delete_user",
+      "target": "state_auth_models_delete_user_eef5695",
+      "kind": "HAS_STATE"
+    },
+    {
+      "source": "commit_eef5695",
+      "target": "state_auth_models_delete_user_eef5695",
+      "kind": "GENERATED"
+    },
+    {
+      "source": "file_auth_models",
+      "target": "func_auth_models_list_users",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "func_auth_models_list_users",
+      "target": "state_auth_models_list_users_eef5695",
+      "kind": "HAS_STATE"
+    },
+    {
+      "source": "commit_eef5695",
+      "target": "state_auth_models_list_users_eef5695",
+      "kind": "GENERATED"
+    },
+    {
+      "source": "file_auth_models",
+      "target": "func_auth_models_user_exists",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "func_auth_models_user_exists",
+      "target": "state_auth_models_user_exists_eef5695",
+      "kind": "HAS_STATE"
+    },
+    {
+      "source": "commit_eef5695",
+      "target": "state_auth_models_user_exists_eef5695",
+      "kind": "GENERATED"
+    },
+    {
+      "source": "commit_eef5695",
+      "target": "file_auth_service",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "file_auth_service",
+      "target": "file_auth",
+      "kind": "IMPORTS"
+    },
+    {
+      "source": "file_auth_service",
+      "target": "class_auth_service_AuthError",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "class_auth_service_AuthError",
+      "target": "class_auth_service_Exception",
+      "kind": "INHERITS"
+    },
+    {
+      "source": "file_auth_service",
+      "target": "class_auth_service_ValidationError",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "class_auth_service_ValidationError",
+      "target": "class_auth_service_AuthError",
+      "kind": "INHERITS"
+    },
+    {
+      "source": "file_auth_service",
+      "target": "class_auth_service_AuthenticationError",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "class_auth_service_AuthenticationError",
+      "target": "class_auth_service_AuthError",
+      "kind": "INHERITS"
+    },
+    {
+      "source": "file_auth_service",
+      "target": "func_auth_service_validate_username",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "func_auth_service_validate_username",
+      "target": "state_auth_service_validate_username_eef5695",
+      "kind": "HAS_STATE"
+    },
+    {
+      "source": "commit_eef5695",
+      "target": "state_auth_service_validate_username_eef5695",
+      "kind": "GENERATED"
+    },
+    {
+      "source": "file_auth_service",
+      "target": "func_auth_service_signup",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "func_auth_service_signup",
+      "target": "state_auth_service_signup_eef5695",
+      "kind": "HAS_STATE"
+    },
+    {
+      "source": "commit_eef5695",
+      "target": "state_auth_service_signup_eef5695",
+      "kind": "GENERATED"
+    },
+    {
+      "source": "state_auth_service_signup_eef5695",
+      "target": "state_auth_service_signup_623241a",
+      "kind": "PREVIOUS_VERSION"
+    },
+    {
+      "source": "func_auth_service_signup",
+      "target": "func_auth_service_validate_username",
+      "kind": "CALLS"
+    },
+    {
+      "source": "func_auth_service_signup",
+      "target": "func_auth_models_user_exists",
+      "kind": "CALLS"
+    },
+    {
+      "source": "func_auth_service_signup",
+      "target": "func_auth_models_create_user",
+      "kind": "CALLS"
+    },
+    {
+      "source": "file_auth_service",
+      "target": "func_auth_service_login",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "func_auth_service_login",
+      "target": "state_auth_service_login_eef5695",
+      "kind": "HAS_STATE"
+    },
+    {
+      "source": "commit_eef5695",
+      "target": "state_auth_service_login_eef5695",
+      "kind": "GENERATED"
+    },
+    {
+      "source": "state_auth_service_login_eef5695",
+      "target": "state_auth_service_login_623241a",
+      "kind": "PREVIOUS_VERSION"
+    },
+    {
+      "source": "func_auth_service_login",
+      "target": "func_auth_models_get_user",
+      "kind": "CALLS"
+    },
+    {
+      "source": "file_auth_service",
+      "target": "func_auth_service_logout",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "func_auth_service_logout",
+      "target": "state_auth_service_logout_eef5695",
+      "kind": "HAS_STATE"
+    },
+    {
+      "source": "commit_eef5695",
+      "target": "state_auth_service_logout_eef5695",
+      "kind": "GENERATED"
+    },
+    {
+      "source": "func_auth_service_logout",
+      "target": "func_auth_models_user_exists",
+      "kind": "CALLS"
+    },
+    {
+      "source": "file_auth_service",
+      "target": "func_auth_service_delete_account",
+      "kind": "CONTAINS"
+    },
+    {
+      "source": "func_auth_service_delete_account",
+      "target": "state_auth_service_delete_account_eef5695",
+      "kind": "HAS_STATE"
+    },
+    {
+      "source": "commit_eef5695",
+      "target": "state_auth_service_delete_account_eef5695",
+      "kind": "GENERATED"
+    },
+    {
+      "source": "func_auth_service_delete_account",
+      "target": "func_auth_service_login",
+      "kind": "CALLS"
+    },
+    {
+      "source": "func_auth_service_delete_account",
+      "target": "func_auth_models_delete_user",
+      "kind": "CALLS"
+    },
+    {
       "source": "commit_623241a",
       "target": "change_commit_623241a",
       "kind": "HAS_CHANGE"
@@ -645,6 +1285,16 @@
     {
       "source": "commit_364d736",
       "target": "change_commit_364d736",
+      "kind": "HAS_CHANGE"
+    },
+    {
+      "source": "commit_c901594",
+      "target": "change_commit_c901594",
+      "kind": "HAS_CHANGE"
+    },
+    {
+      "source": "commit_eef5695",
+      "target": "change_commit_eef5695",
       "kind": "HAS_CHANGE"
     },
     {
@@ -675,6 +1325,26 @@
     {
       "source": "commit_364d736",
       "target": "rationale_commit_364d736",
+      "kind": "HAS_SEMANTIC"
+    },
+    {
+      "source": "commit_c901594",
+      "target": "concept_commit_c901594",
+      "kind": "HAS_SEMANTIC"
+    },
+    {
+      "source": "commit_c901594",
+      "target": "rationale_commit_c901594",
+      "kind": "HAS_SEMANTIC"
+    },
+    {
+      "source": "commit_eef5695",
+      "target": "concept_commit_eef5695",
+      "kind": "HAS_SEMANTIC"
+    },
+    {
+      "source": "commit_eef5695",
+      "target": "rationale_commit_eef5695",
       "kind": "HAS_SEMANTIC"
     },
     {

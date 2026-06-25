@@ -89,6 +89,174 @@
       "msg": "fix: cross-file CALLS resolution, filter stdlib noise, fix semantic edges in viz\n\n- scalable_ingest: func_registry shared across files per commit; CALLS edges\n  only emitted for known user-defined functions (filters out get/append/print etc)\n- dump_viz: replaced broken zip-based edge approach with per-node traversal\n  using parameterized HelixDB queries; semantic edges now correctly appear",
       "timestamp": "2026-06-24T23:15:30+05:45",
       "reasoning": "fix: cross-file CALLS resolution, filter stdlib noise, fix semantic edges in viz\n\n- scalable_ingest: func_registry shared across files per commit; CALLS edges\n  only emitted for known user-defined functions (filters out get/append/print etc)\n- dump_viz: replaced broken zip-based edge approach with per-node traversal\n  using parameterized HelixDB queries; semantic edges now correctly appear | changed 4 file(s): dump_viz.py, graph_payload.json, graph_viz.json, scalable_ingest.py"
+    },
+    {
+      "type": "Commit",
+      "id": "commit_c901594",
+      "msg": "fix: skip tooling files from ingestion, add NEXT_COMMIT timeline chain\n\n- scalable_ingest: _SKIP_FILES list excludes ingestion scripts from being\n  parsed as code nodes; NEXT_COMMIT edges link commits in timeline order\n- dump_viz: includes NEXT_COMMIT in semantic edge traversal",
+      "timestamp": "2026-06-25T01:23:24+05:45",
+      "reasoning": "fix: skip tooling files from ingestion, add NEXT_COMMIT timeline chain\n\n- scalable_ingest: _SKIP_FILES list excludes ingestion scripts from being\n  parsed as code nodes; NEXT_COMMIT edges link commits in timeline order\n- dump_viz: includes NEXT_COMMIT in semantic edge traversal | changed 4 file(s): dump_viz.py, graph_payload.json, graph_viz.json, scalable_ingest.py"
+    },
+    {
+      "type": "Commit",
+      "id": "commit_eef5695",
+      "msg": "feat: add validation, error handling, and account management to auth module\n\n- models: add user_exists, delete_user, list_users with validation\n- service: add custom exceptions (AuthError, ValidationError, AuthenticationError)\n- service: add logout and delete_account functions\n- service: return structured JSON responses instead of plain strings\n- service: validate username format (alphanumeric, min 3 chars)\n- models: enforce password min length (6 chars)",
+      "timestamp": "2026-06-25T13:28:28+05:45",
+      "reasoning": "feat: add validation, error handling, and account management to auth module\n\n- models: add user_exists, delete_user, list_users with validation\n- service: add custom exceptions (AuthError, ValidationError, AuthenticationError)\n- service: add logout and delete_account functions\n- service: return structured JSON responses instead of plain strings\n- service: validate username format (alphanumeric, min 3 chars)\n- models: enforce password min length (6 chars) | changed 2 file(s): auth/models.py, auth/service.py"
+    },
+    {
+      "type": "FileIdentity",
+      "id": "file_auth_models",
+      "file": "auth/models.py"
+    },
+    {
+      "type": "FunctionIdentity",
+      "id": "func_auth_models_create_user",
+      "name": "create_user",
+      "file": "auth/models.py"
+    },
+    {
+      "type": "FunctionState",
+      "id": "state_auth_models_create_user_eef5695",
+      "code": "def create_user(username, password):\n    \"\"\"Create a new user with username and password.\"\"\"\n    if not username or not password:\n        raise ValueError(\"Username and password cannot be empty\")\n    if len(password) < 6:\n        raise ValueError(\"Password must be at least 6 characters\")\n    users[username] = password\n    return True",
+      "commit": "eef5695"
+    },
+    {
+      "type": "FunctionIdentity",
+      "id": "func_auth_models_get_user",
+      "name": "get_user",
+      "file": "auth/models.py"
+    },
+    {
+      "type": "FunctionState",
+      "id": "state_auth_models_get_user_eef5695",
+      "code": "def get_user(username):\n    \"\"\"Retrieve user password by username.\"\"\"\n    return users.get(username)",
+      "commit": "eef5695"
+    },
+    {
+      "type": "FunctionIdentity",
+      "id": "func_auth_models_delete_user",
+      "name": "delete_user",
+      "file": "auth/models.py"
+    },
+    {
+      "type": "FunctionState",
+      "id": "state_auth_models_delete_user_eef5695",
+      "code": "def delete_user(username):\n    \"\"\"Delete a user by username.\"\"\"\n    if username in users:\n        del users[username]\n        return True\n    return False",
+      "commit": "eef5695"
+    },
+    {
+      "type": "FunctionIdentity",
+      "id": "func_auth_models_list_users",
+      "name": "list_users",
+      "file": "auth/models.py"
+    },
+    {
+      "type": "FunctionState",
+      "id": "state_auth_models_list_users_eef5695",
+      "code": "def list_users():\n    \"\"\"List all registered usernames.\"\"\"\n    return list(users.keys())",
+      "commit": "eef5695"
+    },
+    {
+      "type": "FunctionIdentity",
+      "id": "func_auth_models_user_exists",
+      "name": "user_exists",
+      "file": "auth/models.py"
+    },
+    {
+      "type": "FunctionState",
+      "id": "state_auth_models_user_exists_eef5695",
+      "code": "def user_exists(username):\n    \"\"\"Check if user exists.\"\"\"\n    return username in users",
+      "commit": "eef5695"
+    },
+    {
+      "type": "FileIdentity",
+      "id": "file_auth_service",
+      "file": "auth/service.py"
+    },
+    {
+      "type": "FileIdentity",
+      "id": "file_auth",
+      "file": "auth",
+      "external": "true"
+    },
+    {
+      "type": "ClassIdentity",
+      "id": "class_auth_service_AuthError",
+      "name": "AuthError",
+      "file": "auth/service.py"
+    },
+    {
+      "type": "ClassIdentity",
+      "id": "class_auth_service_ValidationError",
+      "name": "ValidationError",
+      "file": "auth/service.py"
+    },
+    {
+      "type": "ClassIdentity",
+      "id": "class_auth_service_AuthenticationError",
+      "name": "AuthenticationError",
+      "file": "auth/service.py"
+    },
+    {
+      "type": "FunctionIdentity",
+      "id": "func_auth_service_validate_username",
+      "name": "validate_username",
+      "file": "auth/service.py"
+    },
+    {
+      "type": "FunctionState",
+      "id": "state_auth_service_validate_username_eef5695",
+      "code": "def validate_username(username):\n    \"\"\"Validate username format.\"\"\"\n    if not username:\n        raise ValidationError(\"Username cannot be empty\")\n    if len(username) < 3:\n        raise ValidationError(\"Username must be at least 3 characters\")\n    if not username.isalnum():\n        raise ValidationError(\"Username must be alphanumeric\")\n    return True",
+      "commit": "eef5695"
+    },
+    {
+      "type": "FunctionIdentity",
+      "id": "func_auth_service_signup",
+      "name": "signup",
+      "file": "auth/service.py"
+    },
+    {
+      "type": "FunctionState",
+      "id": "state_auth_service_signup_eef5695",
+      "code": "def signup(username, password):\n    \"\"\"Register a new user with validation.\"\"\"\n    try:\n        validate_username(username)\n        \n        if user_exists(username):\n            raise ValidationError(\"User already exists\")\n        \n        create_user(username, password)\n        return {\"success\": True, \"message\": \"Signup successful\", \"username\": username}\n    \n    except (ValidationError, ValueError) as e:\n        return {\"success\": False, \"error\": str(e)}",
+      "commit": "eef5695"
+    },
+    {
+      "type": "FunctionIdentity",
+      "id": "func_auth_service_login",
+      "name": "login",
+      "file": "auth/service.py"
+    },
+    {
+      "type": "FunctionState",
+      "id": "state_auth_service_login_eef5695",
+      "code": "def login(username, password):\n    \"\"\"Authenticate user and return success status.\"\"\"\n    try:\n        if not username or not password:\n            raise AuthenticationError(\"Username and password required\")\n        \n        stored_password = get_user(username)\n        \n        if stored_password is None:\n            raise AuthenticationError(\"User not found\")\n        \n        if stored_password != password:\n            raise AuthenticationError(\"Invalid password\")\n        \n        return {\"success\": True, \"message\": \"Login successful\", \"username\": username}\n    \n    except AuthenticationError as e:\n        return {\"success\": False, \"error\": str(e)}",
+      "commit": "eef5695"
+    },
+    {
+      "type": "FunctionIdentity",
+      "id": "func_auth_service_logout",
+      "name": "logout",
+      "file": "auth/service.py"
+    },
+    {
+      "type": "FunctionState",
+      "id": "state_auth_service_logout_eef5695",
+      "code": "def logout(username):\n    \"\"\"Logout user (placeholder for session management).\"\"\"\n    if user_exists(username):\n        return {\"success\": True, \"message\": f\"User {username} logged out\"}\n    return {\"success\": False, \"error\": \"User not found\"}",
+      "commit": "eef5695"
+    },
+    {
+      "type": "FunctionIdentity",
+      "id": "func_auth_service_delete_account",
+      "name": "delete_account",
+      "file": "auth/service.py"
+    },
+    {
+      "type": "FunctionState",
+      "id": "state_auth_service_delete_account_eef5695",
+      "code": "def delete_account(username, password):\n    \"\"\"Delete user account with password verification.\"\"\"\n    try:\n        login_result = login(username, password)\n        if not login_result[\"success\"]:\n            raise AuthenticationError(\"Authentication failed\")\n        \n        if delete_user(username):\n            return {\"success\": True, \"message\": \"Account deleted successfully\"}\n        \n        return {\"success\": False, \"error\": \"Failed to delete account\"}\n    \n    except AuthenticationError as e:\n        return {\"success\": False, \"error\": str(e)}",
+      "commit": "eef5695"
     }
   ],
   "edges": [
@@ -196,6 +364,266 @@
       "from": "commit_34344c3",
       "label": "NEXT_COMMIT",
       "to": "commit_364d736"
+    },
+    {
+      "from": "commit_364d736",
+      "label": "NEXT_COMMIT",
+      "to": "commit_c901594"
+    },
+    {
+      "from": "commit_c901594",
+      "label": "NEXT_COMMIT",
+      "to": "commit_eef5695"
+    },
+    {
+      "from": "commit_eef5695",
+      "label": "CONTAINS",
+      "to": "file_auth_models"
+    },
+    {
+      "from": "file_auth_models",
+      "label": "CONTAINS",
+      "to": "func_auth_models_create_user"
+    },
+    {
+      "from": "func_auth_models_create_user",
+      "label": "HAS_STATE",
+      "to": "state_auth_models_create_user_eef5695"
+    },
+    {
+      "from": "commit_eef5695",
+      "label": "GENERATED",
+      "to": "state_auth_models_create_user_eef5695"
+    },
+    {
+      "from": "state_auth_models_create_user_eef5695",
+      "label": "PREVIOUS_VERSION",
+      "to": "state_auth_models_create_user_623241a"
+    },
+    {
+      "from": "file_auth_models",
+      "label": "CONTAINS",
+      "to": "func_auth_models_get_user"
+    },
+    {
+      "from": "func_auth_models_get_user",
+      "label": "HAS_STATE",
+      "to": "state_auth_models_get_user_eef5695"
+    },
+    {
+      "from": "commit_eef5695",
+      "label": "GENERATED",
+      "to": "state_auth_models_get_user_eef5695"
+    },
+    {
+      "from": "state_auth_models_get_user_eef5695",
+      "label": "PREVIOUS_VERSION",
+      "to": "state_auth_models_get_user_623241a"
+    },
+    {
+      "from": "file_auth_models",
+      "label": "CONTAINS",
+      "to": "func_auth_models_delete_user"
+    },
+    {
+      "from": "func_auth_models_delete_user",
+      "label": "HAS_STATE",
+      "to": "state_auth_models_delete_user_eef5695"
+    },
+    {
+      "from": "commit_eef5695",
+      "label": "GENERATED",
+      "to": "state_auth_models_delete_user_eef5695"
+    },
+    {
+      "from": "file_auth_models",
+      "label": "CONTAINS",
+      "to": "func_auth_models_list_users"
+    },
+    {
+      "from": "func_auth_models_list_users",
+      "label": "HAS_STATE",
+      "to": "state_auth_models_list_users_eef5695"
+    },
+    {
+      "from": "commit_eef5695",
+      "label": "GENERATED",
+      "to": "state_auth_models_list_users_eef5695"
+    },
+    {
+      "from": "file_auth_models",
+      "label": "CONTAINS",
+      "to": "func_auth_models_user_exists"
+    },
+    {
+      "from": "func_auth_models_user_exists",
+      "label": "HAS_STATE",
+      "to": "state_auth_models_user_exists_eef5695"
+    },
+    {
+      "from": "commit_eef5695",
+      "label": "GENERATED",
+      "to": "state_auth_models_user_exists_eef5695"
+    },
+    {
+      "from": "commit_eef5695",
+      "label": "CONTAINS",
+      "to": "file_auth_service"
+    },
+    {
+      "from": "file_auth_service",
+      "label": "IMPORTS",
+      "to": "file_auth"
+    },
+    {
+      "from": "file_auth_service",
+      "label": "CONTAINS",
+      "to": "class_auth_service_AuthError"
+    },
+    {
+      "from": "class_auth_service_AuthError",
+      "label": "INHERITS",
+      "to": "class_auth_service_Exception"
+    },
+    {
+      "from": "file_auth_service",
+      "label": "CONTAINS",
+      "to": "class_auth_service_ValidationError"
+    },
+    {
+      "from": "class_auth_service_ValidationError",
+      "label": "INHERITS",
+      "to": "class_auth_service_AuthError"
+    },
+    {
+      "from": "file_auth_service",
+      "label": "CONTAINS",
+      "to": "class_auth_service_AuthenticationError"
+    },
+    {
+      "from": "class_auth_service_AuthenticationError",
+      "label": "INHERITS",
+      "to": "class_auth_service_AuthError"
+    },
+    {
+      "from": "file_auth_service",
+      "label": "CONTAINS",
+      "to": "func_auth_service_validate_username"
+    },
+    {
+      "from": "func_auth_service_validate_username",
+      "label": "HAS_STATE",
+      "to": "state_auth_service_validate_username_eef5695"
+    },
+    {
+      "from": "commit_eef5695",
+      "label": "GENERATED",
+      "to": "state_auth_service_validate_username_eef5695"
+    },
+    {
+      "from": "file_auth_service",
+      "label": "CONTAINS",
+      "to": "func_auth_service_signup"
+    },
+    {
+      "from": "func_auth_service_signup",
+      "label": "HAS_STATE",
+      "to": "state_auth_service_signup_eef5695"
+    },
+    {
+      "from": "commit_eef5695",
+      "label": "GENERATED",
+      "to": "state_auth_service_signup_eef5695"
+    },
+    {
+      "from": "state_auth_service_signup_eef5695",
+      "label": "PREVIOUS_VERSION",
+      "to": "state_auth_service_signup_623241a"
+    },
+    {
+      "from": "func_auth_service_signup",
+      "label": "CALLS",
+      "to": "func_auth_service_validate_username"
+    },
+    {
+      "from": "func_auth_service_signup",
+      "label": "CALLS",
+      "to": "func_auth_models_user_exists"
+    },
+    {
+      "from": "func_auth_service_signup",
+      "label": "CALLS",
+      "to": "func_auth_models_create_user"
+    },
+    {
+      "from": "file_auth_service",
+      "label": "CONTAINS",
+      "to": "func_auth_service_login"
+    },
+    {
+      "from": "func_auth_service_login",
+      "label": "HAS_STATE",
+      "to": "state_auth_service_login_eef5695"
+    },
+    {
+      "from": "commit_eef5695",
+      "label": "GENERATED",
+      "to": "state_auth_service_login_eef5695"
+    },
+    {
+      "from": "state_auth_service_login_eef5695",
+      "label": "PREVIOUS_VERSION",
+      "to": "state_auth_service_login_623241a"
+    },
+    {
+      "from": "func_auth_service_login",
+      "label": "CALLS",
+      "to": "func_auth_models_get_user"
+    },
+    {
+      "from": "file_auth_service",
+      "label": "CONTAINS",
+      "to": "func_auth_service_logout"
+    },
+    {
+      "from": "func_auth_service_logout",
+      "label": "HAS_STATE",
+      "to": "state_auth_service_logout_eef5695"
+    },
+    {
+      "from": "commit_eef5695",
+      "label": "GENERATED",
+      "to": "state_auth_service_logout_eef5695"
+    },
+    {
+      "from": "func_auth_service_logout",
+      "label": "CALLS",
+      "to": "func_auth_models_user_exists"
+    },
+    {
+      "from": "file_auth_service",
+      "label": "CONTAINS",
+      "to": "func_auth_service_delete_account"
+    },
+    {
+      "from": "func_auth_service_delete_account",
+      "label": "HAS_STATE",
+      "to": "state_auth_service_delete_account_eef5695"
+    },
+    {
+      "from": "commit_eef5695",
+      "label": "GENERATED",
+      "to": "state_auth_service_delete_account_eef5695"
+    },
+    {
+      "from": "func_auth_service_delete_account",
+      "label": "CALLS",
+      "to": "func_auth_service_login"
+    },
+    {
+      "from": "func_auth_service_delete_account",
+      "label": "CALLS",
+      "to": "func_auth_models_delete_user"
     }
   ]
 }
