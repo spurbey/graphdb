@@ -1,0 +1,207 @@
+"""
+Agent toolset for the graph knowledge base.
+
+Four tools — each is a plain Python function callable by an agent or MCP server:
+
+  search_code_semantics(prompt)            — vector search on active FunctionState.ai_summary
+  get_code_time_travel_diff(state_node_id) — PREVIOUS_VERSION traversal
+  trace_blast_radius(function_identity_id) — reverse CALLS traversal
+  get_temporal_vulnerability_trace(target_func, timestamp_iso) — multi-hop commit filter
+"""
+
+from __future__ import annotations
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+
+from helixdb import Client, g, read_batch, define_params, param, Predicate, Projection
+
+HELIX_URL = "http://127.0.0.1:6969"
+
+
+def _c() -> Client:
+    return Client(HELIX_URL)
+
+
+def _rows(result: dict, key: str) -> list[dict]:
+    return result.get(key, {}).get("properties", [])
+
+
+# ── Tool 1: Semantic search ────────────────────────────────────────────────
+
+def search_code_semantics(prompt: str, k: int = 5) -> list[dict]:
+    """
+    Vector similarity search on FunctionState.ai_summary where status == 'active'.
+    Returns list of {node_id, function_id, ai_summary, code} dicts.
+
+    NOTE: requires ai_summary to be populated as a vector embedding. Until
+    semantic_pass.py is wired to an embedding model, falls back to text search.
+    """
+    c = _c()
+    # Text search fallback (works without embeddings; swap for vector_search_nodes
+    # once ai_summary stores float32 vectors)
+    batch = (
+        read_batch()
+        .var_as("states",
+            g().text_search_nodes("FunctionState", "ai_summary", prompt, k)
+               .where(Predicate.eq("status", "active"))
+               .project([
+                   Projection.property("node_id"),
+                   Projection.property("function_id"),
+                   Projection.property("ai_summary"),
+                   Projection.property("code"),
+               ])
+        )
+        .returning(["states"])
+    )
+    try:
+        result = c.query().dynamic(batch.to_dynamic_request()).send()
+        return _rows(result, "states")
+    except Exception as e:
+        return [{"error": str(e)}]
+
+
+# ── Tool 2: Time-travel diff ───────────────────────────────────────────────
+
+_P_NID = define_params({"nid": param.string()})
+
+def get_code_time_travel_diff(state_node_id: str) -> dict:
+    """
+    Given a FunctionState node_id, returns both the current state and the
+    immediately preceding state (via PREVIOUS_VERSION edge).
+    Returns {current: {...}, previous: {...} | None}
+    """
+    c = _c()
+
+    current_batch = (
+        read_batch()
+        .var_as("cur",
+            g().n_with_label("FunctionState")
+               .where(Predicate.eq_param("node_id", "nid"))
+               .project([
+                   Projection.property("node_id"),
+                   Projection.property("ai_summary"),
+                   Projection.property("code"),
+                   Projection.property("commit"),
+                   Projection.property("status"),
+               ])
+        )
+        .returning(["cur"])
+    )
+    prev_batch = (
+        read_batch()
+        .var_as("prev",
+            g().n_with_label("FunctionState")
+               .where(Predicate.eq_param("node_id", "nid"))
+               .out("PREVIOUS_VERSION")
+               .project([
+                   Projection.property("node_id"),
+                   Projection.property("ai_summary"),
+                   Projection.property("code"),
+                   Projection.property("commit"),
+               ])
+        )
+        .returning(["prev"])
+    )
+    try:
+        cur_rows  = _rows(c.query().dynamic(current_batch.to_dynamic_request(_P_NID, {"nid": state_node_id})).send(), "cur")
+        prev_rows = _rows(c.query().dynamic(prev_batch.to_dynamic_request(_P_NID, {"nid": state_node_id})).send(), "prev")
+        return {
+            "current":  cur_rows[0]  if cur_rows  else None,
+            "previous": prev_rows[0] if prev_rows else None,
+        }
+    except Exception as e:
+        return {"error": str(e)}
+
+
+# ── Tool 3: Blast radius ───────────────────────────────────────────────────
+
+_P_FID = define_params({"fid": param.string()})
+
+def trace_blast_radius(function_identity_id: str) -> list[dict]:
+    """
+    Returns all FunctionIdentity nodes that have a CALLS edge pointing TO the
+    given function — i.e. "who calls this function?"
+    Returns list of {node_id, name, file} dicts.
+    """
+    c = _c()
+    batch = (
+        read_batch()
+        .var_as("callers",
+            g().n_with_label("FunctionIdentity")
+               .where(Predicate.eq_param("node_id", "fid"))
+               .in_("CALLS")
+               .project([
+                   Projection.property("node_id"),
+                   Projection.property("name"),
+                   Projection.property("file"),
+               ])
+        )
+        .returning(["callers"])
+    )
+    try:
+        result = c.query().dynamic(batch.to_dynamic_request(_P_FID, {"fid": function_identity_id})).send()
+        return _rows(result, "callers")
+    except Exception as e:
+        return [{"error": str(e)}]
+
+
+# ── Tool 4: Temporal vulnerability trace ──────────────────────────────────
+
+_P_TVUL = define_params({"fname": param.string(), "ts": param.string()})
+
+def get_temporal_vulnerability_trace(target_func: str, timestamp_iso: str) -> list[dict]:
+    """
+    Multi-hop: find all callers of target_func whose implementation was
+    committed BEFORE the given ISO timestamp.
+
+    Path: FunctionIdentity(target) <-[CALLS]- FunctionIdentity(caller)
+          -[HAS_STATE]-> FunctionState -[GENERATED]-> Commit(ts < threshold)
+
+    Returns list of {caller_func_id, caller_name, state_id, commit_hash, timestamp}.
+    """
+    c = _c()
+    batch = (
+        read_batch()
+        .var_as("target",
+            g().n_with_label("FunctionIdentity")
+               .where(Predicate.eq_param("name", "fname"))
+        )
+        .var_as("callers",
+            g().n_with_label("FunctionIdentity")
+               .where(Predicate.eq_param("name", "fname"))
+               .in_("CALLS")
+        )
+        .var_as("states",
+            g().n_with_label("FunctionIdentity")
+               .where(Predicate.eq_param("name", "fname"))
+               .in_("CALLS")
+               .out("HAS_STATE")
+        )
+        .var_as("commits",
+            g().n_with_label("FunctionIdentity")
+               .where(Predicate.eq_param("name", "fname"))
+               .in_("CALLS")
+               .out("HAS_STATE")
+               .in_("GENERATED")
+               .where(Predicate.lt_param("timestamp", "ts"))
+               .project([
+                   Projection.property("node_id"),
+                   Projection.property("hash"),
+                   Projection.property("timestamp"),
+                   Projection.property("msg"),
+               ])
+        )
+        .returning(["commits"])
+    )
+    try:
+        result = c.query().dynamic(batch.to_dynamic_request(_P_TVUL, {"fname": target_func, "ts": timestamp_iso})).send()
+        return _rows(result, "commits")
+    except Exception as e:
+        return [{"error": str(e)}]
+
+
+if __name__ == "__main__":
+    # Quick smoke test — print active states
+    import json
+    results = search_code_semantics("user authentication login")
+    print(json.dumps(results, indent=2))

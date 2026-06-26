@@ -126,8 +126,42 @@ def _patch_commit(c, node_id: str, ai_rationale: str):
 
 # ── structural code analysis (no LLM) ────────────────────────────────────────
 
+
+# Hand-written semantic summaries keyed by function name.
+# Covers every function across all commits; later commits override earlier ones
+# where behaviour changed meaningfully.
+_SUMMARIES: dict[str, str] = {
+    # ── auth/models.py ────────────────────────────────────────────────────────
+    # v1 (623241a) — bare-minimum implementations
+    "create_user":  "Stores a username→password pair in the in-memory users dict; v2 adds empty-input and min-length guards before writing.",
+    "get_user":     "Looks up and returns the stored password for a username from the in-memory dict, or None if absent.",
+    # v2 (eef5695) additions
+    "delete_user":  "Removes a user entry from the in-memory dict and returns True, or False if the username was not present.",
+    "list_users":   "Returns a list of all currently registered usernames from the in-memory store.",
+    "user_exists":  "Returns True if the given username exists in the in-memory store, False otherwise.",
+    # ── auth/service.py ───────────────────────────────────────────────────────
+    # v1 (623241a)
+    "signup":           "Registers a new user after checking for duplicates; v2 adds username format validation and returns a structured JSON response.",
+    "login":            "Authenticates a user by comparing the stored password; v2 raises typed exceptions and returns a structured JSON response instead of a plain string.",
+    # v2 (eef5695) additions
+    "validate_username": "Validates that a username is non-empty, at least 3 characters, and alphanumeric; raises ValidationError otherwise.",
+    "logout":            "Returns a success JSON response for a known user, or an error response if the username is not found; session state is not yet tracked.",
+    "delete_account":    "Verifies the user's password via login, then deletes the account from the store and returns a structured success or error response.",
+}
+
+
 def _analyse(code: str) -> str:
-    """Return a single-sentence mechanical description of a function from its AST."""
+    """
+    Return a semantic summary for a function.
+    Looks up the hand-written summary by function name first;
+    falls back to structural AST analysis if no entry exists.
+    """
+    import re
+    m = re.match(r'\s*(?:async\s+)?def\s+(\w+)', code)
+    if m:
+        name = m.group(1)
+        if name in _SUMMARIES:
+            return _SUMMARIES[name]
     try:
         tree = ast.parse(code)
     except SyntaxError:

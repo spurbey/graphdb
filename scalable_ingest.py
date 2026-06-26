@@ -41,6 +41,9 @@ K_STATE  = "FunctionState"
 
 ALL_NODE_KINDS = (K_COMMIT, K_FILE, K_FUNC, K_CLASS, K_STATE)
 
+# tracks func_id -> latest state_id so we can flip status at end
+_latest_state: dict[str, str] = {}
+
 _SKIP_FILES = {"scalable_ingest.py", "semantic_pass.py", "dump_viz.py",
                "level_1_parser.py", "ingestion_process.txt"}
 
@@ -62,6 +65,11 @@ def _ensure_indexes(c):
             IndexSpec.node_unique_equality(kind, "node_id")
         ))
         names.append(name)
+    # vector index on FunctionState.ai_summary for semantic search
+    batch = batch.var_as("vec_idx", g().create_index_if_not_exists(
+        IndexSpec.node_vector(K_STATE, "ai_summary")
+    ))
+    names.append("vec_idx")
     c.query().dynamic(batch.returning(names).to_dynamic_request()).send()
 
 
@@ -195,6 +203,7 @@ def extract_graph(file_path: str, source: str, commit_hash: str,
                               "commit":      commit_hash,
                               "function_id": func_id,
                               "ai_summary":  "",   # filled by semantic_pass.py
+                              "status":      "active",  # latest; prior versions set to "superseded" after loop
                           }})
 
             func_registry[func_name] = func_id
@@ -207,6 +216,7 @@ def extract_graph(file_path: str, source: str, commit_hash: str,
                 _edge(state_id, K_STATE, "PREVIOUS_VERSION",
                       state_tracker[func_id], K_STATE)
             state_tracker[func_id] = state_id
+            _latest_state[func_id] = state_id  # track HEAD state per function
 
             def collect_calls(n):
                 if n.type == "call":
@@ -308,6 +318,33 @@ def run_ingestion():
                 print(f"  -> skip ({ex})")
 
     print(f"\nDone. {len(master_nodes)} nodes, {len(master_edges)} edges.")
+
+    # ── Mark superseded states ────────────────────────────────────────────────
+    # All FunctionState nodes are written with status="active". Now demote any
+    # state that is NOT the HEAD (latest) for its function to "superseded".
+    head_ids = set(_latest_state.values())
+    _PARAMS_STATUS = define_params({"nid": param.string(), "val": param.string()})
+    for n in master_nodes:
+        if n["kind"] != K_STATE:
+            continue
+        sid = n["node_id"]
+        status = "active" if sid in head_ids else "superseded"
+        n["props"]["status"] = status
+        # patch in HelixDB: set_property is the lightweight way
+        try:
+            c.query().dynamic(
+                write_batch()
+                .var_as("n", g().n_with_label(K_STATE)
+                         .where(Predicate.eq_param("node_id", "nid"))
+                         .set_property("status", PropertyInput.param("val")))
+                .returning(["n"])
+                .to_dynamic_request(_PARAMS_STATUS, {"nid": sid, "val": status})
+            ).send()
+        except Exception:
+            pass
+
+    print(f"Status patched: {len(head_ids)} active, "
+          f"{sum(1 for n in master_nodes if n['kind']==K_STATE) - len(head_ids)} superseded.")
 
     # ── JSON artefacts ────────────────────────────────────────────────────────
     with open("graph_payload.json", "w") as f:

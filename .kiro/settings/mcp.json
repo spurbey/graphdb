@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "graphdb": {
+      "command": "python",
+      "args": ["tools/graph_mcp_server.py"],
+      "cwd": "${workspaceFolder}",
+      "type": "http",
+      "url": "http://127.0.0.1:7700"
+    }
+  }
+}
