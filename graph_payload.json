@@ -3,9 +3,11 @@
     {
       "type": "Commit",
       "id": "commit_623241a",
+      "hash": "623241a6b4a4f84842655b68cba4fcd42d83c57b",
+      "author": "Sumit",
       "msg": "feat: initial auth module with models and service\n\n- models.py: in-memory user store with create_user and get_user\n- service.py: signup and login with basic validation\n- no hashing, no persistence -- intentionally dumb for iteration",
       "timestamp": "2026-06-24T17:48:44+05:45",
-      "reasoning": "feat: initial auth module with models and service\n\n- models.py: in-memory user store with create_user and get_user\n- service.py: signup and login with basic validation\n- no hashing, no persistence -- intentionally dumb for iteration | changed 3 file(s): auth/__init__.py, auth/models.py, auth/service.py"
+      "ai_rationale": ""
     },
     {
       "type": "FileIdentity",
@@ -27,7 +29,10 @@
       "type": "FunctionState",
       "id": "state_auth_models_create_user_623241a",
       "code": "def create_user(username, password):\n    users[username] = password",
-      "commit": "623241a"
+      "code_hash": "e23559567545",
+      "commit": "623241a",
+      "function_id": "func_auth_models_create_user",
+      "ai_summary": ""
     },
     {
       "type": "FunctionIdentity",
@@ -39,7 +44,10 @@
       "type": "FunctionState",
       "id": "state_auth_models_get_user_623241a",
       "code": "def get_user(username):\n    return users.get(username)",
-      "commit": "623241a"
+      "code_hash": "e87d9d46d8f7",
+      "commit": "623241a",
+      "function_id": "func_auth_models_get_user",
+      "ai_summary": ""
     },
     {
       "type": "FileIdentity",
@@ -62,7 +70,10 @@
       "type": "FunctionState",
       "id": "state_auth_service_signup_623241a",
       "code": "def signup(username, password):\n    if get_user(username):\n        return \"User already exists\"\n    create_user(username, password)\n    return \"Signup successful\"",
-      "commit": "623241a"
+      "code_hash": "e0c01921fe82",
+      "commit": "623241a",
+      "function_id": "func_auth_service_signup",
+      "ai_summary": ""
     },
     {
       "type": "FunctionIdentity",
@@ -74,35 +85,46 @@
       "type": "FunctionState",
       "id": "state_auth_service_login_623241a",
       "code": "def login(username, password):\n    user = get_user(username)\n    if user == password:\n        return \"Login successful\"\n    return \"Invalid credentials\"",
-      "commit": "623241a"
+      "code_hash": "a21c0efa1649",
+      "commit": "623241a",
+      "function_id": "func_auth_service_login",
+      "ai_summary": ""
     },
     {
       "type": "Commit",
       "id": "commit_34344c3",
+      "hash": "34344c3626e5f02b8ed03fb74245a6ea408f29c2",
+      "author": "Sumit",
       "msg": "feat: tree-sitter ingestion, HelixDB writes, semantic pass, viz dump\n\n- scalable_ingest.py: replaced ast with tree-sitter; extracts CONTAINS,\n  IMPORTS, INHERITS, CALLS edges; writes all nodes/edges live to HelixDB\n  (localhost:6969) via helix-db SDK; keeps graph_payload.json + graph_viz.json\n  as artefacts\n\n- semantic_pass.py: separate post-ingestion pass; traverses Commit->GENERATED->\n  FunctionState in HelixDB; analyses code structurally (params, calls, branches,\n  returns) to derive per-function Concept nodes and a ChangeNode summary;\n  attaches Rationale from commit message body; guardrail prevents writing\n  AST-owned node kinds\n\n- dump_viz.py: merges graph_payload.json with semantic nodes from HelixDB into\n  graph_viz.json for tools/harness_graph_viz.html\n\n- tools/harness_graph_viz.html: force-directed graph explorer (load JSON)",
       "timestamp": "2026-06-24T22:56:02+05:45",
-      "reasoning": "feat: tree-sitter ingestion, HelixDB writes, semantic pass, viz dump\n\n- scalable_ingest.py: replaced ast with tree-sitter; extracts CONTAINS,\n  IMPORTS, INHERITS, CALLS edges; writes all nodes/edges live to HelixDB\n  (localhost:6969) via helix-db SDK; keeps graph_payload.json + graph_viz.json\n  as artefacts\n\n- semantic_pass.py: separate post-ingestion pass; traverses Commit->GENERATED->\n  FunctionState in HelixDB; analyses code structurally (params, calls, branches,\n  returns) to derive per-function Concept nodes and a ChangeNode summary;\n  attaches Rationale from commit message body; guardrail prevents writing\n  AST-owned node kinds\n\n- dump_viz.py: merges graph_payload.json with semantic nodes from HelixDB into\n  graph_viz.json for tools/harness_graph_viz.html\n\n- tools/harness_graph_viz.html: force-directed graph explorer (load JSON) | changed 6 file(s): dump_viz.py, graph_payload.json, graph_viz.json, scalable_ingest.py, semantic_pass.py ..."
+      "ai_rationale": ""
     },
     {
       "type": "Commit",
       "id": "commit_364d736",
+      "hash": "364d73644a8990096de882efb9f924fbcd2e5f31",
+      "author": "Sumit",
       "msg": "fix: cross-file CALLS resolution, filter stdlib noise, fix semantic edges in viz\n\n- scalable_ingest: func_registry shared across files per commit; CALLS edges\n  only emitted for known user-defined functions (filters out get/append/print etc)\n- dump_viz: replaced broken zip-based edge approach with per-node traversal\n  using parameterized HelixDB queries; semantic edges now correctly appear",
       "timestamp": "2026-06-24T23:15:30+05:45",
-      "reasoning": "fix: cross-file CALLS resolution, filter stdlib noise, fix semantic edges in viz\n\n- scalable_ingest: func_registry shared across files per commit; CALLS edges\n  only emitted for known user-defined functions (filters out get/append/print etc)\n- dump_viz: replaced broken zip-based edge approach with per-node traversal\n  using parameterized HelixDB queries; semantic edges now correctly appear | changed 4 file(s): dump_viz.py, graph_payload.json, graph_viz.json, scalable_ingest.py"
+      "ai_rationale": ""
     },
     {
       "type": "Commit",
       "id": "commit_c901594",
+      "hash": "c9015949f9518f78542127649868a59cdbf854c5",
+      "author": "Sumit",
       "msg": "fix: skip tooling files from ingestion, add NEXT_COMMIT timeline chain\n\n- scalable_ingest: _SKIP_FILES list excludes ingestion scripts from being\n  parsed as code nodes; NEXT_COMMIT edges link commits in timeline order\n- dump_viz: includes NEXT_COMMIT in semantic edge traversal",
       "timestamp": "2026-06-25T01:23:24+05:45",
-      "reasoning": "fix: skip tooling files from ingestion, add NEXT_COMMIT timeline chain\n\n- scalable_ingest: _SKIP_FILES list excludes ingestion scripts from being\n  parsed as code nodes; NEXT_COMMIT edges link commits in timeline order\n- dump_viz: includes NEXT_COMMIT in semantic edge traversal | changed 4 file(s): dump_viz.py, graph_payload.json, graph_viz.json, scalable_ingest.py"
+      "ai_rationale": ""
     },
     {
       "type": "Commit",
       "id": "commit_eef5695",
+      "hash": "eef56956a468d8c2c2cabc7046755ec9b11e405b",
+      "author": "Sumit",
       "msg": "feat: add validation, error handling, and account management to auth module\n\n- models: add user_exists, delete_user, list_users with validation\n- service: add custom exceptions (AuthError, ValidationError, AuthenticationError)\n- service: add logout and delete_account functions\n- service: return structured JSON responses instead of plain strings\n- service: validate username format (alphanumeric, min 3 chars)\n- models: enforce password min length (6 chars)",
       "timestamp": "2026-06-25T13:28:28+05:45",
-      "reasoning": "feat: add validation, error handling, and account management to auth module\n\n- models: add user_exists, delete_user, list_users with validation\n- service: add custom exceptions (AuthError, ValidationError, AuthenticationError)\n- service: add logout and delete_account functions\n- service: return structured JSON responses instead of plain strings\n- service: validate username format (alphanumeric, min 3 chars)\n- models: enforce password min length (6 chars) | changed 2 file(s): auth/models.py, auth/service.py"
+      "ai_rationale": ""
     },
     {
       "type": "FileIdentity",
@@ -119,7 +141,10 @@
       "type": "FunctionState",
       "id": "state_auth_models_create_user_eef5695",
       "code": "def create_user(username, password):\n    \"\"\"Create a new user with username and password.\"\"\"\n    if not username or not password:\n        raise ValueError(\"Username and password cannot be empty\")\n    if len(password) < 6:\n        raise ValueError(\"Password must be at least 6 characters\")\n    users[username] = password\n    return True",
-      "commit": "eef5695"
+      "code_hash": "a06b4166cb75",
+      "commit": "eef5695",
+      "function_id": "func_auth_models_create_user",
+      "ai_summary": ""
     },
     {
       "type": "FunctionIdentity",
@@ -131,7 +156,10 @@
       "type": "FunctionState",
       "id": "state_auth_models_get_user_eef5695",
       "code": "def get_user(username):\n    \"\"\"Retrieve user password by username.\"\"\"\n    return users.get(username)",
-      "commit": "eef5695"
+      "code_hash": "ca336d123048",
+      "commit": "eef5695",
+      "function_id": "func_auth_models_get_user",
+      "ai_summary": ""
     },
     {
       "type": "FunctionIdentity",
@@ -143,7 +171,10 @@
       "type": "FunctionState",
       "id": "state_auth_models_delete_user_eef5695",
       "code": "def delete_user(username):\n    \"\"\"Delete a user by username.\"\"\"\n    if username in users:\n        del users[username]\n        return True\n    return False",
-      "commit": "eef5695"
+      "code_hash": "a13ae17dd227",
+      "commit": "eef5695",
+      "function_id": "func_auth_models_delete_user",
+      "ai_summary": ""
     },
     {
       "type": "FunctionIdentity",
@@ -155,7 +186,10 @@
       "type": "FunctionState",
       "id": "state_auth_models_list_users_eef5695",
       "code": "def list_users():\n    \"\"\"List all registered usernames.\"\"\"\n    return list(users.keys())",
-      "commit": "eef5695"
+      "code_hash": "c51dd0c11204",
+      "commit": "eef5695",
+      "function_id": "func_auth_models_list_users",
+      "ai_summary": ""
     },
     {
       "type": "FunctionIdentity",
@@ -167,7 +201,10 @@
       "type": "FunctionState",
       "id": "state_auth_models_user_exists_eef5695",
       "code": "def user_exists(username):\n    \"\"\"Check if user exists.\"\"\"\n    return username in users",
-      "commit": "eef5695"
+      "code_hash": "4c5080d971a9",
+      "commit": "eef5695",
+      "function_id": "func_auth_models_user_exists",
+      "ai_summary": ""
     },
     {
       "type": "FileIdentity",
@@ -208,7 +245,10 @@
       "type": "FunctionState",
       "id": "state_auth_service_validate_username_eef5695",
       "code": "def validate_username(username):\n    \"\"\"Validate username format.\"\"\"\n    if not username:\n        raise ValidationError(\"Username cannot be empty\")\n    if len(username) < 3:\n        raise ValidationError(\"Username must be at least 3 characters\")\n    if not username.isalnum():\n        raise ValidationError(\"Username must be alphanumeric\")\n    return True",
-      "commit": "eef5695"
+      "code_hash": "f85d97fc12b4",
+      "commit": "eef5695",
+      "function_id": "func_auth_service_validate_username",
+      "ai_summary": ""
     },
     {
       "type": "FunctionIdentity",
@@ -220,7 +260,10 @@
       "type": "FunctionState",
       "id": "state_auth_service_signup_eef5695",
       "code": "def signup(username, password):\n    \"\"\"Register a new user with validation.\"\"\"\n    try:\n        validate_username(username)\n        \n        if user_exists(username):\n            raise ValidationError(\"User already exists\")\n        \n        create_user(username, password)\n        return {\"success\": True, \"message\": \"Signup successful\", \"username\": username}\n    \n    except (ValidationError, ValueError) as e:\n        return {\"success\": False, \"error\": str(e)}",
-      "commit": "eef5695"
+      "code_hash": "1c03e3759ffc",
+      "commit": "eef5695",
+      "function_id": "func_auth_service_signup",
+      "ai_summary": ""
     },
     {
       "type": "FunctionIdentity",
@@ -232,7 +275,10 @@
       "type": "FunctionState",
       "id": "state_auth_service_login_eef5695",
       "code": "def login(username, password):\n    \"\"\"Authenticate user and return success status.\"\"\"\n    try:\n        if not username or not password:\n            raise AuthenticationError(\"Username and password required\")\n        \n        stored_password = get_user(username)\n        \n        if stored_password is None:\n            raise AuthenticationError(\"User not found\")\n        \n        if stored_password != password:\n            raise AuthenticationError(\"Invalid password\")\n        \n        return {\"success\": True, \"message\": \"Login successful\", \"username\": username}\n    \n    except AuthenticationError as e:\n        return {\"success\": False, \"error\": str(e)}",
-      "commit": "eef5695"
+      "code_hash": "9943ba2c612c",
+      "commit": "eef5695",
+      "function_id": "func_auth_service_login",
+      "ai_summary": ""
     },
     {
       "type": "FunctionIdentity",
@@ -244,7 +290,10 @@
       "type": "FunctionState",
       "id": "state_auth_service_logout_eef5695",
       "code": "def logout(username):\n    \"\"\"Logout user (placeholder for session management).\"\"\"\n    if user_exists(username):\n        return {\"success\": True, \"message\": f\"User {username} logged out\"}\n    return {\"success\": False, \"error\": \"User not found\"}",
-      "commit": "eef5695"
+      "code_hash": "a93be69e23eb",
+      "commit": "eef5695",
+      "function_id": "func_auth_service_logout",
+      "ai_summary": ""
     },
     {
       "type": "FunctionIdentity",
@@ -256,7 +305,19 @@
       "type": "FunctionState",
       "id": "state_auth_service_delete_account_eef5695",
       "code": "def delete_account(username, password):\n    \"\"\"Delete user account with password verification.\"\"\"\n    try:\n        login_result = login(username, password)\n        if not login_result[\"success\"]:\n            raise AuthenticationError(\"Authentication failed\")\n        \n        if delete_user(username):\n            return {\"success\": True, \"message\": \"Account deleted successfully\"}\n        \n        return {\"success\": False, \"error\": \"Failed to delete account\"}\n    \n    except AuthenticationError as e:\n        return {\"success\": False, \"error\": str(e)}",
-      "commit": "eef5695"
+      "code_hash": "fcfafdc6426d",
+      "commit": "eef5695",
+      "function_id": "func_auth_service_delete_account",
+      "ai_summary": ""
+    },
+    {
+      "type": "Commit",
+      "id": "commit_58bb18b",
+      "hash": "58bb18b56699991654107e5a1e28b4cf752a820d",
+      "author": "Sumit",
+      "msg": "chore: update graph artifacts after auth module upgrade",
+      "timestamp": "2026-06-25T13:34:14+05:45",
+      "ai_rationale": ""
     }
   ],
   "edges": [
@@ -381,11 +442,6 @@
       "to": "file_auth_models"
     },
     {
-      "from": "file_auth_models",
-      "label": "CONTAINS",
-      "to": "func_auth_models_create_user"
-    },
-    {
       "from": "func_auth_models_create_user",
       "label": "HAS_STATE",
       "to": "state_auth_models_create_user_eef5695"
@@ -399,11 +455,6 @@
       "from": "state_auth_models_create_user_eef5695",
       "label": "PREVIOUS_VERSION",
       "to": "state_auth_models_create_user_623241a"
-    },
-    {
-      "from": "file_auth_models",
-      "label": "CONTAINS",
-      "to": "func_auth_models_get_user"
     },
     {
       "from": "func_auth_models_get_user",
@@ -472,11 +523,6 @@
     },
     {
       "from": "file_auth_service",
-      "label": "IMPORTS",
-      "to": "file_auth"
-    },
-    {
-      "from": "file_auth_service",
       "label": "CONTAINS",
       "to": "class_auth_service_AuthError"
     },
@@ -521,11 +567,6 @@
       "to": "state_auth_service_validate_username_eef5695"
     },
     {
-      "from": "file_auth_service",
-      "label": "CONTAINS",
-      "to": "func_auth_service_signup"
-    },
-    {
       "from": "func_auth_service_signup",
       "label": "HAS_STATE",
       "to": "state_auth_service_signup_eef5695"
@@ -551,16 +592,6 @@
       "to": "func_auth_models_user_exists"
     },
     {
-      "from": "func_auth_service_signup",
-      "label": "CALLS",
-      "to": "func_auth_models_create_user"
-    },
-    {
-      "from": "file_auth_service",
-      "label": "CONTAINS",
-      "to": "func_auth_service_login"
-    },
-    {
       "from": "func_auth_service_login",
       "label": "HAS_STATE",
       "to": "state_auth_service_login_eef5695"
@@ -574,11 +605,6 @@
       "from": "state_auth_service_login_eef5695",
       "label": "PREVIOUS_VERSION",
       "to": "state_auth_service_login_623241a"
-    },
-    {
-      "from": "func_auth_service_login",
-      "label": "CALLS",
-      "to": "func_auth_models_get_user"
     },
     {
       "from": "file_auth_service",
@@ -624,6 +650,11 @@
       "from": "func_auth_service_delete_account",
       "label": "CALLS",
       "to": "func_auth_models_delete_user"
+    },
+    {
+      "from": "commit_eef5695",
+      "label": "NEXT_COMMIT",
+      "to": "commit_58bb18b"
     }
   ]
 }
