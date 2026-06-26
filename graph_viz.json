@@ -4,12 +4,14 @@
       "id": "commit_623241a",
       "kind": "Commit",
       "label": "feat: initial auth module with models and service",
-      "summary": "feat: initial auth module with models and service\n\n- models.py: in-memory user store with create_user and get_user\n- service.py: signup and login with basic validation\n- no hashing, no persistence -- intentionally dumb for iteration | changed 3 file(s): auth/__init__.py, auth/models.py, auth/service",
+      "summary": "",
       "status": "active",
       "metadata": {
+        "hash": "623241a6b4a4f84842655b68cba4fcd42d83c57b",
+        "author": "Sumit",
         "msg": "feat: initial auth module with models and service\n\n- models.py: in-memory user store with create_user and get_user\n- service.py: signup and login with basic validation\n- no hashing, no persistence -- intentionally dumb for iteration",
         "timestamp": "2026-06-24T17:48:44+05:45",
-        "reasoning": "feat: initial auth module with models and service\n\n- models.py: in-memory user store with create_user and get_user\n- service.py: signup and login with basic validation\n- no hashing, no persistence -- intentionally dumb for iteration | changed 3 file(s): auth/__init__.py, auth/models.py, auth/service.py"
+        "ai_rationale": ""
       }
     },
     {
@@ -51,7 +53,10 @@
       "status": "active",
       "metadata": {
         "code": "def create_user(username, password):\n    users[username] = password",
-        "commit": "623241a"
+        "code_hash": "e23559567545",
+        "commit": "623241a",
+        "function_id": "func_auth_models_create_user",
+        "ai_summary": ""
       }
     },
     {
@@ -73,7 +78,10 @@
       "status": "active",
       "metadata": {
         "code": "def get_user(username):\n    return users.get(username)",
-        "commit": "623241a"
+        "code_hash": "e87d9d46d8f7",
+        "commit": "623241a",
+        "function_id": "func_auth_models_get_user",
+        "ai_summary": ""
       }
     },
     {
@@ -116,7 +124,10 @@
       "status": "active",
       "metadata": {
         "code": "def signup(username, password):\n    if get_user(username):\n        return \"User already exists\"\n    create_user(username, password)\n    return \"Signup successful\"",
-        "commit": "623241a"
+        "code_hash": "e0c01921fe82",
+        "commit": "623241a",
+        "function_id": "func_auth_service_signup",
+        "ai_summary": ""
       }
     },
     {
@@ -138,55 +149,66 @@
       "status": "active",
       "metadata": {
         "code": "def login(username, password):\n    user = get_user(username)\n    if user == password:\n        return \"Login successful\"\n    return \"Invalid credentials\"",
-        "commit": "623241a"
+        "code_hash": "a21c0efa1649",
+        "commit": "623241a",
+        "function_id": "func_auth_service_login",
+        "ai_summary": ""
       }
     },
     {
       "id": "commit_34344c3",
       "kind": "Commit",
       "label": "feat: tree-sitter ingestion, HelixDB writes, semantic pass, ",
-      "summary": "feat: tree-sitter ingestion, HelixDB writes, semantic pass, viz dump\n\n- scalable_ingest.py: replaced ast with tree-sitter; extracts CONTAINS,\n  IMPORTS, INHERITS, CALLS edges; writes all nodes/edges live to HelixDB\n  (localhost:6969) via helix-db SDK; keeps graph_payload.json + graph_viz.json\n  as a",
+      "summary": "",
       "status": "active",
       "metadata": {
+        "hash": "34344c3626e5f02b8ed03fb74245a6ea408f29c2",
+        "author": "Sumit",
         "msg": "feat: tree-sitter ingestion, HelixDB writes, semantic pass, viz dump\n\n- scalable_ingest.py: replaced ast with tree-sitter; extracts CONTAINS,\n  IMPORTS, INHERITS, CALLS edges; writes all nodes/edges live to HelixDB\n  (localhost:6969) via helix-db SDK; keeps graph_payload.json + graph_viz.json\n  as artefacts\n\n- semantic_pass.py: separate post-ingestion pass; traverses Commit->GENERATED->\n  FunctionState in HelixDB; analyses code structurally (params, calls, branches,\n  returns) to derive per-function Concept nodes and a ChangeNode summary;\n  attaches Rationale from commit message body; guardrail prevents writing\n  AST-owned node kinds\n\n- dump_viz.py: merges graph_payload.json with semantic nodes from HelixDB into\n  graph_viz.json for tools/harness_graph_viz.html\n\n- tools/harness_graph_viz.html: force-directed graph explorer (load JSON)",
         "timestamp": "2026-06-24T22:56:02+05:45",
-        "reasoning": "feat: tree-sitter ingestion, HelixDB writes, semantic pass, viz dump\n\n- scalable_ingest.py: replaced ast with tree-sitter; extracts CONTAINS,\n  IMPORTS, INHERITS, CALLS edges; writes all nodes/edges live to HelixDB\n  (localhost:6969) via helix-db SDK; keeps graph_payload.json + graph_viz.json\n  as artefacts\n\n- semantic_pass.py: separate post-ingestion pass; traverses Commit->GENERATED->\n  FunctionState in HelixDB; analyses code structurally (params, calls, branches,\n  returns) to derive per-function Concept nodes and a ChangeNode summary;\n  attaches Rationale from commit message body; guardrail prevents writing\n  AST-owned node kinds\n\n- dump_viz.py: merges graph_payload.json with semantic nodes from HelixDB into\n  graph_viz.json for tools/harness_graph_viz.html\n\n- tools/harness_graph_viz.html: force-directed graph explorer (load JSON) | changed 6 file(s): dump_viz.py, graph_payload.json, graph_viz.json, scalable_ingest.py, semantic_pass.py ..."
+        "ai_rationale": ""
       }
     },
     {
       "id": "commit_364d736",
       "kind": "Commit",
       "label": "fix: cross-file CALLS resolution, filter stdlib noise, fix s",
-      "summary": "fix: cross-file CALLS resolution, filter stdlib noise, fix semantic edges in viz\n\n- scalable_ingest: func_registry shared across files per commit; CALLS edges\n  only emitted for known user-defined functions (filters out get/append/print etc)\n- dump_viz: replaced broken zip-based edge approach with p",
+      "summary": "",
       "status": "active",
       "metadata": {
+        "hash": "364d73644a8990096de882efb9f924fbcd2e5f31",
+        "author": "Sumit",
         "msg": "fix: cross-file CALLS resolution, filter stdlib noise, fix semantic edges in viz\n\n- scalable_ingest: func_registry shared across files per commit; CALLS edges\n  only emitted for known user-defined functions (filters out get/append/print etc)\n- dump_viz: replaced broken zip-based edge approach with per-node traversal\n  using parameterized HelixDB queries; semantic edges now correctly appear",
         "timestamp": "2026-06-24T23:15:30+05:45",
-        "reasoning": "fix: cross-file CALLS resolution, filter stdlib noise, fix semantic edges in viz\n\n- scalable_ingest: func_registry shared across files per commit; CALLS edges\n  only emitted for known user-defined functions (filters out get/append/print etc)\n- dump_viz: replaced broken zip-based edge approach with per-node traversal\n  using parameterized HelixDB queries; semantic edges now correctly appear | changed 4 file(s): dump_viz.py, graph_payload.json, graph_viz.json, scalable_ingest.py"
+        "ai_rationale": ""
       }
     },
     {
       "id": "commit_c901594",
       "kind": "Commit",
       "label": "fix: skip tooling files from ingestion, add NEXT_COMMIT time",
-      "summary": "fix: skip tooling files from ingestion, add NEXT_COMMIT timeline chain\n\n- scalable_ingest: _SKIP_FILES list excludes ingestion scripts from being\n  parsed as code nodes; NEXT_COMMIT edges link commits in timeline order\n- dump_viz: includes NEXT_COMMIT in semantic edge traversal | changed 4 file(s): ",
+      "summary": "",
       "status": "active",
       "metadata": {
+        "hash": "c9015949f9518f78542127649868a59cdbf854c5",
+        "author": "Sumit",
         "msg": "fix: skip tooling files from ingestion, add NEXT_COMMIT timeline chain\n\n- scalable_ingest: _SKIP_FILES list excludes ingestion scripts from being\n  parsed as code nodes; NEXT_COMMIT edges link commits in timeline order\n- dump_viz: includes NEXT_COMMIT in semantic edge traversal",
         "timestamp": "2026-06-25T01:23:24+05:45",
-        "reasoning": "fix: skip tooling files from ingestion, add NEXT_COMMIT timeline chain\n\n- scalable_ingest: _SKIP_FILES list excludes ingestion scripts from being\n  parsed as code nodes; NEXT_COMMIT edges link commits in timeline order\n- dump_viz: includes NEXT_COMMIT in semantic edge traversal | changed 4 file(s): dump_viz.py, graph_payload.json, graph_viz.json, scalable_ingest.py"
+        "ai_rationale": ""
       }
     },
     {
       "id": "commit_eef5695",
       "kind": "Commit",
       "label": "feat: add validation, error handling, and account management",
-      "summary": "feat: add validation, error handling, and account management to auth module\n\n- models: add user_exists, delete_user, list_users with validation\n- service: add custom exceptions (AuthError, ValidationError, AuthenticationError)\n- service: add logout and delete_account functions\n- service: return stru",
+      "summary": "",
       "status": "active",
       "metadata": {
+        "hash": "eef56956a468d8c2c2cabc7046755ec9b11e405b",
+        "author": "Sumit",
         "msg": "feat: add validation, error handling, and account management to auth module\n\n- models: add user_exists, delete_user, list_users with validation\n- service: add custom exceptions (AuthError, ValidationError, AuthenticationError)\n- service: add logout and delete_account functions\n- service: return structured JSON responses instead of plain strings\n- service: validate username format (alphanumeric, min 3 chars)\n- models: enforce password min length (6 chars)",
         "timestamp": "2026-06-25T13:28:28+05:45",
-        "reasoning": "feat: add validation, error handling, and account management to auth module\n\n- models: add user_exists, delete_user, list_users with validation\n- service: add custom exceptions (AuthError, ValidationError, AuthenticationError)\n- service: add logout and delete_account functions\n- service: return structured JSON responses instead of plain strings\n- service: validate username format (alphanumeric, min 3 chars)\n- models: enforce password min length (6 chars) | changed 2 file(s): auth/models.py, auth/service.py"
+        "ai_rationale": ""
       }
     },
     {
@@ -218,7 +240,10 @@
       "status": "active",
       "metadata": {
         "code": "def create_user(username, password):\n    \"\"\"Create a new user with username and password.\"\"\"\n    if not username or not password:\n        raise ValueError(\"Username and password cannot be empty\")\n    if len(password) < 6:\n        raise ValueError(\"Password must be at least 6 characters\")\n    users[username] = password\n    return True",
-        "commit": "eef5695"
+        "code_hash": "a06b4166cb75",
+        "commit": "eef5695",
+        "function_id": "func_auth_models_create_user",
+        "ai_summary": ""
       }
     },
     {
@@ -240,7 +265,10 @@
       "status": "active",
       "metadata": {
         "code": "def get_user(username):\n    \"\"\"Retrieve user password by username.\"\"\"\n    return users.get(username)",
-        "commit": "eef5695"
+        "code_hash": "ca336d123048",
+        "commit": "eef5695",
+        "function_id": "func_auth_models_get_user",
+        "ai_summary": ""
       }
     },
     {
@@ -262,7 +290,10 @@
       "status": "active",
       "metadata": {
         "code": "def delete_user(username):\n    \"\"\"Delete a user by username.\"\"\"\n    if username in users:\n        del users[username]\n        return True\n    return False",
-        "commit": "eef5695"
+        "code_hash": "a13ae17dd227",
+        "commit": "eef5695",
+        "function_id": "func_auth_models_delete_user",
+        "ai_summary": ""
       }
     },
     {
@@ -284,7 +315,10 @@
       "status": "active",
       "metadata": {
         "code": "def list_users():\n    \"\"\"List all registered usernames.\"\"\"\n    return list(users.keys())",
-        "commit": "eef5695"
+        "code_hash": "c51dd0c11204",
+        "commit": "eef5695",
+        "function_id": "func_auth_models_list_users",
+        "ai_summary": ""
       }
     },
     {
@@ -306,7 +340,10 @@
       "status": "active",
       "metadata": {
         "code": "def user_exists(username):\n    \"\"\"Check if user exists.\"\"\"\n    return username in users",
-        "commit": "eef5695"
+        "code_hash": "4c5080d971a9",
+        "commit": "eef5695",
+        "function_id": "func_auth_models_user_exists",
+        "ai_summary": ""
       }
     },
     {
@@ -382,7 +419,10 @@
       "status": "active",
       "metadata": {
         "code": "def validate_username(username):\n    \"\"\"Validate username format.\"\"\"\n    if not username:\n        raise ValidationError(\"Username cannot be empty\")\n    if len(username) < 3:\n        raise ValidationError(\"Username must be at least 3 characters\")\n    if not username.isalnum():\n        raise ValidationError(\"Username must be alphanumeric\")\n    return True",
-        "commit": "eef5695"
+        "code_hash": "f85d97fc12b4",
+        "commit": "eef5695",
+        "function_id": "func_auth_service_validate_username",
+        "ai_summary": ""
       }
     },
     {
@@ -404,7 +444,10 @@
       "status": "active",
       "metadata": {
         "code": "def signup(username, password):\n    \"\"\"Register a new user with validation.\"\"\"\n    try:\n        validate_username(username)\n        \n        if user_exists(username):\n            raise ValidationError(\"User already exists\")\n        \n        create_user(username, password)\n        return {\"success\": True, \"message\": \"Signup successful\", \"username\": username}\n    \n    except (ValidationError, ValueError) as e:\n        return {\"success\": False, \"error\": str(e)}",
-        "commit": "eef5695"
+        "code_hash": "1c03e3759ffc",
+        "commit": "eef5695",
+        "function_id": "func_auth_service_signup",
+        "ai_summary": ""
       }
     },
     {
@@ -426,7 +469,10 @@
       "status": "active",
       "metadata": {
         "code": "def login(username, password):\n    \"\"\"Authenticate user and return success status.\"\"\"\n    try:\n        if not username or not password:\n            raise AuthenticationError(\"Username and password required\")\n        \n        stored_password = get_user(username)\n        \n        if stored_password is None:\n            raise AuthenticationError(\"User not found\")\n        \n        if stored_password != password:\n            raise AuthenticationError(\"Invalid password\")\n        \n        return {\"success\": True, \"message\": \"Login successful\", \"username\": username}\n    \n    except AuthenticationError as e:\n        return {\"success\": False, \"error\": str(e)}",
-        "commit": "eef5695"
+        "code_hash": "9943ba2c612c",
+        "commit": "eef5695",
+        "function_id": "func_auth_service_login",
+        "ai_summary": ""
       }
     },
     {
@@ -448,7 +494,10 @@
       "status": "active",
       "metadata": {
         "code": "def logout(username):\n    \"\"\"Logout user (placeholder for session management).\"\"\"\n    if user_exists(username):\n        return {\"success\": True, \"message\": f\"User {username} logged out\"}\n    return {\"success\": False, \"error\": \"User not found\"}",
-        "commit": "eef5695"
+        "code_hash": "a93be69e23eb",
+        "commit": "eef5695",
+        "function_id": "func_auth_service_logout",
+        "ai_summary": ""
       }
     },
     {
@@ -470,439 +519,24 @@
       "status": "active",
       "metadata": {
         "code": "def delete_account(username, password):\n    \"\"\"Delete user account with password verification.\"\"\"\n    try:\n        login_result = login(username, password)\n        if not login_result[\"success\"]:\n            raise AuthenticationError(\"Authentication failed\")\n        \n        if delete_user(username):\n            return {\"success\": True, \"message\": \"Account deleted successfully\"}\n        \n        return {\"success\": False, \"error\": \"Failed to delete account\"}\n    \n    except AuthenticationError as e:\n        return {\"success\": False, \"error\": str(e)}",
-        "commit": "eef5695"
+        "code_hash": "fcfafdc6426d",
+        "commit": "eef5695",
+        "function_id": "func_auth_service_delete_account",
+        "ai_summary": ""
       }
     },
     {
-      "id": "change_commit_623241a",
-      "kind": "ChangeNode",
-      "label": "ChangeNode: commit_623241a",
-      "summary": "Commit: feat: initial auth module with models and service\nFunctions introduced/changed (4):\n  * `create_user` -- accepts (username, password); no return value\n  * `get_user` -- accepts (username); calls get; returns a value\n  * `signup` -- accepts (username, password); calls create_user, get_user; 1 branch(es); returns a value\n  * `login` -- accepts (username, password); calls get_user; 1 branch(e",
-      "status": "semantic",
+      "id": "commit_58bb18b",
+      "kind": "Commit",
+      "label": "chore: update graph artifacts after auth module upgrade",
+      "summary": "",
+      "status": "active",
       "metadata": {
-        "summary": "Commit: feat: initial auth module with models and service\nFunctions introduced/changed (4):\n  * `create_user` -- accepts (username, password); no return value\n  * `get_user` -- accepts (username); calls get; returns a value\n  * `signup` -- accepts (username, password); calls create_user, get_user; 1 branch(es); returns a value\n  * `login` -- accepts (username, password); calls get_user; 1 branch(es); returns a value\nCross-function calls detected: create_user, get, get_user\nTotal control-flow branches: 2\nAuthor notes: - models.py: in-memory user store with create_user and get_user - service.py: signup and login with basic validation - no hashing, no persistence -- intentionally dumb for iteration",
-        "commit": "commit_623241a",
-        "node_id": "change_commit_623241a"
-      }
-    },
-    {
-      "id": "change_commit_34344c3",
-      "kind": "ChangeNode",
-      "label": "ChangeNode: commit_34344c3",
-      "summary": "Commit: feat: tree-sitter ingestion, HelixDB writes, semantic pass, viz dump\nFunctions introduced/changed (14):\n  * `_label` -- accepts (kind, r); calls get; 1 branch(es); returns a value\n  * `_summary` -- accepts (kind, r); calls get; 1 branch(es); returns a value\n  * `dump` -- calls Client, _label, _summary, add; 9 branch(es); no return value\n  * `_c` -- calls Client; returns a value\n  * `_ensur",
-      "status": "semantic",
-      "metadata": {
-        "commit": "commit_34344c3",
-        "summary": "Commit: feat: tree-sitter ingestion, HelixDB writes, semantic pass, viz dump\nFunctions introduced/changed (14):\n  * `_label` -- accepts (kind, r); calls get; 1 branch(es); returns a value\n  * `_summary` -- accepts (kind, r); calls get; 1 branch(es); returns a value\n  * `dump` -- calls Client, _label, _summary, add; 9 branch(es); no return value\n  * `_c` -- calls Client; returns a value\n  * `_ensure_indexes` -- accepts (c); calls create_index_if_not_exists, dynamic, g, node_unique_equality; 1 branch(es); no return value\n  * `_get_commits` -- accepts (c); calls dynamic, g, get, n_with_label; returns a value\n  * `_get_states_for_commit` -- accepts (c, commit_node_id); calls define_params, dynamic, eq_param, g; returns a value\n  * `_upsert` -- accepts (c, kind, node_id, props); calls add_n, define_params, drop, dynamic; 2 branch(es); no return value\n  * `_edge` -- accepts (c, src_id, src_kind, tgt_id, tgt_kind, label); calls add_e, dynamic, eq_param, g; 2 branch(es); no return value\n  * `_analyse_function` -- accepts (code); calls any, append, isinstance, join; 7 branch(es); returns a value\n  * `_concept_text` -- accepts (msg); calls groups, match, splitlines, strip; 1 branch(es); returns a value\n  * `_rationale_text` -- accepts (msg); calls join, splitlines, strip; returns a value\n  * `_change_summary` -- accepts (msg, states); calls _analyse_function, append, extend, get; 4 branch(es); returns a value\n  * `run_semantic_pass` -- calls _analyse_function, _c, _change_summary, _concept_text; 4 branch(es); no return value\nCross-function calls detected: Client, _analyse_function, _c, _change_summary, _concept_text, _edge, _ensure_indexes, _get_commits\nTotal control-flow branches: 32\nAuthor notes: - scalable_ingest.py: replaced ast with tree-sitter; extracts CONTAINS, IMPORTS, INHERITS, CALLS edges; writes all nodes/edges live to HelixDB (localhost:6969) via helix-db SDK; keeps graph_payload.json + graph_viz.json as artefacts - semantic_pass.py: separate post-ingestion pass; traverses Commit-",
-        "node_id": "change_commit_34344c3"
-      }
-    },
-    {
-      "id": "change_commit_364d736",
-      "kind": "ChangeNode",
-      "label": "ChangeNode: commit_364d736",
-      "summary": "Commit: fix: cross-file CALLS resolution, filter stdlib noise, fix semantic edges in viz\nAuthor notes: - scalable_ingest: func_registry shared across files per commit; CALLS edges only emitted for known user-defined functions (filters out get/append/print etc) - dump_viz: replaced broken zip-based edge approach with per-node traversal using parameterized HelixDB queries; semantic edges now correct",
-      "status": "semantic",
-      "metadata": {
-        "summary": "Commit: fix: cross-file CALLS resolution, filter stdlib noise, fix semantic edges in viz\nAuthor notes: - scalable_ingest: func_registry shared across files per commit; CALLS edges only emitted for known user-defined functions (filters out get/append/print etc) - dump_viz: replaced broken zip-based edge approach with per-node traversal using parameterized HelixDB queries; semantic edges now correctly ",
-        "commit": "commit_364d736",
-        "node_id": "change_commit_364d736"
-      }
-    },
-    {
-      "id": "change_commit_c901594",
-      "kind": "ChangeNode",
-      "label": "ChangeNode: commit_c901594",
-      "summary": "Commit: fix: skip tooling files from ingestion, add NEXT_COMMIT timeline chain\nAuthor notes: - scalable_ingest: _SKIP_FILES list excludes ingestion scripts from being parsed as code nodes; NEXT_COMMIT edges link commits in timeline order - dump_viz: includes NEXT_COMMIT in semantic edge traversal",
-      "status": "semantic",
-      "metadata": {
-        "node_id": "change_commit_c901594",
-        "summary": "Commit: fix: skip tooling files from ingestion, add NEXT_COMMIT timeline chain\nAuthor notes: - scalable_ingest: _SKIP_FILES list excludes ingestion scripts from being parsed as code nodes; NEXT_COMMIT edges link commits in timeline order - dump_viz: includes NEXT_COMMIT in semantic edge traversal",
-        "commit": "commit_c901594"
-      }
-    },
-    {
-      "id": "change_commit_eef5695",
-      "kind": "ChangeNode",
-      "label": "ChangeNode: commit_eef5695",
-      "summary": "Commit: feat: add validation, error handling, and account management to auth module\nAuthor notes: - models: add user_exists, delete_user, list_users with validation - service: add custom exceptions (AuthError, ValidationError, AuthenticationError) - service: add logout and delete_account functions - service: return structured JSON responses instead of plain strings - service: validate username f",
-      "status": "semantic",
-      "metadata": {
-        "commit": "commit_eef5695",
-        "node_id": "change_commit_eef5695",
-        "summary": "Commit: feat: add validation, error handling, and account management to auth module\nAuthor notes: - models: add user_exists, delete_user, list_users with validation - service: add custom exceptions (AuthError, ValidationError, AuthenticationError) - service: add logout and delete_account functions - service: return structured JSON responses instead of plain strings - service: validate username f"
-      }
-    },
-    {
-      "id": "sem_state_auth_models_create_user_623241a",
-      "kind": "Concept",
-      "label": "`create_user` -- accepts (username, password); no return val",
-      "summary": "`create_user` -- accepts (username, password); no return value",
-      "status": "semantic",
-      "metadata": {
-        "node_id": "sem_state_auth_models_create_user_623241a",
-        "calls": "",
-        "text": "`create_user` -- accepts (username, password); no return value",
-        "branches": "0",
-        "commit": "commit_623241a"
-      }
-    },
-    {
-      "id": "sem_state_auth_models_get_user_623241a",
-      "kind": "Concept",
-      "label": "`get_user` -- accepts (username); calls get; returns a value",
-      "summary": "`get_user` -- accepts (username); calls get; returns a value",
-      "status": "semantic",
-      "metadata": {
-        "node_id": "sem_state_auth_models_get_user_623241a",
-        "commit": "commit_623241a",
-        "text": "`get_user` -- accepts (username); calls get; returns a value",
-        "branches": "0",
-        "calls": "get"
-      }
-    },
-    {
-      "id": "sem_state_auth_service_signup_623241a",
-      "kind": "Concept",
-      "label": "`signup` -- accepts (username, password); calls create_user,",
-      "summary": "`signup` -- accepts (username, password); calls create_user, get_user; 1 branch(es); returns a value",
-      "status": "semantic",
-      "metadata": {
-        "node_id": "sem_state_auth_service_signup_623241a",
-        "branches": "1",
-        "text": "`signup` -- accepts (username, password); calls create_user, get_user; 1 branch(es); returns a value",
-        "calls": "create_user, get_user",
-        "commit": "commit_623241a"
-      }
-    },
-    {
-      "id": "sem_state_auth_service_login_623241a",
-      "kind": "Concept",
-      "label": "`login` -- accepts (username, password); calls get_user; 1 b",
-      "summary": "`login` -- accepts (username, password); calls get_user; 1 branch(es); returns a value",
-      "status": "semantic",
-      "metadata": {
-        "text": "`login` -- accepts (username, password); calls get_user; 1 branch(es); returns a value",
-        "commit": "commit_623241a",
-        "calls": "get_user",
-        "node_id": "sem_state_auth_service_login_623241a",
-        "branches": "1"
-      }
-    },
-    {
-      "id": "concept_commit_623241a",
-      "kind": "Concept",
-      "label": "FEAT: initial auth module with models and service",
-      "summary": "FEAT: initial auth module with models and service",
-      "status": "semantic",
-      "metadata": {
-        "commit": "commit_623241a",
-        "text": "FEAT: initial auth module with models and service",
-        "node_id": "concept_commit_623241a"
-      }
-    },
-    {
-      "id": "sem_state_dump_viz__label_34344c3",
-      "kind": "Concept",
-      "label": "`_label` -- accepts (kind, r); calls get; 1 branch(es); retu",
-      "summary": "`_label` -- accepts (kind, r); calls get; 1 branch(es); returns a value",
-      "status": "semantic",
-      "metadata": {
-        "text": "`_label` -- accepts (kind, r); calls get; 1 branch(es); returns a value",
-        "node_id": "sem_state_dump_viz__label_34344c3",
-        "calls": "get",
-        "branches": "1",
-        "commit": "commit_34344c3"
-      }
-    },
-    {
-      "id": "sem_state_dump_viz__summary_34344c3",
-      "kind": "Concept",
-      "label": "`_summary` -- accepts (kind, r); calls get; 1 branch(es); re",
-      "summary": "`_summary` -- accepts (kind, r); calls get; 1 branch(es); returns a value",
-      "status": "semantic",
-      "metadata": {
-        "branches": "1",
-        "calls": "get",
-        "commit": "commit_34344c3",
-        "node_id": "sem_state_dump_viz__summary_34344c3",
-        "text": "`_summary` -- accepts (kind, r); calls get; 1 branch(es); returns a value"
-      }
-    },
-    {
-      "id": "sem_state_dump_viz_dump_34344c3",
-      "kind": "Concept",
-      "label": "`dump` -- calls Client, _label, _summary, add; 9 branch(es);",
-      "summary": "`dump` -- calls Client, _label, _summary, add; 9 branch(es); no return value",
-      "status": "semantic",
-      "metadata": {
-        "commit": "commit_34344c3",
-        "branches": "9",
-        "text": "`dump` -- calls Client, _label, _summary, add; 9 branch(es); no return value",
-        "calls": "Client, _label, _summary, add, append, dump, dynamic, g, get, items, len, load, n_with_label, open, out_e, out_n, print, query, read_batch, returning, send, splitlines, startswith, to_dynamic_request, value_map, var_as, zip",
-        "node_id": "sem_state_dump_viz_dump_34344c3"
-      }
-    },
-    {
-      "id": "sem_state_semantic_pass__c_34344c3",
-      "kind": "Concept",
-      "label": "`_c` -- calls Client; returns a value",
-      "summary": "`_c` -- calls Client; returns a value",
-      "status": "semantic",
-      "metadata": {
-        "branches": "0",
-        "text": "`_c` -- calls Client; returns a value",
-        "calls": "Client",
-        "node_id": "sem_state_semantic_pass__c_34344c3",
-        "commit": "commit_34344c3"
-      }
-    },
-    {
-      "id": "sem_state_semantic_pass__ensure_indexes_34344c3",
-      "kind": "Concept",
-      "label": "`_ensure_indexes` -- accepts (c); calls create_index_if_not_",
-      "summary": "`_ensure_indexes` -- accepts (c); calls create_index_if_not_exists, dynamic, g, node_unique_equality; 1 branch(es); no return value",
-      "status": "semantic",
-      "metadata": {
-        "branches": "1",
-        "node_id": "sem_state_semantic_pass__ensure_indexes_34344c3",
-        "calls": "create_index_if_not_exists, dynamic, g, node_unique_equality, query, returning, send, to_dynamic_request, var_as, write_batch",
-        "text": "`_ensure_indexes` -- accepts (c); calls create_index_if_not_exists, dynamic, g, node_unique_equality; 1 branch(es); no return value",
-        "commit": "commit_34344c3"
-      }
-    },
-    {
-      "id": "sem_state_semantic_pass__get_commits_34344c3",
-      "kind": "Concept",
-      "label": "`_get_commits` -- accepts (c); calls dynamic, g, get, n_with",
-      "summary": "`_get_commits` -- accepts (c); calls dynamic, g, get, n_with_label; returns a value",
-      "status": "semantic",
-      "metadata": {
-        "text": "`_get_commits` -- accepts (c); calls dynamic, g, get, n_with_label; returns a value",
-        "commit": "commit_34344c3",
-        "branches": "0",
-        "calls": "dynamic, g, get, n_with_label, query, read_batch, returning, send, to_dynamic_request, value_map, var_as",
-        "node_id": "sem_state_semantic_pass__get_commits_34344c3"
-      }
-    },
-    {
-      "id": "sem_state_semantic_pass__get_states_for_commit_34344c3",
-      "kind": "Concept",
-      "label": "`_get_states_for_commit` -- accepts (c, commit_node_id); cal",
-      "summary": "`_get_states_for_commit` -- accepts (c, commit_node_id); calls define_params, dynamic, eq_param, g; returns a value",
-      "status": "semantic",
-      "metadata": {
-        "branches": "0",
-        "commit": "commit_34344c3",
-        "node_id": "sem_state_semantic_pass__get_states_for_commit_34344c3",
-        "calls": "define_params, dynamic, eq_param, g, get, n, n_with_label, out_e, out_n, query, read_batch, returning, send, string, to_dynamic_request, value_map, var, var_as, where",
-        "text": "`_get_states_for_commit` -- accepts (c, commit_node_id); calls define_params, dynamic, eq_param, g; returns a value"
-      }
-    },
-    {
-      "id": "sem_state_semantic_pass__upsert_34344c3",
-      "kind": "Concept",
-      "label": "`_upsert` -- accepts (c, kind, node_id, props); calls add_n,",
-      "summary": "`_upsert` -- accepts (c, kind, node_id, props); calls add_n, define_params, drop, dynamic; 2 branch(es); no return value",
-      "status": "semantic",
-      "metadata": {
-        "calls": "add_n, define_params, drop, dynamic, eq_param, g, items, n_with_label, query, returning, send, str, string, to_dynamic_request, value, var_as, where, write_batch",
-        "branches": "2",
-        "commit": "commit_34344c3",
-        "node_id": "sem_state_semantic_pass__upsert_34344c3",
-        "text": "`_upsert` -- accepts (c, kind, node_id, props); calls add_n, define_params, drop, dynamic; 2 branch(es); no return value"
-      }
-    },
-    {
-      "id": "sem_state_semantic_pass__edge_34344c3",
-      "kind": "Concept",
-      "label": "`_edge` -- accepts (c, src_id, src_kind, tgt_id, tgt_kind, l",
-      "summary": "`_edge` -- accepts (c, src_id, src_kind, tgt_id, tgt_kind, label); calls add_e, dynamic, eq_param, g; 2 branch(es); no return value",
-      "status": "semantic",
-      "metadata": {
-        "branches": "2",
-        "commit": "commit_34344c3",
-        "calls": "add_e, dynamic, eq_param, g, n, n_with_label, query, returning, send, to_dynamic_request, var, var_as, where, write_batch",
-        "node_id": "sem_state_semantic_pass__edge_34344c3",
-        "text": "`_edge` -- accepts (c, src_id, src_kind, tgt_id, tgt_kind, label); calls add_e, dynamic, eq_param, g; 2 branch(es); no return value"
-      }
-    },
-    {
-      "id": "sem_state_semantic_pass__analyse_function_34344c3",
-      "kind": "Concept",
-      "label": "`_analyse_function` -- accepts (code); calls any, append, is",
-      "summary": "`_analyse_function` -- accepts (code); calls any, append, isinstance, join; 7 branch(es); returns a value",
-      "status": "semantic",
-      "metadata": {
-        "calls": "any, append, isinstance, join, next, parse, sorted, splitlines, sum, walk",
-        "commit": "commit_34344c3",
-        "text": "`_analyse_function` -- accepts (code); calls any, append, isinstance, join; 7 branch(es); returns a value",
-        "branches": "7",
-        "node_id": "sem_state_semantic_pass__analyse_function_34344c3"
-      }
-    },
-    {
-      "id": "sem_state_semantic_pass__concept_text_34344c3",
-      "kind": "Concept",
-      "label": "`_concept_text` -- accepts (msg); calls groups, match, split",
-      "summary": "`_concept_text` -- accepts (msg); calls groups, match, splitlines, strip; 1 branch(es); returns a value",
-      "status": "semantic",
-      "metadata": {
-        "commit": "commit_34344c3",
-        "branches": "1",
-        "node_id": "sem_state_semantic_pass__concept_text_34344c3",
-        "text": "`_concept_text` -- accepts (msg); calls groups, match, splitlines, strip; 1 branch(es); returns a value",
-        "calls": "groups, match, splitlines, strip, upper"
-      }
-    },
-    {
-      "id": "sem_state_semantic_pass__rationale_text_34344c3",
-      "kind": "Concept",
-      "label": "`_rationale_text` -- accepts (msg); calls join, splitlines, ",
-      "summary": "`_rationale_text` -- accepts (msg); calls join, splitlines, strip; returns a value",
-      "status": "semantic",
-      "metadata": {
-        "text": "`_rationale_text` -- accepts (msg); calls join, splitlines, strip; returns a value",
-        "node_id": "sem_state_semantic_pass__rationale_text_34344c3",
-        "calls": "join, splitlines, strip",
-        "branches": "0",
-        "commit": "commit_34344c3"
-      }
-    },
-    {
-      "id": "sem_state_semantic_pass__change_summary_34344c3",
-      "kind": "Concept",
-      "label": "`_change_summary` -- accepts (msg, states); calls _analyse_f",
-      "summary": "`_change_summary` -- accepts (msg, states); calls _analyse_function, append, extend, get; 4 branch(es); returns a value",
-      "status": "semantic",
-      "metadata": {
-        "branches": "4",
-        "node_id": "sem_state_semantic_pass__change_summary_34344c3",
-        "text": "`_change_summary` -- accepts (msg, states); calls _analyse_function, append, extend, get; 4 branch(es); returns a value",
-        "calls": "_analyse_function, append, extend, get, join, len, sorted, splitlines, strip, sum",
-        "commit": "commit_34344c3"
-      }
-    },
-    {
-      "id": "sem_state_semantic_pass_run_semantic_pass_34344c3",
-      "kind": "Concept",
-      "label": "`run_semantic_pass` -- calls _analyse_function, _c, _change_",
-      "summary": "`run_semantic_pass` -- calls _analyse_function, _c, _change_summary, _concept_text; 4 branch(es); no return value",
-      "status": "semantic",
-      "metadata": {
-        "node_id": "sem_state_semantic_pass_run_semantic_pass_34344c3",
-        "calls": "_analyse_function, _c, _change_summary, _concept_text, _edge, _ensure_indexes, _get_commits, _get_states_for_commit, _rationale_text, _upsert, get, join, len, print, replace, splitlines, startswith, str",
-        "text": "`run_semantic_pass` -- calls _analyse_function, _c, _change_summary, _concept_text; 4 branch(es); no return value",
-        "branches": "4",
-        "commit": "commit_34344c3"
-      }
-    },
-    {
-      "id": "concept_commit_34344c3",
-      "kind": "Concept",
-      "label": "FEAT: tree-sitter ingestion, HelixDB writes, semantic pass, ",
-      "summary": "FEAT: tree-sitter ingestion, HelixDB writes, semantic pass, viz dump",
-      "status": "semantic",
-      "metadata": {
-        "text": "FEAT: tree-sitter ingestion, HelixDB writes, semantic pass, viz dump",
-        "node_id": "concept_commit_34344c3",
-        "commit": "commit_34344c3"
-      }
-    },
-    {
-      "id": "concept_commit_364d736",
-      "kind": "Concept",
-      "label": "FIX: cross-file CALLS resolution, filter stdlib noise, fix s",
-      "summary": "FIX: cross-file CALLS resolution, filter stdlib noise, fix semantic edges in viz",
-      "status": "semantic",
-      "metadata": {
-        "node_id": "concept_commit_364d736",
-        "text": "FIX: cross-file CALLS resolution, filter stdlib noise, fix semantic edges in viz",
-        "commit": "commit_364d736"
-      }
-    },
-    {
-      "id": "concept_commit_c901594",
-      "kind": "Concept",
-      "label": "FIX: skip tooling files from ingestion, add NEXT_COMMIT time",
-      "summary": "FIX: skip tooling files from ingestion, add NEXT_COMMIT timeline chain",
-      "status": "semantic",
-      "metadata": {
-        "node_id": "concept_commit_c901594",
-        "text": "FIX: skip tooling files from ingestion, add NEXT_COMMIT timeline chain",
-        "commit": "commit_c901594"
-      }
-    },
-    {
-      "id": "concept_commit_eef5695",
-      "kind": "Concept",
-      "label": "FEAT: add validation, error handling, and account management",
-      "summary": "FEAT: add validation, error handling, and account management to auth module",
-      "status": "semantic",
-      "metadata": {
-        "node_id": "concept_commit_eef5695",
-        "commit": "commit_eef5695",
-        "text": "FEAT: add validation, error handling, and account management to auth module"
-      }
-    },
-    {
-      "id": "rationale_commit_623241a",
-      "kind": "Rationale",
-      "label": "- models.py: in-memory user store with create_user and get_u",
-      "summary": "- models.py: in-memory user store with create_user and get_user - service.py: signup and login with basic validation - no hashing, no persistence -- intentionally dumb for iteration",
-      "status": "semantic",
-      "metadata": {
-        "commit": "commit_623241a",
-        "node_id": "rationale_commit_623241a",
-        "text": "- models.py: in-memory user store with create_user and get_user - service.py: signup and login with basic validation - no hashing, no persistence -- intentionally dumb for iteration"
-      }
-    },
-    {
-      "id": "rationale_commit_34344c3",
-      "kind": "Rationale",
-      "label": "- scalable_ingest.py: replaced ast with tree-sitter; extract",
-      "summary": "- scalable_ingest.py: replaced ast with tree-sitter; extracts CONTAINS, IMPORTS, INHERITS, CALLS edges; writes all nodes/edges live to HelixDB (localhost:6969) via helix-db SDK; keeps graph_payload.json + graph_viz.json as artefacts - semantic_pass.py: separate post-ingestion pass; traverses Commit->GENERATED-> FunctionState in HelixDB; analyses code structurally (params, calls, branches, returns) to derive per-function Concept nodes and a ChangeNode summary; attaches Rationale from commit messa",
-      "status": "semantic",
-      "metadata": {
-        "text": "- scalable_ingest.py: replaced ast with tree-sitter; extracts CONTAINS, IMPORTS, INHERITS, CALLS edges; writes all nodes/edges live to HelixDB (localhost:6969) via helix-db SDK; keeps graph_payload.json + graph_viz.json as artefacts - semantic_pass.py: separate post-ingestion pass; traverses Commit->GENERATED-> FunctionState in HelixDB; analyses code structurally (params, calls, branches, returns) to derive per-function Concept nodes and a ChangeNode summary; attaches Rationale from commit messa",
-        "node_id": "rationale_commit_34344c3",
-        "commit": "commit_34344c3"
-      }
-    },
-    {
-      "id": "rationale_commit_364d736",
-      "kind": "Rationale",
-      "label": "- scalable_ingest: func_registry shared across files per com",
-      "summary": "- scalable_ingest: func_registry shared across files per commit; CALLS edges only emitted for known user-defined functions (filters out get/append/print etc) - dump_viz: replaced broken zip-based edge approach with per-node traversal using parameterized HelixDB queries; semantic edges now correctly appear",
-      "status": "semantic",
-      "metadata": {
-        "node_id": "rationale_commit_364d736",
-        "commit": "commit_364d736",
-        "text": "- scalable_ingest: func_registry shared across files per commit; CALLS edges only emitted for known user-defined functions (filters out get/append/print etc) - dump_viz: replaced broken zip-based edge approach with per-node traversal using parameterized HelixDB queries; semantic edges now correctly appear"
-      }
-    },
-    {
-      "id": "rationale_commit_c901594",
-      "kind": "Rationale",
-      "label": "- scalable_ingest: _SKIP_FILES list excludes ingestion scrip",
-      "summary": "- scalable_ingest: _SKIP_FILES list excludes ingestion scripts from being parsed as code nodes; NEXT_COMMIT edges link commits in timeline order - dump_viz: includes NEXT_COMMIT in semantic edge traversal",
-      "status": "semantic",
-      "metadata": {
-        "text": "- scalable_ingest: _SKIP_FILES list excludes ingestion scripts from being parsed as code nodes; NEXT_COMMIT edges link commits in timeline order - dump_viz: includes NEXT_COMMIT in semantic edge traversal",
-        "commit": "commit_c901594",
-        "node_id": "rationale_commit_c901594"
-      }
-    },
-    {
-      "id": "rationale_commit_eef5695",
-      "kind": "Rationale",
-      "label": "- models: add user_exists, delete_user, list_users with vali",
-      "summary": "- models: add user_exists, delete_user, list_users with validation - service: add custom exceptions (AuthError, ValidationError, AuthenticationError) - service: add logout and delete_account functions - service: return structured JSON responses instead of plain strings - service: validate username format (alphanumeric, min 3 chars) - models: enforce password min length (6 chars)",
-      "status": "semantic",
-      "metadata": {
-        "text": "- models: add user_exists, delete_user, list_users with validation - service: add custom exceptions (AuthError, ValidationError, AuthenticationError) - service: add logout and delete_account functions - service: return structured JSON responses instead of plain strings - service: validate username format (alphanumeric, min 3 chars) - models: enforce password min length (6 chars)",
-        "node_id": "rationale_commit_eef5695",
-        "commit": "commit_eef5695"
+        "hash": "58bb18b56699991654107e5a1e28b4cf752a820d",
+        "author": "Sumit",
+        "msg": "chore: update graph artifacts after auth module upgrade",
+        "timestamp": "2026-06-25T13:34:14+05:45",
+        "ai_rationale": ""
       }
     }
   ],
@@ -1028,11 +662,6 @@
       "kind": "CONTAINS"
     },
     {
-      "source": "file_auth_models",
-      "target": "func_auth_models_create_user",
-      "kind": "CONTAINS"
-    },
-    {
       "source": "func_auth_models_create_user",
       "target": "state_auth_models_create_user_eef5695",
       "kind": "HAS_STATE"
@@ -1046,11 +675,6 @@
       "source": "state_auth_models_create_user_eef5695",
       "target": "state_auth_models_create_user_623241a",
       "kind": "PREVIOUS_VERSION"
-    },
-    {
-      "source": "file_auth_models",
-      "target": "func_auth_models_get_user",
-      "kind": "CONTAINS"
     },
     {
       "source": "func_auth_models_get_user",
@@ -1119,11 +743,6 @@
     },
     {
       "source": "file_auth_service",
-      "target": "file_auth",
-      "kind": "IMPORTS"
-    },
-    {
-      "source": "file_auth_service",
       "target": "class_auth_service_AuthError",
       "kind": "CONTAINS"
     },
@@ -1168,11 +787,6 @@
       "kind": "GENERATED"
     },
     {
-      "source": "file_auth_service",
-      "target": "func_auth_service_signup",
-      "kind": "CONTAINS"
-    },
-    {
       "source": "func_auth_service_signup",
       "target": "state_auth_service_signup_eef5695",
       "kind": "HAS_STATE"
@@ -1198,16 +812,6 @@
       "kind": "CALLS"
     },
     {
-      "source": "func_auth_service_signup",
-      "target": "func_auth_models_create_user",
-      "kind": "CALLS"
-    },
-    {
-      "source": "file_auth_service",
-      "target": "func_auth_service_login",
-      "kind": "CONTAINS"
-    },
-    {
       "source": "func_auth_service_login",
       "target": "state_auth_service_login_eef5695",
       "kind": "HAS_STATE"
@@ -1221,11 +825,6 @@
       "source": "state_auth_service_login_eef5695",
       "target": "state_auth_service_login_623241a",
       "kind": "PREVIOUS_VERSION"
-    },
-    {
-      "source": "func_auth_service_login",
-      "target": "func_auth_models_get_user",
-      "kind": "CALLS"
     },
     {
       "source": "file_auth_service",
@@ -1273,169 +872,9 @@
       "kind": "CALLS"
     },
     {
-      "source": "commit_623241a",
-      "target": "change_commit_623241a",
-      "kind": "HAS_CHANGE"
-    },
-    {
-      "source": "commit_34344c3",
-      "target": "change_commit_34344c3",
-      "kind": "HAS_CHANGE"
-    },
-    {
-      "source": "commit_364d736",
-      "target": "change_commit_364d736",
-      "kind": "HAS_CHANGE"
-    },
-    {
-      "source": "commit_c901594",
-      "target": "change_commit_c901594",
-      "kind": "HAS_CHANGE"
-    },
-    {
       "source": "commit_eef5695",
-      "target": "change_commit_eef5695",
-      "kind": "HAS_CHANGE"
-    },
-    {
-      "source": "commit_623241a",
-      "target": "concept_commit_623241a",
-      "kind": "HAS_SEMANTIC"
-    },
-    {
-      "source": "commit_623241a",
-      "target": "rationale_commit_623241a",
-      "kind": "HAS_SEMANTIC"
-    },
-    {
-      "source": "commit_34344c3",
-      "target": "concept_commit_34344c3",
-      "kind": "HAS_SEMANTIC"
-    },
-    {
-      "source": "commit_34344c3",
-      "target": "rationale_commit_34344c3",
-      "kind": "HAS_SEMANTIC"
-    },
-    {
-      "source": "commit_364d736",
-      "target": "concept_commit_364d736",
-      "kind": "HAS_SEMANTIC"
-    },
-    {
-      "source": "commit_364d736",
-      "target": "rationale_commit_364d736",
-      "kind": "HAS_SEMANTIC"
-    },
-    {
-      "source": "commit_c901594",
-      "target": "concept_commit_c901594",
-      "kind": "HAS_SEMANTIC"
-    },
-    {
-      "source": "commit_c901594",
-      "target": "rationale_commit_c901594",
-      "kind": "HAS_SEMANTIC"
-    },
-    {
-      "source": "commit_eef5695",
-      "target": "concept_commit_eef5695",
-      "kind": "HAS_SEMANTIC"
-    },
-    {
-      "source": "commit_eef5695",
-      "target": "rationale_commit_eef5695",
-      "kind": "HAS_SEMANTIC"
-    },
-    {
-      "source": "change_commit_623241a",
-      "target": "sem_state_auth_models_create_user_623241a",
-      "kind": "DESCRIBES"
-    },
-    {
-      "source": "change_commit_623241a",
-      "target": "sem_state_auth_models_get_user_623241a",
-      "kind": "DESCRIBES"
-    },
-    {
-      "source": "change_commit_623241a",
-      "target": "sem_state_auth_service_signup_623241a",
-      "kind": "DESCRIBES"
-    },
-    {
-      "source": "change_commit_623241a",
-      "target": "sem_state_auth_service_login_623241a",
-      "kind": "DESCRIBES"
-    },
-    {
-      "source": "change_commit_34344c3",
-      "target": "sem_state_dump_viz__label_34344c3",
-      "kind": "DESCRIBES"
-    },
-    {
-      "source": "change_commit_34344c3",
-      "target": "sem_state_dump_viz__summary_34344c3",
-      "kind": "DESCRIBES"
-    },
-    {
-      "source": "change_commit_34344c3",
-      "target": "sem_state_dump_viz_dump_34344c3",
-      "kind": "DESCRIBES"
-    },
-    {
-      "source": "change_commit_34344c3",
-      "target": "sem_state_semantic_pass__c_34344c3",
-      "kind": "DESCRIBES"
-    },
-    {
-      "source": "change_commit_34344c3",
-      "target": "sem_state_semantic_pass__ensure_indexes_34344c3",
-      "kind": "DESCRIBES"
-    },
-    {
-      "source": "change_commit_34344c3",
-      "target": "sem_state_semantic_pass__get_commits_34344c3",
-      "kind": "DESCRIBES"
-    },
-    {
-      "source": "change_commit_34344c3",
-      "target": "sem_state_semantic_pass__get_states_for_commit_34344c3",
-      "kind": "DESCRIBES"
-    },
-    {
-      "source": "change_commit_34344c3",
-      "target": "sem_state_semantic_pass__upsert_34344c3",
-      "kind": "DESCRIBES"
-    },
-    {
-      "source": "change_commit_34344c3",
-      "target": "sem_state_semantic_pass__edge_34344c3",
-      "kind": "DESCRIBES"
-    },
-    {
-      "source": "change_commit_34344c3",
-      "target": "sem_state_semantic_pass__analyse_function_34344c3",
-      "kind": "DESCRIBES"
-    },
-    {
-      "source": "change_commit_34344c3",
-      "target": "sem_state_semantic_pass__concept_text_34344c3",
-      "kind": "DESCRIBES"
-    },
-    {
-      "source": "change_commit_34344c3",
-      "target": "sem_state_semantic_pass__rationale_text_34344c3",
-      "kind": "DESCRIBES"
-    },
-    {
-      "source": "change_commit_34344c3",
-      "target": "sem_state_semantic_pass__change_summary_34344c3",
-      "kind": "DESCRIBES"
-    },
-    {
-      "source": "change_commit_34344c3",
-      "target": "sem_state_semantic_pass_run_semantic_pass_34344c3",
-      "kind": "DESCRIBES"
+      "target": "commit_58bb18b",
+      "kind": "NEXT_COMMIT"
     }
   ]
 }
