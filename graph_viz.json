@@ -56,7 +56,8 @@
         "code_hash": "e23559567545",
         "commit": "623241a",
         "function_id": "func_auth_models_create_user",
-        "ai_summary": ""
+        "ai_summary": "",
+        "status": "superseded"
       }
     },
     {
@@ -81,7 +82,8 @@
         "code_hash": "e87d9d46d8f7",
         "commit": "623241a",
         "function_id": "func_auth_models_get_user",
-        "ai_summary": ""
+        "ai_summary": "",
+        "status": "superseded"
       }
     },
     {
@@ -127,7 +129,8 @@
         "code_hash": "e0c01921fe82",
         "commit": "623241a",
         "function_id": "func_auth_service_signup",
-        "ai_summary": ""
+        "ai_summary": "",
+        "status": "superseded"
       }
     },
     {
@@ -152,7 +155,8 @@
         "code_hash": "a21c0efa1649",
         "commit": "623241a",
         "function_id": "func_auth_service_login",
-        "ai_summary": ""
+        "ai_summary": "",
+        "status": "superseded"
       }
     },
     {
@@ -243,7 +247,8 @@
         "code_hash": "a06b4166cb75",
         "commit": "eef5695",
         "function_id": "func_auth_models_create_user",
-        "ai_summary": ""
+        "ai_summary": "",
+        "status": "active"
       }
     },
     {
@@ -268,7 +273,8 @@
         "code_hash": "ca336d123048",
         "commit": "eef5695",
         "function_id": "func_auth_models_get_user",
-        "ai_summary": ""
+        "ai_summary": "",
+        "status": "active"
       }
     },
     {
@@ -293,7 +299,8 @@
         "code_hash": "a13ae17dd227",
         "commit": "eef5695",
         "function_id": "func_auth_models_delete_user",
-        "ai_summary": ""
+        "ai_summary": "",
+        "status": "active"
       }
     },
     {
@@ -318,7 +325,8 @@
         "code_hash": "c51dd0c11204",
         "commit": "eef5695",
         "function_id": "func_auth_models_list_users",
-        "ai_summary": ""
+        "ai_summary": "",
+        "status": "active"
       }
     },
     {
@@ -343,7 +351,8 @@
         "code_hash": "4c5080d971a9",
         "commit": "eef5695",
         "function_id": "func_auth_models_user_exists",
-        "ai_summary": ""
+        "ai_summary": "",
+        "status": "active"
       }
     },
     {
@@ -422,7 +431,8 @@
         "code_hash": "f85d97fc12b4",
         "commit": "eef5695",
         "function_id": "func_auth_service_validate_username",
-        "ai_summary": ""
+        "ai_summary": "",
+        "status": "active"
       }
     },
     {
@@ -447,7 +457,8 @@
         "code_hash": "1c03e3759ffc",
         "commit": "eef5695",
         "function_id": "func_auth_service_signup",
-        "ai_summary": ""
+        "ai_summary": "",
+        "status": "active"
       }
     },
     {
@@ -472,7 +483,8 @@
         "code_hash": "9943ba2c612c",
         "commit": "eef5695",
         "function_id": "func_auth_service_login",
-        "ai_summary": ""
+        "ai_summary": "",
+        "status": "active"
       }
     },
     {
@@ -497,7 +509,8 @@
         "code_hash": "a93be69e23eb",
         "commit": "eef5695",
         "function_id": "func_auth_service_logout",
-        "ai_summary": ""
+        "ai_summary": "",
+        "status": "active"
       }
     },
     {
@@ -522,7 +535,8 @@
         "code_hash": "fcfafdc6426d",
         "commit": "eef5695",
         "function_id": "func_auth_service_delete_account",
-        "ai_summary": ""
+        "ai_summary": "",
+        "status": "active"
       }
     },
     {
@@ -536,6 +550,20 @@
         "author": "Sumit",
         "msg": "chore: update graph artifacts after auth module upgrade",
         "timestamp": "2026-06-25T13:34:14+05:45",
+        "ai_rationale": ""
+      }
+    },
+    {
+      "id": "commit_5d3d872",
+      "kind": "Commit",
+      "label": "refactor: flatten graph schema — remove ChangeNode/Concept/R",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "hash": "5d3d8728a068f124e748fc4e461533247109a387",
+        "author": "Sumit",
+        "msg": "refactor: flatten graph schema — remove ChangeNode/Concept/Rationale, embed ai_summary on FunctionState, ai_rationale on Commit",
+        "timestamp": "2026-06-26T18:42:36+05:45",
         "ai_rationale": ""
       }
     }
@@ -874,6 +902,11 @@
     {
       "source": "commit_eef5695",
       "target": "commit_58bb18b",
+      "kind": "NEXT_COMMIT"
+    },
+    {
+      "source": "commit_58bb18b",
+      "target": "commit_5d3d872",
       "kind": "NEXT_COMMIT"
     }
   ]
