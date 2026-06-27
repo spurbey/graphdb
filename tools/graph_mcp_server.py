@@ -16,6 +16,7 @@ from tools.graph_tools import (
     get_code_time_travel_diff,
     trace_blast_radius,
     get_temporal_vulnerability_trace,
+    edit_code,
 )
 
 PORT = 7700
@@ -71,14 +72,28 @@ MANIFEST = {
                 "required": ["target_func", "timestamp_iso"],
             },
         },
+        {
+            "name":        "edit_code",
+            "description": "Patch a function in the working tree with new code, then re-ingest into the graph. Use after trace tools identify a stale/vulnerable function.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "file":          {"type": "string", "description": "Repo-relative file path (e.g. 'auth/service.py')"},
+                    "function_name": {"type": "string", "description": "Name of the function to replace"},
+                    "new_code":      {"type": "string", "description": "Complete new function definition (def ... including body)"},
+                },
+                "required": ["file", "function_name", "new_code"],
+            },
+        },
     ],
 }
 
 TOOL_MAP = {
-    "search_code_semantics":           lambda p: search_code_semantics(p["prompt"], p.get("k", 5)),
-    "get_code_time_travel_diff":       lambda p: get_code_time_travel_diff(p["state_node_id"]),
-    "trace_blast_radius":              lambda p: trace_blast_radius(p["function_identity_id"]),
+    "search_code_semantics":            lambda p: search_code_semantics(p["prompt"], p.get("k", 5)),
+    "get_code_time_travel_diff":        lambda p: get_code_time_travel_diff(p["state_node_id"]),
+    "trace_blast_radius":               lambda p: trace_blast_radius(p["function_identity_id"]),
     "get_temporal_vulnerability_trace": lambda p: get_temporal_vulnerability_trace(p["target_func"], p["timestamp_iso"]),
+    "edit_code":                        lambda p: edit_code(p["file"], p["function_name"], p["new_code"]),
 }
 
 

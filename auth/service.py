@@ -28,16 +28,15 @@ def validate_username(username):
 
 
 def signup(username, password):
-    """Register a new user with validation."""
+    """Register a new user with validation and password strength check."""
     try:
         validate_username(username)
-        
+        if len(password) < 8:
+            raise ValidationError("Password must be at least 8 characters")
         if user_exists(username):
             raise ValidationError("User already exists")
-        
         create_user(username, password)
         return {"success": True, "message": "Signup successful", "username": username}
-    
     except (ValidationError, ValueError) as e:
         return {"success": False, "error": str(e)}
 

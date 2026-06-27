@@ -1,21 +1,22 @@
 """
 Agent toolset for the graph knowledge base.
 
-Four tools — each is a plain Python function callable by an agent or MCP server:
-
-  search_code_semantics(prompt)            — vector search on active FunctionState.ai_summary
+Five tools:
+  search_code_semantics(prompt)            — text search on active FunctionState.ai_summary
   get_code_time_travel_diff(state_node_id) — PREVIOUS_VERSION traversal
   trace_blast_radius(function_identity_id) — reverse CALLS traversal
   get_temporal_vulnerability_trace(target_func, timestamp_iso) — multi-hop commit filter
+  edit_code(file, function_name, new_code) — patch a function in the working tree + re-ingest
 """
 
 from __future__ import annotations
-import sys, os
+import sys, os, ast, re, importlib
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from helixdb import Client, g, read_batch, define_params, param, Predicate, Projection
 
-HELIX_URL = "http://127.0.0.1:6969"
+HELIX_URL  = "http://127.0.0.1:6969"
+REPO_ROOT  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 def _c() -> Client:
@@ -237,8 +238,85 @@ def get_temporal_vulnerability_trace(target_func: str, timestamp_iso: str) -> li
     return results
 
 
+# ── Tool 5: Edit code ──────────────────────────────────────────────────────
+
+def edit_code(file: str, function_name: str, new_code: str) -> dict:
+    """
+    Patch a function in the working tree and re-ingest that file into HelixDB.
+
+    Steps:
+      1. Validate new_code parses as valid Python.
+      2. Find the existing function in the file by AST line numbers.
+      3. Replace exactly those lines with new_code.
+      4. Write the file back.
+      5. Re-run scalable_ingest so the graph reflects the change.
+
+    Returns {status, file, function_name, lines_replaced} or {error}.
+    """
+    abs_path = os.path.join(REPO_ROOT, file.replace("/", os.sep))
+    if not os.path.isfile(abs_path):
+        return {"error": f"file not found: {file}"}
+
+    # 1. Validate new_code
+    try:
+        ast.parse(new_code)
+    except SyntaxError as e:
+        return {"error": f"new_code syntax error: {e}"}
+
+    # 2. Find function in existing file
+    source = open(abs_path, encoding="utf-8").read()
+    try:
+        tree = ast.parse(source)
+    except SyntaxError as e:
+        return {"error": f"existing file unparseable: {e}"}
+
+    target = next(
+        (n for n in ast.walk(tree)
+         if isinstance(n, ast.FunctionDef) and n.name == function_name),
+        None
+    )
+    if target is None:
+        return {"error": f"function '{function_name}' not found in {file}"}
+
+    lines = source.splitlines(keepends=True)
+    start = target.lineno - 1        # ast lineno is 1-based
+    end   = target.end_lineno        # slice end is exclusive
+
+    # 3. Detect indentation of the function and normalise new_code to match
+    indent = re.match(r"(\s*)", lines[start]).group(1)
+    new_lines = []
+    for i, ln in enumerate(new_code.splitlines(keepends=True)):
+        # first line gets existing indent; subsequent lines keep relative indent
+        if i == 0:
+            new_lines.append(indent + ln.lstrip())
+        else:
+            new_lines.append(indent + ln if ln.strip() else ln)
+    if new_lines and not new_lines[-1].endswith("\n"):
+        new_lines[-1] += "\n"
+
+    # 4. Write back
+    patched = lines[:start] + new_lines + lines[end:]
+    open(abs_path, "w", encoding="utf-8").write("".join(patched))
+
+    # 5. Re-ingest (import fresh to pick up any module changes)
+    try:
+        import scalable_ingest
+        importlib.reload(scalable_ingest)
+        scalable_ingest.run_ingestion()
+        ingest_status = "ok"
+    except Exception as e:
+        ingest_status = f"warning: re-ingest failed ({e})"
+
+    return {
+        "status":         "patched",
+        "file":           file,
+        "function_name":  function_name,
+        "lines_replaced": f"{start+1}–{end}",
+        "ingest":         ingest_status,
+    }
+
+
 if __name__ == "__main__":
-    # Quick smoke test — print active states
     import json
     results = search_code_semantics("user authentication login")
     print(json.dumps(results, indent=2))
