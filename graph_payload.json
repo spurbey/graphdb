@@ -149,7 +149,7 @@
       "commit": "eef5695",
       "function_id": "func_auth_models_create_user",
       "ai_summary": "",
-      "status": "active"
+      "status": "superseded"
     },
     {
       "type": "FunctionIdentity",
@@ -165,7 +165,7 @@
       "commit": "eef5695",
       "function_id": "func_auth_models_get_user",
       "ai_summary": "",
-      "status": "active"
+      "status": "superseded"
     },
     {
       "type": "FunctionIdentity",
@@ -181,7 +181,7 @@
       "commit": "eef5695",
       "function_id": "func_auth_models_delete_user",
       "ai_summary": "",
-      "status": "active"
+      "status": "superseded"
     },
     {
       "type": "FunctionIdentity",
@@ -197,7 +197,7 @@
       "commit": "eef5695",
       "function_id": "func_auth_models_list_users",
       "ai_summary": "",
-      "status": "active"
+      "status": "superseded"
     },
     {
       "type": "FunctionIdentity",
@@ -213,7 +213,7 @@
       "commit": "eef5695",
       "function_id": "func_auth_models_user_exists",
       "ai_summary": "",
-      "status": "active"
+      "status": "superseded"
     },
     {
       "type": "FileIdentity",
@@ -258,7 +258,7 @@
       "commit": "eef5695",
       "function_id": "func_auth_service_validate_username",
       "ai_summary": "",
-      "status": "active"
+      "status": "superseded"
     },
     {
       "type": "FunctionIdentity",
@@ -274,7 +274,7 @@
       "commit": "eef5695",
       "function_id": "func_auth_service_signup",
       "ai_summary": "",
-      "status": "active"
+      "status": "superseded"
     },
     {
       "type": "FunctionIdentity",
@@ -290,7 +290,7 @@
       "commit": "eef5695",
       "function_id": "func_auth_service_login",
       "ai_summary": "",
-      "status": "active"
+      "status": "superseded"
     },
     {
       "type": "FunctionIdentity",
@@ -306,7 +306,7 @@
       "commit": "eef5695",
       "function_id": "func_auth_service_logout",
       "ai_summary": "",
-      "status": "active"
+      "status": "superseded"
     },
     {
       "type": "FunctionIdentity",
@@ -322,7 +322,7 @@
       "commit": "eef5695",
       "function_id": "func_auth_service_delete_account",
       "ai_summary": "",
-      "status": "active"
+      "status": "superseded"
     },
     {
       "type": "Commit",
@@ -338,7 +338,7 @@
       "id": "commit_5d3d872",
       "hash": "5d3d8728a068f124e748fc4e461533247109a387",
       "author": "Sumit",
-      "msg": "refactor: flatten graph schema \u2014 remove ChangeNode/Concept/Rationale, embed ai_summary on FunctionState, ai_rationale on Commit",
+      "msg": "refactor: flatten graph schema — remove ChangeNode/Concept/Rationale, embed ai_summary on FunctionState, ai_rationale on Commit",
       "timestamp": "2026-06-26T18:42:36+05:45",
       "ai_rationale": ""
     },
@@ -347,9 +347,269 @@
       "id": "commit_4d5601b",
       "hash": "4d5601b7944bfc29bdbc999b712fc5b4a59ec373",
       "author": "Sumit",
-      "msg": "feat: agent tooling \u2014 status tracking, vector index, MCP server, hand-written semantic summaries\n\n- scalable_ingest: add status='active'/'superseded' on FunctionState nodes,\n  create vector index on FunctionState.ai_summary\n- semantic_pass: replace AST-only analysis with hand-written summaries for all\n  auth module functions; LLM hook stub left for future wiring\n- tools/graph_tools.py: 4 DSL-based agent tools (search_code_semantics,\n  get_code_time_travel_diff, trace_blast_radius, get_temporal_vulnerability_trace)\n- tools/graph_mcp_server.py: HTTP MCP server exposing tools on port 7700\n- .kiro/settings/mcp.json: registers graphdb MCP server with Kiro",
+      "msg": "feat: agent tooling — status tracking, vector index, MCP server, hand-written semantic summaries\n\n- scalable_ingest: add status='active'/'superseded' on FunctionState nodes,\n  create vector index on FunctionState.ai_summary\n- semantic_pass: replace AST-only analysis with hand-written summaries for all\n  auth module functions; LLM hook stub left for future wiring\n- tools/graph_tools.py: 4 DSL-based agent tools (search_code_semantics,\n  get_code_time_travel_diff, trace_blast_radius, get_temporal_vulnerability_trace)\n- tools/graph_mcp_server.py: HTTP MCP server exposing tools on port 7700\n- .kiro/settings/mcp.json: registers graphdb MCP server with Kiro",
       "timestamp": "2026-06-27T03:33:53+05:45",
       "ai_rationale": ""
+    },
+    {
+      "type": "Commit",
+      "id": "commit_097981a",
+      "hash": "097981a543b3b6cdd555dbbb07e8557524bad652",
+      "author": "Sumit",
+      "msg": "fix: resolve all traversal bugs — set_property patch, multi-hop Python join, GENERATED query\n\n- semantic_pass: replace drop+reinsert with set_property (edges no longer destroyed)\n- semantic_pass: fix _get_states_for_commit — drop NodeRef.var chaining, use direct\n  chained traversal g().n_with_label(Commit).out(GENERATED) which HelixDB resolves correctly\n- scalable_ingest: add graph_mcp_server.py + graph_tools.py to _SKIP_FILES\n- graph_tools: refactor get_temporal_vulnerability_trace into 3-hop Python join\n  (hop1: find callers, hop2a: caller->HAS_STATE, hop2b: state<-GENERATED with ts filter)\n  avoids mixed-direction single-batch limitation\n\nAll 4 tools now validated:\n  trace_blast_radius: signup correctly identified as caller of create_user\n  get_temporal_vulnerability_trace: returns commit_623241a (pre-upgrade stale caller)\n  get_code_time_travel_diff: signup eef5695 current + 623241a previous with full code+summary\n  search_code_semantics: login + delete_account returned for auth query",
+      "timestamp": "2026-06-27T11:08:06+05:45",
+      "ai_rationale": ""
+    },
+    {
+      "type": "Commit",
+      "id": "commit_81cc82a",
+      "hash": "81cc82afa3b16d736fbdd53f26600b4250a8ca9a",
+      "author": "Sumit",
+      "msg": "feat: edit_code tool — closes the agentic loop (trace -> diff -> patch -> re-ingest)\n\n- graph_tools: add edit_code(file, function_name, new_code) — AST-based function\n  replacement in working tree; re-runs scalable_ingest after write\n- graph_mcp_server: register edit_code tool in manifest + TOOL_MAP\n- auth/service.py: patched by agent via edit_code — signup now enforces 8-char\n  minimum password (was 6 in models, now enforced at service layer too)\n- tools/_test_loop.py: end-to-end test script for the full agentic loop\n\nValidated loop: get_temporal_vulnerability_trace identified stale signup@623241a,\nget_code_time_travel_diff showed old vs new behavior, edit_code patched auth/service.py\nlines 30-42 and re-ingested successfully",
+      "timestamp": "2026-06-27T11:26:00+05:45",
+      "ai_rationale": ""
+    },
+    {
+      "type": "FileIdentity",
+      "id": "file_auth_service",
+      "file": "auth/service.py"
+    },
+    {
+      "type": "FileIdentity",
+      "id": "file_auth",
+      "file": "auth",
+      "external": "true"
+    },
+    {
+      "type": "ClassIdentity",
+      "id": "class_auth_service_AuthError",
+      "name": "AuthError",
+      "file": "auth/service.py"
+    },
+    {
+      "type": "ClassIdentity",
+      "id": "class_auth_service_ValidationError",
+      "name": "ValidationError",
+      "file": "auth/service.py"
+    },
+    {
+      "type": "ClassIdentity",
+      "id": "class_auth_service_AuthenticationError",
+      "name": "AuthenticationError",
+      "file": "auth/service.py"
+    },
+    {
+      "type": "FunctionIdentity",
+      "id": "func_auth_service_validate_username",
+      "name": "validate_username",
+      "file": "auth/service.py"
+    },
+    {
+      "type": "FunctionState",
+      "id": "state_auth_service_validate_username_81cc82a",
+      "code": "def validate_username(username):\n    \"\"\"Validate username format.\"\"\"\n    if not username:\n        raise ValidationError(\"Username cannot be empty\")\n    if len(username) < 3:\n        raise ValidationError(\"Username must be at least 3 characters\")\n    if not username.isalnum():\n        raise ValidationError(\"Username must be alphanumeric\")\n    return True",
+      "code_hash": "f85d97fc12b4",
+      "commit": "81cc82a",
+      "function_id": "func_auth_service_validate_username",
+      "ai_summary": "",
+      "status": "active"
+    },
+    {
+      "type": "FunctionIdentity",
+      "id": "func_auth_service_signup",
+      "name": "signup",
+      "file": "auth/service.py"
+    },
+    {
+      "type": "FunctionState",
+      "id": "state_auth_service_signup_81cc82a",
+      "code": "def signup(username, password):\n    \"\"\"Register a new user with validation and password strength check.\"\"\"\n    try:\n        validate_username(username)\n        if len(password) < 8:\n            raise ValidationError(\"Password must be at least 8 characters\")\n        if user_exists(username):\n            raise ValidationError(\"User already exists\")\n        create_user(username, password)\n        return {\"success\": True, \"message\": \"Signup successful\", \"username\": username}\n    except (ValidationError, ValueError) as e:\n        return {\"success\": False, \"error\": str(e)}",
+      "code_hash": "f9dc51349146",
+      "commit": "81cc82a",
+      "function_id": "func_auth_service_signup",
+      "ai_summary": "",
+      "status": "active"
+    },
+    {
+      "type": "FunctionIdentity",
+      "id": "func_auth_service_login",
+      "name": "login",
+      "file": "auth/service.py"
+    },
+    {
+      "type": "FunctionState",
+      "id": "state_auth_service_login_81cc82a",
+      "code": "def login(username, password):\n    \"\"\"Authenticate user and return success status.\"\"\"\n    try:\n        if not username or not password:\n            raise AuthenticationError(\"Username and password required\")\n        \n        stored_password = get_user(username)\n        \n        if stored_password is None:\n            raise AuthenticationError(\"User not found\")\n        \n        if stored_password != password:\n            raise AuthenticationError(\"Invalid password\")\n        \n        return {\"success\": True, \"message\": \"Login successful\", \"username\": username}\n    \n    except AuthenticationError as e:\n        return {\"success\": False, \"error\": str(e)}",
+      "code_hash": "9943ba2c612c",
+      "commit": "81cc82a",
+      "function_id": "func_auth_service_login",
+      "ai_summary": "",
+      "status": "active"
+    },
+    {
+      "type": "FunctionIdentity",
+      "id": "func_auth_service_logout",
+      "name": "logout",
+      "file": "auth/service.py"
+    },
+    {
+      "type": "FunctionState",
+      "id": "state_auth_service_logout_81cc82a",
+      "code": "def logout(username):\n    \"\"\"Logout user (placeholder for session management).\"\"\"\n    if user_exists(username):\n        return {\"success\": True, \"message\": f\"User {username} logged out\"}\n    return {\"success\": False, \"error\": \"User not found\"}",
+      "code_hash": "a93be69e23eb",
+      "commit": "81cc82a",
+      "function_id": "func_auth_service_logout",
+      "ai_summary": "",
+      "status": "active"
+    },
+    {
+      "type": "FunctionIdentity",
+      "id": "func_auth_service_delete_account",
+      "name": "delete_account",
+      "file": "auth/service.py"
+    },
+    {
+      "type": "FunctionState",
+      "id": "state_auth_service_delete_account_81cc82a",
+      "code": "def delete_account(username, password):\n    \"\"\"Delete user account with password verification.\"\"\"\n    try:\n        login_result = login(username, password)\n        if not login_result[\"success\"]:\n            raise AuthenticationError(\"Authentication failed\")\n        \n        if delete_user(username):\n            return {\"success\": True, \"message\": \"Account deleted successfully\"}\n        \n        return {\"success\": False, \"error\": \"Failed to delete account\"}\n    \n    except AuthenticationError as e:\n        return {\"success\": False, \"error\": str(e)}",
+      "code_hash": "fcfafdc6426d",
+      "commit": "81cc82a",
+      "function_id": "func_auth_service_delete_account",
+      "ai_summary": "",
+      "status": "active"
+    },
+    {
+      "type": "FileIdentity",
+      "id": "file_tools__test_loop",
+      "file": "tools/_test_loop.py"
+    },
+    {
+      "type": "FileIdentity",
+      "id": "file_urllib",
+      "file": "urllib",
+      "external": "true"
+    },
+    {
+      "type": "FileIdentity",
+      "id": "file_json",
+      "file": "json",
+      "external": "true"
+    },
+    {
+      "type": "FileIdentity",
+      "id": "file_textwrap",
+      "file": "textwrap",
+      "external": "true"
+    },
+    {
+      "type": "FunctionIdentity",
+      "id": "func_tools__test_loop_call",
+      "name": "call",
+      "file": "tools/_test_loop.py"
+    },
+    {
+      "type": "FunctionState",
+      "id": "state_tools__test_loop_call_81cc82a",
+      "code": "def call(tool, params):\n    payload = json.dumps({\"name\": tool, \"parameters\": params}).encode()\n    req = urllib.request.Request(\"http://127.0.0.1:7700/call\", data=payload, headers={\"Content-Type\":\"application/json\"})\n    return json.loads(urllib.request.urlopen(req).read())",
+      "code_hash": "e70c55505ac6",
+      "commit": "81cc82a",
+      "function_id": "func_tools__test_loop_call",
+      "ai_summary": "",
+      "status": "active"
+    },
+    {
+      "type": "Commit",
+      "id": "commit_612101c",
+      "hash": "612101c6de8dfac955fb0098905e00443aab46bb",
+      "author": "Sumit",
+      "msg": "fix(auth): align password policy in auth.models with service layer",
+      "timestamp": "2026-06-27T11:48:02+05:45",
+      "ai_rationale": "Align auth model password validation with service by enforcing an 8-character minimum password in create_user; preserve in-memory auth semantics across all auth model functions."
+    },
+    {
+      "type": "FileIdentity",
+      "id": "file_auth_models",
+      "file": "auth/models.py"
+    },
+    {
+      "type": "FunctionIdentity",
+      "id": "func_auth_models_create_user",
+      "name": "create_user",
+      "file": "auth/models.py"
+    },
+    {
+      "type": "FunctionState",
+      "id": "state_auth_models_create_user_612101c",
+      "code": "def create_user(username, password):\n    \"\"\"Create a new user with username and password.\"\"\"\n    if not username or not password:\n        raise ValueError(\"Username and password cannot be empty\")\n    if len(password) < 8:\n        raise ValueError(\"Password must be at least 8 characters\")\n    users[username] = password\n    return True",
+      "code_hash": "984d12fa8b31",
+      "commit": "612101c",
+      "function_id": "func_auth_models_create_user",
+      "ai_summary": "Create a new user with username and password, enforce non-empty credentials and minimum 8-character password, then store in the in-memory user map.",
+      "status": "active"
+    },
+    {
+      "type": "FunctionIdentity",
+      "id": "func_auth_models_get_user",
+      "name": "get_user",
+      "file": "auth/models.py"
+    },
+    {
+      "type": "FunctionState",
+      "id": "state_auth_models_get_user_612101c",
+      "code": "def get_user(username):\n    \"\"\"Retrieve user password by username.\"\"\"\n    return users.get(username)",
+      "code_hash": "ca336d123048",
+      "commit": "612101c",
+      "function_id": "func_auth_models_get_user",
+      "ai_summary": "Retrieve the stored password for a username from the in-memory auth store.",
+      "status": "active"
+    },
+    {
+      "type": "FunctionIdentity",
+      "id": "func_auth_models_delete_user",
+      "name": "delete_user",
+      "file": "auth/models.py"
+    },
+    {
+      "type": "FunctionState",
+      "id": "state_auth_models_delete_user_612101c",
+      "code": "def delete_user(username):\n    \"\"\"Delete a user by username.\"\"\"\n    if username in users:\n        del users[username]\n        return True\n    return False",
+      "code_hash": "a13ae17dd227",
+      "commit": "612101c",
+      "function_id": "func_auth_models_delete_user",
+      "ai_summary": "Delete an existing user from the in-memory auth store if present and return success status.",
+      "status": "active"
+    },
+    {
+      "type": "FunctionIdentity",
+      "id": "func_auth_models_list_users",
+      "name": "list_users",
+      "file": "auth/models.py"
+    },
+    {
+      "type": "FunctionState",
+      "id": "state_auth_models_list_users_612101c",
+      "code": "def list_users():\n    \"\"\"List all registered usernames.\"\"\"\n    return list(users.keys())",
+      "code_hash": "c51dd0c11204",
+      "commit": "612101c",
+      "function_id": "func_auth_models_list_users",
+      "ai_summary": "Return the list of all registered usernames in the current in-memory auth store.",
+      "status": "active"
+    },
+    {
+      "type": "FunctionIdentity",
+      "id": "func_auth_models_user_exists",
+      "name": "user_exists",
+      "file": "auth/models.py"
+    },
+    {
+      "type": "FunctionState",
+      "id": "state_auth_models_user_exists_612101c",
+      "code": "def user_exists(username):\n    \"\"\"Check if user exists.\"\"\"\n    return username in users",
+      "code_hash": "4c5080d971a9",
+      "commit": "612101c",
+      "function_id": "func_auth_models_user_exists",
+      "ai_summary": "Check whether a username exists in the in-memory auth store.",
+      "status": "active"
     }
   ],
   "edges": [
@@ -697,6 +957,216 @@
       "from": "commit_5d3d872",
       "label": "NEXT_COMMIT",
       "to": "commit_4d5601b"
+    },
+    {
+      "from": "commit_4d5601b",
+      "label": "NEXT_COMMIT",
+      "to": "commit_097981a"
+    },
+    {
+      "from": "commit_097981a",
+      "label": "NEXT_COMMIT",
+      "to": "commit_81cc82a"
+    },
+    {
+      "from": "commit_81cc82a",
+      "label": "CONTAINS",
+      "to": "file_auth_service"
+    },
+    {
+      "from": "func_auth_service_validate_username",
+      "label": "HAS_STATE",
+      "to": "state_auth_service_validate_username_81cc82a"
+    },
+    {
+      "from": "commit_81cc82a",
+      "label": "GENERATED",
+      "to": "state_auth_service_validate_username_81cc82a"
+    },
+    {
+      "from": "state_auth_service_validate_username_81cc82a",
+      "label": "PREVIOUS_VERSION",
+      "to": "state_auth_service_validate_username_eef5695"
+    },
+    {
+      "from": "func_auth_service_signup",
+      "label": "HAS_STATE",
+      "to": "state_auth_service_signup_81cc82a"
+    },
+    {
+      "from": "commit_81cc82a",
+      "label": "GENERATED",
+      "to": "state_auth_service_signup_81cc82a"
+    },
+    {
+      "from": "state_auth_service_signup_81cc82a",
+      "label": "PREVIOUS_VERSION",
+      "to": "state_auth_service_signup_eef5695"
+    },
+    {
+      "from": "func_auth_service_login",
+      "label": "HAS_STATE",
+      "to": "state_auth_service_login_81cc82a"
+    },
+    {
+      "from": "commit_81cc82a",
+      "label": "GENERATED",
+      "to": "state_auth_service_login_81cc82a"
+    },
+    {
+      "from": "state_auth_service_login_81cc82a",
+      "label": "PREVIOUS_VERSION",
+      "to": "state_auth_service_login_eef5695"
+    },
+    {
+      "from": "func_auth_service_logout",
+      "label": "HAS_STATE",
+      "to": "state_auth_service_logout_81cc82a"
+    },
+    {
+      "from": "commit_81cc82a",
+      "label": "GENERATED",
+      "to": "state_auth_service_logout_81cc82a"
+    },
+    {
+      "from": "state_auth_service_logout_81cc82a",
+      "label": "PREVIOUS_VERSION",
+      "to": "state_auth_service_logout_eef5695"
+    },
+    {
+      "from": "func_auth_service_delete_account",
+      "label": "HAS_STATE",
+      "to": "state_auth_service_delete_account_81cc82a"
+    },
+    {
+      "from": "commit_81cc82a",
+      "label": "GENERATED",
+      "to": "state_auth_service_delete_account_81cc82a"
+    },
+    {
+      "from": "state_auth_service_delete_account_81cc82a",
+      "label": "PREVIOUS_VERSION",
+      "to": "state_auth_service_delete_account_eef5695"
+    },
+    {
+      "from": "commit_81cc82a",
+      "label": "CONTAINS",
+      "to": "file_tools__test_loop"
+    },
+    {
+      "from": "file_tools__test_loop",
+      "label": "IMPORTS",
+      "to": "file_urllib"
+    },
+    {
+      "from": "file_tools__test_loop",
+      "label": "IMPORTS",
+      "to": "file_json"
+    },
+    {
+      "from": "file_tools__test_loop",
+      "label": "IMPORTS",
+      "to": "file_textwrap"
+    },
+    {
+      "from": "file_tools__test_loop",
+      "label": "CONTAINS",
+      "to": "func_tools__test_loop_call"
+    },
+    {
+      "from": "func_tools__test_loop_call",
+      "label": "HAS_STATE",
+      "to": "state_tools__test_loop_call_81cc82a"
+    },
+    {
+      "from": "commit_81cc82a",
+      "label": "GENERATED",
+      "to": "state_tools__test_loop_call_81cc82a"
+    },
+    {
+      "from": "commit_81cc82a",
+      "label": "NEXT_COMMIT",
+      "to": "commit_612101c"
+    },
+    {
+      "from": "commit_612101c",
+      "label": "CONTAINS",
+      "to": "file_auth_models"
+    },
+    {
+      "from": "func_auth_models_create_user",
+      "label": "HAS_STATE",
+      "to": "state_auth_models_create_user_612101c"
+    },
+    {
+      "from": "commit_612101c",
+      "label": "GENERATED",
+      "to": "state_auth_models_create_user_612101c"
+    },
+    {
+      "from": "state_auth_models_create_user_612101c",
+      "label": "PREVIOUS_VERSION",
+      "to": "state_auth_models_create_user_eef5695"
+    },
+    {
+      "from": "func_auth_models_get_user",
+      "label": "HAS_STATE",
+      "to": "state_auth_models_get_user_612101c"
+    },
+    {
+      "from": "commit_612101c",
+      "label": "GENERATED",
+      "to": "state_auth_models_get_user_612101c"
+    },
+    {
+      "from": "state_auth_models_get_user_612101c",
+      "label": "PREVIOUS_VERSION",
+      "to": "state_auth_models_get_user_eef5695"
+    },
+    {
+      "from": "func_auth_models_delete_user",
+      "label": "HAS_STATE",
+      "to": "state_auth_models_delete_user_612101c"
+    },
+    {
+      "from": "commit_612101c",
+      "label": "GENERATED",
+      "to": "state_auth_models_delete_user_612101c"
+    },
+    {
+      "from": "state_auth_models_delete_user_612101c",
+      "label": "PREVIOUS_VERSION",
+      "to": "state_auth_models_delete_user_eef5695"
+    },
+    {
+      "from": "func_auth_models_list_users",
+      "label": "HAS_STATE",
+      "to": "state_auth_models_list_users_612101c"
+    },
+    {
+      "from": "commit_612101c",
+      "label": "GENERATED",
+      "to": "state_auth_models_list_users_612101c"
+    },
+    {
+      "from": "state_auth_models_list_users_612101c",
+      "label": "PREVIOUS_VERSION",
+      "to": "state_auth_models_list_users_eef5695"
+    },
+    {
+      "from": "func_auth_models_user_exists",
+      "label": "HAS_STATE",
+      "to": "state_auth_models_user_exists_612101c"
+    },
+    {
+      "from": "commit_612101c",
+      "label": "GENERATED",
+      "to": "state_auth_models_user_exists_612101c"
+    },
+    {
+      "from": "state_auth_models_user_exists_612101c",
+      "label": "PREVIOUS_VERSION",
+      "to": "state_auth_models_user_exists_eef5695"
     }
   ]
 }
