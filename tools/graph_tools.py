@@ -10,13 +10,43 @@ Five tools:
 """
 
 from __future__ import annotations
-import sys, os, ast, re, importlib
+import sys, os, ast, re, importlib, json, urllib.request
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from helixdb import Client, g, read_batch, define_params, param, Predicate, Projection
+from helixdb import Client, g, read_batch, define_params, param, Predicate, Projection, PropertyValue
 
 HELIX_URL  = "http://127.0.0.1:6969"
 REPO_ROOT  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# ── Embedding helper (same model as scalable_ingest) ──────────────────────────
+_EMBED_MODEL = "nvidia/llama-nemotron-embed-vl-1b-v2:free"
+_EMBED_DIMS  = 2048
+
+def _load_key() -> str:
+    try:
+        env = os.path.join(REPO_ROOT, ".env")
+        for line in open(env):
+            if "=" in line:
+                return line.split("=", 1)[1].strip()
+    except FileNotFoundError:
+        pass
+    return ""
+
+_API_KEY = _load_key()
+
+def _embed(text: str) -> list[float]:
+    if not _API_KEY or not text.strip():
+        return [0.0] * _EMBED_DIMS
+    try:
+        payload = json.dumps({"model": _EMBED_MODEL, "input": text[:2000]}).encode()
+        req = urllib.request.Request(
+            "https://openrouter.ai/api/v1/embeddings",
+            data=payload,
+            headers={"Authorization": f"Bearer {_API_KEY}", "Content-Type": "application/json"},
+        )
+        return json.loads(urllib.request.urlopen(req, timeout=15).read())["data"][0]["embedding"]
+    except Exception:
+        return [0.0] * _EMBED_DIMS
 
 
 def _c() -> Client:
@@ -31,20 +61,17 @@ def _rows(result: dict, key: str) -> list[dict]:
 
 def search_code_semantics(prompt: str, k: int = 5) -> list[dict]:
     """
-    Vector similarity search on FunctionState.ai_summary where status == 'active'.
-    Returns list of {node_id, function_id, ai_summary, code} dicts.
-
-    NOTE: requires ai_summary to be populated as a vector embedding. Until
-    semantic_pass.py is wired to an embedding model, falls back to text search.
+    Vector similarity search on FunctionState.ai_summary_vec where status == 'active'.
+    Embeds the prompt via OpenRouter then queries the HelixDB vector index.
     """
     c = _c()
-    # Text search fallback (works without embeddings; swap for vector_search_nodes
-    # once ai_summary stores float32 vectors)
+    vec = _embed(prompt)
     batch = (
         read_batch()
         .var_as("states",
-            g().text_search_nodes("FunctionState", "ai_summary", prompt, k)
+            g().vector_search_nodes("FunctionState", "ai_summary_vec", vec, k)
                .where(Predicate.eq("status", "active"))
+               .where(Predicate.is_not_null("ai_summary"))
                .project([
                    Projection.property("node_id"),
                    Projection.property("function_id"),
