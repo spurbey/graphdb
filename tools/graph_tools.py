@@ -147,57 +147,94 @@ def trace_blast_radius(function_identity_id: str) -> list[dict]:
 
 # ── Tool 4: Temporal vulnerability trace ──────────────────────────────────
 
-_P_TVUL = define_params({"fname": param.string(), "ts": param.string()})
+_P_TVUL_CALLERS = define_params({"fname": param.string()})
+_P_TVUL_STATE   = define_params({"fid": param.string()})
+_P_TVUL_COMMIT  = define_params({"sid": param.string(), "ts": param.string()})
 
 def get_temporal_vulnerability_trace(target_func: str, timestamp_iso: str) -> list[dict]:
     """
-    Multi-hop: find all callers of target_func whose implementation was
-    committed BEFORE the given ISO timestamp.
-
-    Path: FunctionIdentity(target) <-[CALLS]- FunctionIdentity(caller)
-          -[HAS_STATE]-> FunctionState -[GENERATED]-> Commit(ts < threshold)
-
-    Returns list of {caller_func_id, caller_name, state_id, commit_hash, timestamp}.
+    Two-hop Python join (avoids mixed-direction single-batch limitation):
+      HOP 1: FunctionIdentity(name=target) <-[CALLS]- FunctionIdentity(callers)
+      HOP 2: for each caller → HAS_STATE → FunctionState ← GENERATED ← Commit(ts < threshold)
+    Returns list of {caller, caller_node_id, state_id, commit_hash, timestamp, msg}.
     """
     c = _c()
-    batch = (
+
+    # HOP 1 — who calls target_func?
+    hop1 = (
         read_batch()
-        .var_as("target",
-            g().n_with_label("FunctionIdentity")
-               .where(Predicate.eq_param("name", "fname"))
-        )
         .var_as("callers",
             g().n_with_label("FunctionIdentity")
                .where(Predicate.eq_param("name", "fname"))
                .in_("CALLS")
+               .project([Projection.property("node_id"), Projection.property("name")])
         )
-        .var_as("states",
-            g().n_with_label("FunctionIdentity")
-               .where(Predicate.eq_param("name", "fname"))
-               .in_("CALLS")
-               .out("HAS_STATE")
-        )
-        .var_as("commits",
-            g().n_with_label("FunctionIdentity")
-               .where(Predicate.eq_param("name", "fname"))
-               .in_("CALLS")
-               .out("HAS_STATE")
-               .in_("GENERATED")
-               .where(Predicate.lt_param("timestamp", "ts"))
-               .project([
-                   Projection.property("node_id"),
-                   Projection.property("hash"),
-                   Projection.property("timestamp"),
-                   Projection.property("msg"),
-               ])
-        )
-        .returning(["commits"])
+        .returning(["callers"])
     )
     try:
-        result = c.query().dynamic(batch.to_dynamic_request(_P_TVUL, {"fname": target_func, "ts": timestamp_iso})).send()
-        return _rows(result, "commits")
+        callers = _rows(c.query().dynamic(hop1.to_dynamic_request(_P_TVUL_CALLERS, {"fname": target_func})).send(), "callers")
     except Exception as e:
-        return [{"error": str(e)}]
+        return [{"error": f"hop1 failed: {e}"}]
+
+    if not callers:
+        return []
+
+    results = []
+    for caller in callers:
+        fid = caller["node_id"]
+        cname = caller.get("name", fid)
+
+        # HOP 2a — caller → HAS_STATE → FunctionState
+        hop2a = (
+            read_batch()
+            .var_as("states",
+                g().n_with_label("FunctionIdentity")
+                   .where(Predicate.eq_param("node_id", "fid"))
+                   .out("HAS_STATE")
+                   .project([Projection.property("node_id"), Projection.property("commit"),
+                              Projection.property("status"), Projection.property("ai_summary")])
+            )
+            .returning(["states"])
+        )
+        try:
+            states = _rows(c.query().dynamic(hop2a.to_dynamic_request(_P_TVUL_STATE, {"fid": fid})).send(), "states")
+        except Exception:
+            continue
+
+        for state in states:
+            sid = state["node_id"]
+            # HOP 2b — FunctionState ← GENERATED ← Commit, filter by timestamp
+            hop2b = (
+                read_batch()
+                .var_as("commits",
+                    g().n_with_label("FunctionState")
+                       .where(Predicate.eq_param("node_id", "sid"))
+                       .in_("GENERATED")
+                       .where(Predicate.lt_param("timestamp", "ts"))
+                       .project([Projection.property("node_id"), Projection.property("hash"),
+                                 Projection.property("timestamp"), Projection.property("msg")])
+                )
+                .returning(["commits"])
+            )
+            _P2 = define_params({"sid": param.string(), "ts": param.string()})
+            try:
+                commits = _rows(c.query().dynamic(hop2b.to_dynamic_request(_P2, {"sid": sid, "ts": timestamp_iso})).send(), "commits")
+            except Exception:
+                continue
+
+            for commit in commits:
+                results.append({
+                    "caller":        cname,
+                    "caller_node_id": fid,
+                    "state_id":      sid,
+                    "state_status":  state.get("status"),
+                    "ai_summary":    state.get("ai_summary", ""),
+                    "commit_hash":   commit.get("hash", ""),
+                    "timestamp":     commit.get("timestamp", ""),
+                    "msg":           commit.get("msg", "")[:80],
+                })
+
+    return results
 
 
 if __name__ == "__main__":

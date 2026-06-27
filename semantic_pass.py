@@ -42,86 +42,47 @@ def _get_commits(c) -> list[dict]:
 
 def _get_states_for_commit(c, commit_node_id: str) -> list[dict]:
     """Commit --GENERATED--> FunctionState"""
+    _P = define_params({"cid": param.string()})
     batch = (
         read_batch()
-        .var_as("commit", g().n_with_label("Commit").where(Predicate.eq_param("node_id", "cid")))
-        .var_as("states", g().n(NodeRef.var("commit")).out_e("GENERATED").out_n().value_map())
+        .var_as("states",
+            g().n_with_label("Commit")
+               .where(Predicate.eq_param("node_id", "cid"))
+               .out("GENERATED")
+               .value_map()
+        )
         .returning(["states"])
     )
-    result = c.query().dynamic(batch.to_dynamic_request(_PARAMS_CID, {"cid": commit_node_id})).send()
+    result = c.query().dynamic(batch.to_dynamic_request(_P, {"cid": commit_node_id})).send()
     return result.get("states", {}).get("properties", [])
 
 
 # ── HelixDB patch helpers ─────────────────────────────────────────────────────
+# Use set_property — never drop+reinsert, which would destroy all edges.
 
-def _patch_state(c, node_id: str, ai_summary: str):
-    """Write ai_summary onto an existing FunctionState node by dropping + re-inserting."""
-    # Read current props first
-    batch = (
-        read_batch()
-        .var_as("n", g().n_with_label("FunctionState").where(Predicate.eq_param("node_id", "nid")).value_map())
-        .returning(["n"])
-    )
-    result = c.query().dynamic(batch.to_dynamic_request(_PARAMS_NID, {"nid": node_id})).send()
-    rows = result.get("n", {}).get("properties", [])
-    if not rows:
-        return
-    props = {k: v for k, v in rows[0].items() if not k.startswith("$")}
-    props["ai_summary"] = ai_summary
+_PARAMS_PATCH_S = define_params({"nid": param.string(), "val": param.string()})
 
-    # Drop old, re-insert with updated props
-    del_batch = (
-        write_batch()
-        .var_as("n", g().n_with_label("FunctionState").where(Predicate.eq_param("node_id", "nid")).drop())
-        .returning(["n"])
-    )
-    try:
-        c.query().dynamic(del_batch.to_dynamic_request(_PARAMS_NID, {"nid": node_id})).send()
-    except Exception:
-        pass
 
-    all_props = {"node_id": PropertyInput.value(node_id),
-                 **{k: PropertyInput.value(str(v)[:4000]) for k, v in props.items()}}
+def _set_prop(c, label: str, node_id: str, prop: str, val: str):
     try:
         c.query().dynamic(
-            write_batch().var_as("n", g().add_n("FunctionState", all_props)).returning(["n"]).to_dynamic_request()
+            write_batch()
+            .var_as("n", g().n_with_label(label)
+                     .where(Predicate.eq_param("node_id", "nid"))
+                     .set_property(prop, PropertyInput.param("val")))
+            .returning(["n"])
+            .to_dynamic_request(_PARAMS_PATCH_S, {"nid": node_id, "val": val[:4000]})
         ).send()
     except Exception:
         pass
+
+
+def _patch_state(c, node_id: str, ai_summary: str):
+    _set_prop(c, "FunctionState", node_id, "ai_summary", ai_summary)
 
 
 def _patch_commit(c, node_id: str, ai_rationale: str):
-    """Write ai_rationale onto an existing Commit node by dropping + re-inserting."""
-    batch = (
-        read_batch()
-        .var_as("n", g().n_with_label("Commit").where(Predicate.eq_param("node_id", "nid")).value_map())
-        .returning(["n"])
-    )
-    result = c.query().dynamic(batch.to_dynamic_request(_PARAMS_NID, {"nid": node_id})).send()
-    rows = result.get("n", {}).get("properties", [])
-    if not rows:
-        return
-    props = {k: v for k, v in rows[0].items() if not k.startswith("$")}
-    props["ai_rationale"] = ai_rationale
-
-    del_batch = (
-        write_batch()
-        .var_as("n", g().n_with_label("Commit").where(Predicate.eq_param("node_id", "nid")).drop())
-        .returning(["n"])
-    )
-    try:
-        c.query().dynamic(del_batch.to_dynamic_request(_PARAMS_NID, {"nid": node_id})).send()
-    except Exception:
-        pass
-
-    all_props = {"node_id": PropertyInput.value(node_id),
-                 **{k: PropertyInput.value(str(v)[:4000]) for k, v in props.items()}}
-    try:
-        c.query().dynamic(
-            write_batch().var_as("n", g().add_n("Commit", all_props)).returning(["n"]).to_dynamic_request()
-        ).send()
-    except Exception:
-        pass
+    _set_prop(c, "Commit", node_id, "ai_rationale", ai_rationale)
 
 
 # ── structural code analysis (no LLM) ────────────────────────────────────────

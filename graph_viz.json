@@ -556,14 +556,28 @@
     {
       "id": "commit_5d3d872",
       "kind": "Commit",
-      "label": "refactor: flatten graph schema — remove ChangeNode/Concept/R",
+      "label": "refactor: flatten graph schema \u2014 remove ChangeNode/Concept/R",
       "summary": "",
       "status": "active",
       "metadata": {
         "hash": "5d3d8728a068f124e748fc4e461533247109a387",
         "author": "Sumit",
-        "msg": "refactor: flatten graph schema — remove ChangeNode/Concept/Rationale, embed ai_summary on FunctionState, ai_rationale on Commit",
+        "msg": "refactor: flatten graph schema \u2014 remove ChangeNode/Concept/Rationale, embed ai_summary on FunctionState, ai_rationale on Commit",
         "timestamp": "2026-06-26T18:42:36+05:45",
+        "ai_rationale": ""
+      }
+    },
+    {
+      "id": "commit_4d5601b",
+      "kind": "Commit",
+      "label": "feat: agent tooling \u2014 status tracking, vector index, MCP ser",
+      "summary": "",
+      "status": "active",
+      "metadata": {
+        "hash": "4d5601b7944bfc29bdbc999b712fc5b4a59ec373",
+        "author": "Sumit",
+        "msg": "feat: agent tooling \u2014 status tracking, vector index, MCP server, hand-written semantic summaries\n\n- scalable_ingest: add status='active'/'superseded' on FunctionState nodes,\n  create vector index on FunctionState.ai_summary\n- semantic_pass: replace AST-only analysis with hand-written summaries for all\n  auth module functions; LLM hook stub left for future wiring\n- tools/graph_tools.py: 4 DSL-based agent tools (search_code_semantics,\n  get_code_time_travel_diff, trace_blast_radius, get_temporal_vulnerability_trace)\n- tools/graph_mcp_server.py: HTTP MCP server exposing tools on port 7700\n- .kiro/settings/mcp.json: registers graphdb MCP server with Kiro",
+        "timestamp": "2026-06-27T03:33:53+05:45",
         "ai_rationale": ""
       }
     }
@@ -907,6 +921,11 @@
     {
       "source": "commit_58bb18b",
       "target": "commit_5d3d872",
+      "kind": "NEXT_COMMIT"
+    },
+    {
+      "source": "commit_5d3d872",
+      "target": "commit_4d5601b",
       "kind": "NEXT_COMMIT"
     }
   ]
