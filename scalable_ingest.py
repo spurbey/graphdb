@@ -45,7 +45,8 @@ ALL_NODE_KINDS = (K_COMMIT, K_FILE, K_FUNC, K_CLASS, K_STATE)
 _latest_state: dict[str, str] = {}
 
 _SKIP_FILES = {"scalable_ingest.py", "semantic_pass.py", "dump_viz.py",
-               "level_1_parser.py", "ingestion_process.txt"}
+               "level_1_parser.py", "ingestion_process.txt",
+               "graph_mcp_server.py", "graph_tools.py"}
 
 _EDGE_PARAMS = define_params({"src_id": param.string(), "tgt_id": param.string()})
 
@@ -65,11 +66,11 @@ def _ensure_indexes(c):
             IndexSpec.node_unique_equality(kind, "node_id")
         ))
         names.append(name)
-    # vector index on FunctionState.ai_summary for semantic search
-    batch = batch.var_as("vec_idx", g().create_index_if_not_exists(
-        IndexSpec.node_vector(K_STATE, "ai_summary")
+    # text index on FunctionState.ai_summary for semantic search (no embeddings required)
+    batch = batch.var_as("text_idx", g().create_index_if_not_exists(
+        IndexSpec.node_text(K_STATE, "ai_summary")
     ))
-    names.append("vec_idx")
+    names.append("text_idx")
     c.query().dynamic(batch.returning(names).to_dynamic_request()).send()
 
 
