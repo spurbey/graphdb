@@ -18,17 +18,50 @@ Schema (flattened):
 import hashlib
 import json
 import re
+import urllib.request
 import git
 import tree_sitter_python as tspython
 from tree_sitter import Language, Parser
 from helixdb import (
     Client, g, write_batch, read_batch,
-    define_params, param, PropertyInput, IndexSpec,
+    define_params, param, PropertyInput, PropertyValue, IndexSpec,
     Predicate, NodeRef,
 )
 
 REPO_PATH = "."
 HELIX_URL = "http://127.0.0.1:6969"
+
+# ── OpenRouter embedding ──────────────────────────────────────────────────────
+_EMBED_MODEL = "nvidia/llama-nemotron-embed-vl-1b-v2:free"
+_EMBED_DIMS  = 2048
+
+def _load_api_key() -> str:
+    try:
+        for line in open(".env"):
+            if "=" in line:
+                return line.split("=", 1)[1].strip()
+    except FileNotFoundError:
+        pass
+    return ""
+
+_API_KEY = _load_api_key()
+
+def _embed(text: str) -> list[float]:
+    """Return a 2048-dim embedding vector from OpenRouter. Returns zeros on failure."""
+    if not _API_KEY or not text.strip():
+        return [0.0] * _EMBED_DIMS
+    try:
+        payload = json.dumps({"model": _EMBED_MODEL, "input": text[:2000]}).encode()
+        req = urllib.request.Request(
+            "https://openrouter.ai/api/v1/embeddings",
+            data=payload,
+            headers={"Authorization": f"Bearer {_API_KEY}", "Content-Type": "application/json"},
+        )
+        resp = json.loads(urllib.request.urlopen(req, timeout=15).read())
+        return resp["data"][0]["embedding"]
+    except Exception as e:
+        print(f"  [embed warn] {e}")
+        return [0.0] * _EMBED_DIMS
 
 # Inline summaries — same source of truth as semantic_pass._SUMMARIES.
 # Populated at insert time so the text index picks them up immediately.
@@ -71,7 +104,8 @@ _latest_state: dict[str, str] = {}
 
 _SKIP_FILES = {"scalable_ingest.py", "semantic_pass.py", "dump_viz.py",
                "level_1_parser.py", "ingestion_process.txt",
-               "graph_mcp_server.py", "graph_tools.py"}
+               "graph_mcp_server.py", "graph_tools.py",
+               "_test_loop.py", "_test_queries.py", "_test_vector.py"}
 
 _EDGE_PARAMS = define_params({"src_id": param.string(), "tgt_id": param.string()})
 
@@ -91,20 +125,22 @@ def _ensure_indexes(c):
             IndexSpec.node_unique_equality(kind, "node_id")
         ))
         names.append(name)
-    # text index on FunctionState.ai_summary for semantic search (no embeddings required)
-    batch = batch.var_as("text_idx", g().create_index_if_not_exists(
-        IndexSpec.node_text(K_STATE, "ai_summary")
+    # vector index on FunctionState.ai_summary_vec for semantic search
+    batch = batch.var_as("vec_idx", g().create_index_if_not_exists(
+        IndexSpec.node_vector(K_STATE, "ai_summary_vec")
     ))
-    names.append("text_idx")
+    names.append("vec_idx")
     c.query().dynamic(batch.returning(names).to_dynamic_request()).send()
 
 
 def _upsert_node(c, kind: str, node_id: str, props: dict):
     """Insert node; silently skips if node_id already exists."""
-    all_props = {
-        "node_id": PropertyInput.value(node_id),
-        **{k: PropertyInput.value(str(v)[:4000]) for k, v in props.items()},
-    }
+    all_props = {"node_id": PropertyInput.value(node_id)}
+    for k, v in props.items():
+        if isinstance(v, list) and v and isinstance(v[0], float):
+            all_props[k] = PropertyInput.value(PropertyValue.f32_array(v))
+        else:
+            all_props[k] = PropertyInput.value(str(v)[:4000])
     try:
         c.query().dynamic(
             write_batch().var_as("n", g().add_n(kind, all_props)).returning(["n"]).to_dynamic_request()
@@ -222,14 +258,16 @@ def extract_graph(file_path: str, source: str, commit_hash: str,
 
             nodes.append({"kind": K_FUNC, "node_id": func_id,
                           "props": {"name": func_name, "file": file_path}})
+            _summary = _summarise(code)
             nodes.append({"kind": K_STATE, "node_id": state_id,
                           "props": {
-                              "code":        code[:4000],
-                              "code_hash":   _code_hash(code),
-                              "commit":      commit_hash,
-                              "function_id": func_id,
-                              "ai_summary":  _summarise(code),
-                              "status":      "active",  # latest; prior versions set to "superseded" after loop
+                              "code":            code[:4000],
+                              "code_hash":       _code_hash(code),
+                              "commit":          commit_hash,
+                              "function_id":     func_id,
+                              "ai_summary":      _summary,
+                              "ai_summary_vec":  _embed(_summary),
+                              "status":          "active",
                           }})
 
             func_registry[func_name] = func_id
