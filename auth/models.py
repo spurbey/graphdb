@@ -5,8 +5,8 @@ def create_user(username, password):
     """Create a new user with username and password."""
     if not username or not password:
         raise ValueError("Username and password cannot be empty")
-    if len(password) < 6:
-        raise ValueError("Password must be at least 6 characters")
+    if len(password) < 8:
+        raise ValueError("Password must be at least 8 characters")
     users[username] = password
     return True
 
