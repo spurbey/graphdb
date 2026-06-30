@@ -51,11 +51,12 @@ MANIFEST = {
         },
         {
             "name":        "trace_blast_radius",
-            "description": "Find all functions that call a given function. Use to assess impact of changing it.",
+            "description": "Find all functions that call a given function, up to N hops deep. Single Rust traversal — no client-side looping.",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "function_identity_id": {"type": "string", "description": "FunctionIdentity node_id (e.g. func_auth_service_login)"},
+                    "function_identity_id": {"type": "string",  "description": "FunctionIdentity node_id (e.g. func_auth_models_get_user)"},
+                    "depth":                {"type": "integer", "description": "How many CALLS hops to traverse (default 3)", "default": 3},
                 },
                 "required": ["function_identity_id"],
             },
@@ -91,7 +92,7 @@ MANIFEST = {
 TOOL_MAP = {
     "search_code_semantics":            lambda p: search_code_semantics(p["prompt"], p.get("k", 5)),
     "get_code_time_travel_diff":        lambda p: get_code_time_travel_diff(p["state_node_id"]),
-    "trace_blast_radius":               lambda p: trace_blast_radius(p["function_identity_id"]),
+    "trace_blast_radius":               lambda p: trace_blast_radius(p["function_identity_id"], p.get("depth", 3)),
     "get_temporal_vulnerability_trace": lambda p: get_temporal_vulnerability_trace(p["target_func"], p["timestamp_iso"]),
     "edit_code":                        lambda p: edit_code(p["file"], p["function_name"], p["new_code"]),
 }

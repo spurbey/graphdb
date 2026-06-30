@@ -147,19 +147,27 @@ def get_code_time_travel_diff(state_node_id: str) -> dict:
 
 _P_FID = define_params({"fid": param.string()})
 
-def trace_blast_radius(function_identity_id: str) -> list[dict]:
+def trace_blast_radius(function_identity_id: str, depth: int = 3) -> list[dict]:
     """
     Returns all FunctionIdentity nodes that have a CALLS edge pointing TO the
-    given function — i.e. "who calls this function?"
-    Returns list of {node_id, name, file} dicts.
+    given function, up to `depth` hops deep.
+
+    Uses repeat().emit_all() — the entire traversal executes inside HelixDB's
+    Rust engine as a single request. No client-side looping between hops.
     """
+    from helixdb import RepeatConfig, SubTraversal
     c = _c()
     batch = (
         read_batch()
         .var_as("callers",
             g().n_with_label("FunctionIdentity")
                .where(Predicate.eq_param("node_id", "fid"))
-               .in_("CALLS")
+               .repeat(
+                   RepeatConfig.new(SubTraversal.new().in_("CALLS"))
+                               .times(depth)
+                               .emit_all()
+               )
+               .dedup()
                .project([
                    Projection.property("node_id"),
                    Projection.property("name"),
@@ -169,8 +177,12 @@ def trace_blast_radius(function_identity_id: str) -> list[dict]:
         .returning(["callers"])
     )
     try:
-        result = c.query().dynamic(batch.to_dynamic_request(_P_FID, {"fid": function_identity_id})).send()
-        return _rows(result, "callers")
+        result = c.query().dynamic(
+            batch.to_dynamic_request(_P_FID, {"fid": function_identity_id})
+        ).send()
+        # exclude the anchor itself from results
+        return [r for r in _rows(result, "callers")
+                if r.get("node_id") != function_identity_id]
     except Exception as e:
         return [{"error": str(e)}]
 
