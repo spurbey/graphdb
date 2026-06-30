@@ -72,10 +72,10 @@ _SUMMARIES = {
     "list_users":        "Returns a list of all currently registered usernames from the in-memory store.",
     "user_exists":       "Returns True if the given username exists in the in-memory store, False otherwise.",
     "signup":            "Registers a new user after validating username format and enforcing minimum password length; returns a structured JSON response.",
-    "login":             "Authenticates a user by comparing the stored password; raises typed exceptions and returns a structured JSON response.",
+    "login":             "Authenticates a user by verifying their password against the stored credential; returns a structured JSON success or failure response.",
     "validate_username": "Validates that a username is non-empty, at least 3 characters, and alphanumeric; raises ValidationError otherwise.",
-    "logout":            "Returns a success JSON response for a known user, or an error response if the username is not found.",
-    "delete_account":    "Verifies the user password via login, then deletes the account and returns a structured success or error response.",
+    "logout":            "Ends a user session by confirming the user exists; returns a structured response. Does not verify password.",
+    "delete_account":    "Permanently removes a user account after verifying credentials; calls login internally then drops the record from the store.",
 }
 
 def _summarise(code: str) -> str:
