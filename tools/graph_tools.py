@@ -62,16 +62,18 @@ def _rows(result: dict, key: str) -> list[dict]:
 def search_code_semantics(prompt: str, k: int = 5) -> list[dict]:
     """
     Vector similarity search on FunctionState.ai_summary_vec where status == 'active'.
-    Embeds the prompt via OpenRouter then queries the HelixDB vector index.
+    Fetches k*3 candidates from the vector index then filters to active, returns top k.
     """
     c = _c()
     vec = _embed(prompt)
+    # Fetch more candidates than needed so the active filter doesn't starve results
     batch = (
         read_batch()
         .var_as("states",
-            g().vector_search_nodes("FunctionState", "ai_summary_vec", vec, k)
+            g().vector_search_nodes("FunctionState", "ai_summary_vec", vec, k * 3)
                .where(Predicate.eq("status", "active"))
                .where(Predicate.is_not_null("ai_summary"))
+               .limit(k)
                .project([
                    Projection.property("node_id"),
                    Projection.property("function_id"),
