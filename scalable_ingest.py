@@ -105,7 +105,8 @@ _latest_state: dict[str, str] = {}
 _SKIP_FILES = {"scalable_ingest.py", "semantic_pass.py", "dump_viz.py",
                "level_1_parser.py", "ingestion_process.txt",
                "graph_mcp_server.py", "graph_tools.py",
-               "_test_loop.py", "_test_queries.py", "_test_vector.py"}
+               "_test_loop.py", "_test_queries.py", "_test_vector.py",
+               "_test_3hop.py", "_test_bench.py"}
 
 _EDGE_PARAMS = define_params({"src_id": param.string(), "tgt_id": param.string()})
 
