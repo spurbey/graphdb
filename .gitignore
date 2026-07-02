@@ -1,0 +1,7 @@
+__pycache__/
+*.pyc
+
+# sandbox data files — too large for GitHub, regenerate with sandbox/amo_ingest.py
+sandbox/amo_nodes.json
+sandbox/amo_edges.json
+sandbox/amo_viz.json
