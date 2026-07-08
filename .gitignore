@@ -5,3 +5,12 @@ __pycache__/
 sandbox/amo_nodes.json
 sandbox/amo_edges.json
 sandbox/amo_viz.json
+
+# graphsage — regenerable binary artifacts
+graphsage_minimal/data/amo_calls_active.npz
+graphsage_minimal/data/query_embeddings.npy
+graphsage_minimal/out/graphsage_state.pt
+graphsage_minimal/out/graphsage_embeddings.npy
+
+# colab bundle — built from graphsage_minimal/
+graphsage_minimal_bundle.zip
