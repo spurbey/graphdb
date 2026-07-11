@@ -16,7 +16,9 @@ Usage:
 
 import json
 import math
+import os
 import random as _random
+import urllib.request
 from pathlib import Path
 import numpy as np
 import igraph as ig
@@ -106,6 +108,7 @@ for i, e in enumerate(edges_data):
     G.es[i]["co_change_count"]  = e.get("co_change_count", 0)
     G.es[i]["category"]         = e.get("category", "")
     G.es[i]["ast_relation_type"] = e.get("ast_relation_type", "unknown")
+    G.es[i]["theme_proportions"] = e.get("theme_proportions", {})
 
 print(f"  Graph: {G.vcount()} vertices, {G.ecount()} edges")
 
@@ -175,6 +178,131 @@ def compute_weights(alpha=0.4, beta=0.6, co_change_floor=1, cochange_mode=MODE_R
 G.es["weight"] = compute_weights()
 print(f"  Weights computed. Range: [{min(G.es['weight']):.3f}, {max(G.es['weight']):.3f}]")
 
+# ── Theme overlay setup ───────────────────────────────────────────────────────
+# Load co-change themes. Build label text per theme for query-time cosine scoring.
+# theme_vec_map is populated lazily on first query that uses theme overlay.
+
+EMBED_MODEL = "nvidia/llama-nemotron-embed-vl-1b-v2:free"
+EMBED_DIMS  = 2048
+SKIP_THEME_EMBED = os.environ.get("AMO_SKIP_THEME_EMBED", "").lower() in {"1", "true", "yes"}
+
+_themes_path = ROOT / "sandbox" / "amo_cochange_themes.json"
+_themes_data: list[dict] = json.loads(_themes_path.read_text(encoding="utf-8")) if _themes_path.exists() else []
+
+def _load_api_key() -> str:
+    preferred = ("llm_api_key_2", "llm_api_key2", "llm_api_key")
+    candidates = [Path.cwd() / ".env", ROOT / ".env",
+                  Path.cwd().parent / ".env", ROOT.parent / ".env"]
+    for p in candidates:
+        if not p.exists():
+            continue
+        vals: dict[str, str] = {}
+        for line in p.read_text(encoding="utf-8").splitlines():
+            if "=" not in line:
+                continue
+            k, v = line.split("=", 1)
+            vals[k.strip().lower()] = v.strip()
+        for name in preferred:
+            if vals.get(name):
+                return vals[name]
+    return ""
+
+_API_KEY = _load_api_key()
+
+def _embed_text(text: str) -> np.ndarray:
+    if not _API_KEY or not text.strip():
+        return np.zeros(EMBED_DIMS, dtype=np.float32)
+    try:
+        payload = json.dumps({"model": EMBED_MODEL, "input": text[:2000]}).encode()
+        req = urllib.request.Request(
+            "https://openrouter.ai/api/v1/embeddings",
+            data=payload,
+            headers={"Authorization": f"Bearer {_API_KEY}",
+                     "Content-Type": "application/json"},
+        )
+        resp = json.loads(urllib.request.urlopen(req, timeout=20).read())
+        vec = np.array(resp["data"][0]["embedding"], dtype=np.float32)
+        if QUERY_FEATURE_MEAN is not None:
+            vec = vec.reshape(1, -1) - QUERY_FEATURE_MEAN
+            vec = vec / np.maximum(np.linalg.norm(vec, axis=1, keepdims=True), 1e-8)
+            return vec[0].astype(np.float32)
+        return vec
+    except Exception as e:
+        print(f"  [embed warn] {e}")
+        return np.zeros(EMBED_DIMS, dtype=np.float32)
+
+def _theme_label_text(theme: dict) -> str:
+    if theme.get("dependency_id"):
+        dep = theme["dependency_id"].replace("function:", "").replace("file:", "")
+        return f"shared dependency {dep}"
+    msgs = " ".join(
+        m.splitlines()[0] for m in (theme.get("commit_messages") or [])[:5] if m
+    )
+    return f"{theme.get('category', 'cochange')} {msgs}".strip()[:300]
+
+# theme vectors: populated once on first theme-overlay query
+_theme_ids:   list[str]           = [t["theme_id"] for t in _themes_data]
+_theme_labels:list[str]           = [_theme_label_text(t) for t in _themes_data]
+_theme_vecs:  list[np.ndarray]    = []
+_theme_vec_map: dict[str, np.ndarray] = {}
+_themes_embedded = False
+
+def _ensure_theme_vecs() -> None:
+    global _theme_vecs, _theme_vec_map, _themes_embedded
+    if _themes_embedded:
+        return
+    if not _themes_data:
+        _themes_embedded = True
+        return
+    if SKIP_THEME_EMBED or not _API_KEY:
+        _theme_vecs = [np.zeros(EMBED_DIMS, dtype=np.float32) for _ in _themes_data]
+    else:
+        import time
+        print(f"  Embedding {len(_themes_data)} theme labels (first theme-overlay query)...")
+        _theme_vecs = []
+        for label in _theme_labels:
+            _theme_vecs.append(_embed_text(label))
+            time.sleep(0.15)
+    _theme_vec_map = dict(zip(_theme_ids, _theme_vecs))
+    _themes_embedded = True
+
+def _theme_boosted_weights(query_vec: np.ndarray) -> list[float]:
+    """Compute per-query theme-boosted edge weights for CO_CHANGE edges."""
+    _ensure_theme_vecs()
+    theme_scores: dict[str, float] = {
+        tid: max(0.0, cosine_sim(query_vec, tvec))
+        for tid, tvec in _theme_vec_map.items()
+    }
+    weights = []
+    for edge in G.es:
+        etype = edge["type"]
+        cc  = edge["co_change_count"]
+        deg = _calls_degrees[edge.target]
+
+        if etype == "CALLS":
+            cost = 0.4 * 1.0 + 0.6 * (1.0 / (1.0 + cc) if cc >= 1 else 1.0)
+        elif etype == "IMPORTS":
+            cost = 0.4 * 1.5 + 0.6 * (1.0 / (1.0 + cc) if cc >= 1 else 1.0)
+        else:  # CO_CHANGE
+            policy = cochange_consumer_policy(edge["category"], MODE_RISK)
+            if not policy["include"]:
+                weights.append(9999.0)
+                continue
+            temporal = 1.0 / (1.0 + cc) if cc >= 1 else 1.0
+            cost = (0.4 * 2.0 + 0.6 * temporal) * policy["cost_multiplier"]
+            proportions: dict[str, float] = edge["theme_proportions"] or {}
+            if proportions:
+                boost = sum(
+                    prop * theme_scores.get(tid, 0.0)
+                    for tid, prop in proportions.items()
+                )
+                cost *= max(0.4, 1.0 - 0.6 * boost)
+
+        if deg > _calls_max * 0.05:
+            cost *= math.log(deg + 1) ** HUB_PENALTY_EXPONENT
+        weights.append(cost)
+    return weights
+
 
 # ── Phase 3: Cold Discovery Pipeline ─────────────────────────────────────────
 
@@ -186,20 +314,30 @@ def cosine_sim(a: np.ndarray, b: np.ndarray) -> float:
 
 
 def _is_candidate(v) -> bool:
-    """Phase 0b: exclude test functions and inactive/unembedded nodes from results."""
+    """Phase 0b: exclude test functions and inactive/unembedded nodes from results.
+    Filters by both function name prefix AND file path — catches functions named
+    e.g. 'snapshot' that live in test_graph_rag.py."""
+    name: str = v["name"] or ""
+    file: str = v["file"] or ""
+    file_base = file.replace("\\", "/").split("/")[-1]
     return (
         v["status"] == "active"
         and v["embedding"] is not None
-        and not v["name"].startswith("test_")
+        and not name.startswith("test_")
+        and not file_base.startswith("test_")
     )
 
 
-def run_cold_discovery(query_embedding: np.ndarray, top_k_seeds=15, final_k=10):
+def run_cold_discovery(query_embedding: np.ndarray, top_k_seeds=15, final_k=10,
+                       use_theme_overlay=True):
     """
     Step 1: Vector seed search (cosine similarity) — test functions excluded
     Step 2: Infomap community scope (pre-computed at startup, deterministic)
     Step 3: Personalized PageRank with soft community weighting
     Step 4: MMR diverse selection
+
+    use_theme_overlay=True  → PPR on full graph with theme-boosted CO_CHANGE weights
+    use_theme_overlay=False → PPR on CALLS-only graph (faster, no API calls)
     """
     # Step 1: Vector seed search — candidates only (no test functions)
     seed_scores = []
@@ -224,9 +362,6 @@ def run_cold_discovery(query_embedding: np.ndarray, top_k_seeds=15, final_k=10):
     print(f"  Seed cluster distribution: {dict(list(cluster_counts.items())[:5])} ({len(cluster_counts)} clusters)")
 
     # Step 3: Personalized PageRank with soft community weighting
-    # Phase 1 fix: proportional weighting instead of binary dominant-cluster mask.
-    # A community with k seeds out of top_k_seeds gets weight k/top_k_seeds in
-    # the reset vector instead of being zeroed out entirely.
     total_seeds = len(top_seeds)
     community_weight = {
         cid: count / total_seeds
@@ -246,11 +381,18 @@ def run_cold_discovery(query_embedding: np.ndarray, top_k_seeds=15, final_k=10):
         for idx, _ in top_seeds:
             reset_vector[idx] = 1.0 / len(top_seeds)
 
-    ppr_scores = calls_only.personalized_pagerank(
+    # Choose graph and weights based on mode
+    if use_theme_overlay:
+        G.es["weight"] = _theme_boosted_weights(query_embedding)
+        ppr_graph = G  # full graph including CO_CHANGE with boosted weights
+    else:
+        ppr_graph = calls_only  # CALLS-only, static weights
+
+    ppr_scores = ppr_graph.personalized_pagerank(
         vertices=None,
         damping=0.85,
         directed=True,
-        weights=None,
+        weights=G.es["weight"] if use_theme_overlay else None,
         reset=reset_vector.tolist(),
     )
 
@@ -319,52 +461,7 @@ def find_connecting_path(source_id: str, target_id: str) -> list[str]:
 
 def load_query_embedding(query_text: str) -> np.ndarray:
     """Embed a query string using the same OpenRouter model."""
-    import urllib.request
-    try:
-        key = ""
-        preferred_names = ("llm_api_key_2", "llm_api_key2", "llm_api_key")
-        env_candidates = [
-            Path.cwd() / ".env",
-            Path(__file__).resolve().parents[1] / ".env",
-            Path.cwd().parent / ".env",
-            Path(__file__).resolve().parents[2] / ".env",
-        ]
-        for env_path in env_candidates:
-            if not env_path.exists():
-                continue
-            values: dict[str, str] = {}
-            for line in env_path.read_text(encoding="utf-8").splitlines():
-                if "=" not in line:
-                    continue
-                name, value = line.split("=", 1)
-                values[name.strip().lower()] = value.strip()
-            for name in preferred_names:
-                if values.get(name):
-                    key = values[name]
-                    break
-            if key:
-                break
-        if not key:
-            raise RuntimeError("No llm_api_key found in .env candidates")
-        payload = json.dumps({
-            "model": "nvidia/llama-nemotron-embed-vl-1b-v2:free",
-            "input": query_text
-        }).encode()
-        req = urllib.request.Request(
-            "https://openrouter.ai/api/v1/embeddings",
-            data=payload,
-            headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
-        )
-        resp = json.loads(urllib.request.urlopen(req, timeout=20).read())
-        vec = np.array(resp["data"][0]["embedding"], dtype=np.float32)
-        if QUERY_FEATURE_MEAN is not None:
-            vec = vec.reshape(1, -1) - QUERY_FEATURE_MEAN
-            vec = vec / np.maximum(np.linalg.norm(vec, axis=1, keepdims=True), 1e-8)
-            return vec[0].astype(np.float32)
-        return vec
-    except Exception as e:
-        print(f"  [embed warn] {e}")
-        return np.zeros(2048, dtype=np.float32)
+    return _embed_text(query_text)
 
 
 def run_validation():
