@@ -343,11 +343,17 @@ def _run_retrieval(
         for cid, count in cluster_counts.items()
     }
 
+    # Seed floor weighting: 0.0 = pure proportional. See PIPELINE_SPEC.md 2026-07-12.
+    SEED_FLOOR = 0.0
+    uniform_weight = 1.0 / max(total_seeds, 1)
+
     reset = np.zeros(G.vcount())
     for idx, score in top_seeds:
         cid = G.vs[idx]["cluster_id"]
         w = community_weight.get(cid, 0.0)
-        reset[idx] = max(score, 0.0) * w
+        proportional = max(score, 0.0) * w
+        floor = SEED_FLOOR * uniform_weight
+        reset[idx] = max(proportional, floor)
 
     total = reset.sum()
     if total > 0:

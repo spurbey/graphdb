@@ -368,11 +368,22 @@ def run_cold_discovery(query_embedding: np.ndarray, top_k_seeds=15, final_k=10,
         for cid, count in cluster_counts.items()
     }
 
+    # Seed floor weighting: SEED_FLOOR=0.0 means pure proportional weighting (current behavior).
+    # Raising SEED_FLOOR gives every seed a minimum reset mass regardless of cosine score.
+    # Tested 2026-07-12 with SEED_FLOOR=0.3: no effect on export_snapshot (cluster filter
+    # removes it regardless) or _filter_answer_grade_nodes (proportional already > floor).
+    # Left at 0.0 until a miss is specifically diagnosed where floor would activate.
+    # See PIPELINE_SPEC.md Result Log 2026-07-12 for full diagnosis.
+    SEED_FLOOR = 0.0
+    uniform_weight = 1.0 / len(top_seeds)
+
     reset_vector = np.zeros(G.vcount())
     for idx, score in top_seeds:
         cid = G.vs[idx]["cluster_id"]
         w = community_weight.get(cid, 0.0)
-        reset_vector[idx] = max(score, 0.0) * w
+        proportional = max(score, 0.0) * w
+        floor = SEED_FLOOR * uniform_weight
+        reset_vector[idx] = max(proportional, floor)
 
     total = reset_vector.sum()
     if total > 0:

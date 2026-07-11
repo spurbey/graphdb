@@ -97,7 +97,7 @@ Each miss has a specific mechanism. Do not attempt to fix a miss without re-read
 | Query ID | Target | Raw vector rank | Mechanism | Fix | Priority |
 |----------|--------|-----------------|-----------|-----|----------|
 | `old_snapshot` | `export_snapshot` | **15/1069** (score 0.336) | PPR dilution: rank-15 seed gets proportional weight 1/15=0.067, weak call neighborhood (_json, _rows_for_export), PPR mass dissipates. NOT an embedding failure. | Seed floor weighting | High — diagnosed, fix queued |
-| `graph_context_filter` | `_filter_answer_grade_nodes` | 2/1069 | Partially diagnosed. Vector rank is fine (rank 2). PPR fails — seed `rebuild_graph_cache` has high PPR score but directed PPR may not amplify its callees sufficiently. Directed graph confirmed (source=caller, target=callee, PPR follows out-edges). Whether seed dilution is the mechanism needs one more diagnostic check. | Check if `rebuild_graph_cache` is a dilution victim. If yes, seed floor weighting covers it. | Medium — needs one diagnostic script before coding |
+| `graph_context_filter` | `_filter_answer_grade_nodes` | 2/1069 | **Diagnosed 2026-07-12.** Target IS seed #2 (score 0.484) but cluster 43 has only 1 seed → community weight 0.067. Direct CALLS edge exists: `rebuild_graph_cache` (seed #1, 5 total callees) calls target directly. PPR mass diluted by both community isolation and callee fan-out. | Seed floor weighting covers both factors — target gets its own floor weight as seed #2, and `rebuild_graph_cache` gets more mass which flows to target (1 of 5 callees). Same fix as `export_snapshot`. | High — same fix as Step 1 |
 | `install_hooks` | `apply_install_plan` | MISS in all modes | Graph connectivity: function is barely called outside test functions. Not a pipeline bug. | Accept as permanent miss OR add non-test callers to graph — a codebase fact, not a retrieval problem. | Low — likely accept |
 | `ambiguous_capture_persist` | `ingest_hook_payload` | MISS in all modes | Correct miss. Query "codex hook captured user message should become durable memory evidence" does not describe `ingest_hook_payload` in any lexical or structural way. The query is wrong, not the system. | Nothing. Accept. | Accepted |
 
@@ -361,12 +361,67 @@ Format: date, what changed, what was measured, what was observed, what was decid
 
 ---
 
-### [NEXT ENTRY — fill in after seed floor weighting experiment]
+### [2026-07-12 — Step 1: Seed floor weighting implemented, result unexpected — diagnosed]
 
-**Changes:**  
-**Expected:**  
-**Measured:**  
-**Decided:**  
+**Changes made:** `SEED_FLOOR = 0.3` added to reset vector construction in both `igraph_sandbox.py` and `cochange_ablation.py`.
+
+**Expected:** `export_snapshot` and `_filter_answer_grade_nodes` to improve.  
+**Actual:** Both still MISS. Score unchanged: VectorOnly 6/10, CallsPPR 5/10, ThemeOverlay 6/10.
+
+**Did not regress any passing query.** Two-sided check: all 6 currently passing queries held.
+
+**Post-failure diagnosis (scripts: `_check_floor_effect.py`, `_check_cluster_filter.py`):**
+
+Two separate failures, not one:
+
+**`export_snapshot` — cluster filter, not dilution:**
+```
+export_snapshot cluster_id = 33
+Seeds in cluster 33 for snapshot query: (none)
+top_cluster_set = {166, 172, 112, 82, 148, 92}  (all seed clusters)
+Cluster 33 NOT in top_cluster_set
+```
+The post-PPR filter `ranked_ppr = [(i,s) for i,s in ranked if G.vs[i]["cluster_id"] in top_cluster_set]`
+removes `export_snapshot` regardless of its PPR score. `_check_floor_effect.py` showed it at PPR rank 6
+using `calls_only` directly (bypassing the cluster filter) — that's why the numbers disagreed.
+**Floor weighting cannot fix this.** The cluster filter is the wall, not the reset weight.
+
+Root cause: `export_snapshot` lives in cluster 33 which never has any seeds for "store and save
+session memory snapshot" queries. The top-15 seeds are `memory_import, dashboard_snapshot, 
+memory_export, memory_write, session_id, snapshot [git.py], query_session_graph, graph_snapshot` —
+all in clusters 172, 82, 112, 148, 92, 166. Cluster 33 has none.
+
+**`_filter_answer_grade_nodes` — floor was a no-op:**
+```
+Reset weight WITHOUT floor: 0.0496 (4.96%)
+Reset weight WITH floor:    0.0496 (4.96%)
+Floor improvement: +0.00 percentage points
+```
+The proportional value (0.0496) already exceeded the floor value (0.3/15 = 0.02).
+`max(proportional, floor)` picked proportional — the floor never activated.
+The target reaches PPR rank 10 in the filtered set but gets displaced in the ablation's
+full-graph (theme overlay) mode vs CALLS-only mode. Different PPR graph = different ranks.
+
+**Floor weighting was based on a correct diagnosis of dilution but the wrong identification
+of which bottleneck was active.** The dilution happens BEFORE the cluster filter for export_snapshot
+(floor would give more reset mass, but the cluster filter removes it anyway). And for
+_filter_answer_grade_nodes, the floor value was too small to move the needle.
+
+**What actually fixes export_snapshot:**
+Option A: Remove the post-PPR cluster filter entirely. Let any node with PPR score survive to MMR.
+Risk: god-node contamination returns (hub-penalized but still possible). Needs measurement.
+
+Option B: Accept as permanent miss. The function is structurally isolated from this query's semantic neighborhood.
+
+**What actually fixes _filter_answer_grade_nodes:**
+The target reaches PPR rank 10 in CALLS-only but gets displaced in full-graph mode.
+The theme overlay is routing PPR mass differently. Investigate which theme edges are pulling
+mass away from cluster 43.
+
+**Decision: revert SEED_FLOOR to 0.0 (no-op) since it did nothing and complicates the code.**
+The floor-weighting hypothesis is closed as incorrect for the specific mechanism in play.
+
+**Updated miss table below (mechanisms corrected).**
 
 ---
 
