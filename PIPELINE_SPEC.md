@@ -148,13 +148,23 @@ for idx, score in top_seeds:
 
 **Do not code yet.** Run one diagnostic script first.
 
-Question: for the `graph_context_filter` query, what is `rebuild_graph_cache`'s cosine rank, and what is its proportional weight in the reset vector? Is it in the top-15 seeds?
+Question: for the `graph_context_filter` query, what is `rebuild_graph_cache`'s cosine rank, and what is its proportional weight in the reset vector? Is it in the top-15 seeds? If it is a seed, what fraction of PPR mass flows from it toward `_filter_answer_grade_nodes` given the directed graph and the CALLS edges between them?
 
-If `rebuild_graph_cache` is a seed with adequate weight AND directed PPR follows its out-edges toward `_filter_answer_grade_nodes`, but `_filter_answer_grade_nodes` still doesn't surface — that's a different mechanism than dilution (possibly: too many outgoing CALLS from `rebuild_graph_cache`, each getting only a small fraction of PPR mass).
+**Required evidence standard — same as `export_snapshot`:** The diagnostic script must be run and its raw shell output shown in the Result Log entry below before any conclusion about the mechanism gets written into the Settled Decisions table. This is not optional. The pattern is: script → output → conclusion, in that order. A conclusion written without a cited script and its output does not count as settled. This rule is stated explicitly here because the "rank 5, embedding space mismatch" episode showed what happens when a conclusion gets committed without it — a plausible-sounding mechanism that was wrong, that almost got treated as fact.
 
-Script to write: load graph, embed the query "drop noisy answer grade nodes from current graph context results", score all candidates, report rank and weight of `rebuild_graph_cache`, then simulate what fraction of its PPR mass flows to `_filter_answer_grade_nodes`.
+Script to write: load graph, embed the query "drop noisy answer grade nodes from current graph context results", score all candidates, report:
+1. `rebuild_graph_cache`'s raw cosine rank and score
+2. Its proportional weight in the reset vector for this query
+3. Whether `_filter_answer_grade_nodes` is reachable from `rebuild_graph_cache` via directed CALLS out-edges (check direct edge existence)
+4. If reachable: how many total out-edges does `rebuild_graph_cache` have (this determines what fraction of PPR mass flows to each callee)
 
-**Only after this number exists** does it become clear whether Step 1's floor weighting also covers this miss.
+**If `rebuild_graph_cache` is in top-15 seeds AND `_filter_answer_grade_nodes` is a direct callee:** seed floor weighting from Step 1 will help — it gives `rebuild_graph_cache` more teleportation mass, which flows to `_filter_answer_grade_nodes`. No additional fix needed.
+
+**If `rebuild_graph_cache` is in top-15 seeds AND `_filter_answer_grade_nodes` is NOT a direct callee:** different mechanism — the callee is reachable only through intermediate nodes. PPR mass diffuses before reaching it. Seed floor weighting alone won't fix it.
+
+**If `rebuild_graph_cache` is NOT in top-15 seeds:** different mechanism entirely — the vector embedding for this query doesn't surface the right seeds. Floor weighting is irrelevant.
+
+**Fallback if mechanism is different from dilution:** Accept as a second permanent miss OR investigate whether `top_k_seeds` expansion (from 15 to 20) would bring the right seed into the window. Only justified if the diagnostic shows the target seed is at rank 16-20.
 
 ---
 
@@ -230,7 +240,7 @@ Script to write: load graph, embed the query "drop noisy answer grade nodes from
 | Consumer policy mode on subgraph edges | `temporal_burst` CO_CHANGE edges excluded from `general_retrieval` output. One-time refactor events are misleading context for an agent. | `cochange_consumer_policy` function in `cochange_analysis.py` | 2026-07-11 |
 | `ingest_hook_payload` (ambiguous query) accepted as permanent miss | Query "codex hook captured user message should become durable memory evidence" does not describe the function in any recoverable way. Query is wrong, not the system. | Vector rank: MISS in all modes. No lexical or structural path from query to function. | 2026-07-11 |
 | `export_snapshot` is PPR dilution, not embedding failure | Raw cosine rank 15/1069, score 0.336. Embedding is adequate. Mechanism: weak proportional reset weight + generic call neighborhood. | `sandbox/_check_raw_rank.py` — 10/10 alignment with stored ablation top-10 | 2026-07-11 |
-| Directed PPR confirmed | `G = ig.Graph(directed=True)`. `calls_only = G.subgraph_edges(...)` inherits directedness. `personalized_pagerank(directed=True)`. Source=caller, target=callee. PPR follows out-edges: from callers toward callees. | Code inspection + `G.is_directed()` check | 2026-07-12 |
+| Directed PPR confirmed | `G = ig.Graph(directed=True)`. `calls_only = G.subgraph_edges(...)` inherits directedness. `personalized_pagerank(directed=True)`. Source=caller, target=callee. PPR follows out-edges: from callers toward callees. **This closes the open question that was sitting unverified under the `_filter_answer_grade_nodes` diagnosis and retroactively strengthens the `export_snapshot` diagnosis, the soft-weighting fix rationale, and the hub-penalty direction claims — all of which assumed directed PPR without having checked it.** | Code inspection + `G.is_directed()` shell check: `calls_only.is_directed() = True`. Edge sample confirmed source=caller, target=callee. | 2026-07-12 |
 
 ### Deferred decisions (need specific evidence to unblock)
 
