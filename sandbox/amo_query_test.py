@@ -3,9 +3,38 @@ Run a single ambiguous query through the cold discovery pipeline and print what 
 """
 import json
 import math
+from pathlib import Path
 import urllib.request
 import numpy as np
 import igraph as ig
+
+ROOT = Path(__file__).resolve().parents[1]
+QUERY_FEATURE_MEAN = None
+
+
+def has_nonzero_embedding(values) -> bool:
+    return bool(values) and any(abs(float(value)) > 1e-12 for value in values)
+
+
+def load_graphsage_feature_fallback(nodes):
+    active = sorted([node for node in nodes if node.get("status") == "active"], key=lambda node: node["id"])
+    if any(has_nonzero_embedding(node.get("embedding") or []) for node in active):
+        return {}, None
+
+    data_path = ROOT / "graphsage_minimal" / "data" / "amo_calls_active.npz"
+    meta_path = ROOT / "graphsage_minimal" / "data" / "node_meta.json"
+    if not data_path.exists() or not meta_path.exists():
+        return {}, None
+
+    meta = json.loads(meta_path.read_text(encoding="utf-8"))
+    meta_ids = [row["id"] for row in meta]
+    active_ids = [node["id"] for node in active]
+    if meta_ids != active_ids:
+        return {}, None
+
+    data = np.load(data_path)
+    x = data["x"].astype(np.float32)
+    return {node_id: x[idx] for idx, node_id in enumerate(meta_ids)}, data["feature_mean"].astype(np.float32)
 
 # ── Load graph ────────────────────────────────────────────────────────────────
 with open("sandbox/amo_nodes.json", encoding="utf-8") as f:
@@ -20,6 +49,9 @@ G = ig.Graph(directed=True)
 node_ids = [n["id"] for n in nodes_data]
 G.add_vertices(len(node_ids))
 id_to_idx = {nid: i for i, nid in enumerate(node_ids)}
+reused_features, QUERY_FEATURE_MEAN = load_graphsage_feature_fallback(nodes_data)
+if reused_features:
+    print(f"Reusing GraphSAGE feature matrix for {len(reused_features)} active embeddings")
 
 for i, n in enumerate(nodes_data):
     G.vs[i]["id"]        = n["id"]
@@ -27,7 +59,12 @@ for i, n in enumerate(nodes_data):
     G.vs[i]["name"]      = n["name"]
     G.vs[i]["status"]    = n.get("status", "superseded")
     emb = n.get("embedding", [])
-    G.vs[i]["embedding"] = np.array(emb, dtype=np.float32) if emb else None
+    if has_nonzero_embedding(emb):
+        G.vs[i]["embedding"] = np.array(emb, dtype=np.float32)
+    elif n["id"] in reused_features:
+        G.vs[i]["embedding"] = reused_features[n["id"]]
+    else:
+        G.vs[i]["embedding"] = None
 
 edge_tuples = [(id_to_idx[e["source"]], id_to_idx[e["target"]]) for e in edges_data]
 G.add_edges(edge_tuples)
@@ -45,17 +82,42 @@ G.vs["cluster"] = communities.membership
 # ── Embed query ───────────────────────────────────────────────────────────────
 def embed(text):
     key = ""
-    for line in open("../.env"):
-        if "llm_api_key" in line.lower() and "=" in line and line.split("=")[0].strip() == "llm_api_key":
-            key = line.split("=", 1)[1].strip()
+    preferred_names = ("llm_api_key_2", "llm_api_key2", "llm_api_key")
+    env_candidates = [
+        Path.cwd() / ".env",
+        Path(__file__).resolve().parents[1] / ".env",
+        Path.cwd().parent / ".env",
+        Path(__file__).resolve().parents[2] / ".env",
+    ]
+    for env_path in env_candidates:
+        if not env_path.exists():
+            continue
+        values = {}
+        for line in env_path.read_text(encoding="utf-8").splitlines():
+            if "=" not in line:
+                continue
+            name, value = line.split("=", 1)
+            values[name.strip().lower()] = value.strip()
+        for name in preferred_names:
+            if values.get(name):
+                key = values[name]
+                break
+        if key:
             break
+    if not key:
+        raise RuntimeError("No llm_api_key_2, llm_api_key2, or llm_api_key found in .env candidates")
     payload = json.dumps({"model": "nvidia/llama-nemotron-embed-vl-1b-v2:free", "input": text}).encode()
     req = urllib.request.Request(
         "https://openrouter.ai/api/v1/embeddings",
         data=payload,
         headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
     )
-    return np.array(json.loads(urllib.request.urlopen(req, timeout=20).read())["data"][0]["embedding"], dtype=np.float32)
+    vec = np.array(json.loads(urllib.request.urlopen(req, timeout=20).read())["data"][0]["embedding"], dtype=np.float32)
+    if QUERY_FEATURE_MEAN is not None:
+        vec = vec.reshape(1, -1) - QUERY_FEATURE_MEAN
+        vec = vec / np.maximum(np.linalg.norm(vec, axis=1, keepdims=True), 1e-8)
+        return vec[0].astype(np.float32)
+    return vec
 
 def cosine(a, b):
     na, nb = np.linalg.norm(a), np.linalg.norm(b)
