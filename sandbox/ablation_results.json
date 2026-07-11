@@ -1,9 +1,9 @@
 {
   "summary": {
-    "n_queries": 10,
-    "hit_at_10_vector_only": 6,
+    "n_queries": 13,
+    "hit_at_10_vector_only": 7,
     "hit_at_10_calls_ppr": 5,
-    "hit_at_10_theme_overlay": 6,
+    "hit_at_10_theme_overlay": 7,
     "theme_embedding_active": true
   },
   "per_query": [
@@ -445,6 +445,138 @@
         "rebuild_indexes [storage.py]",
         "memory_export [server.py]",
         "memory_rebuild_indexes [tools.py]"
+      ]
+    },
+    {
+      "id": "cross_session_graph_builder",
+      "query": "build and serialize compact session graph nodes for storage",
+      "target_name": "build_compact_session_graph",
+      "rank_vector_only": null,
+      "rank_calls_ppr": null,
+      "rank_theme_overlay": null,
+      "top10_vector": [
+        "build_compact_session_graph [session_graph_writer.py]",
+        "write_compact_session_graph [session_graph_writer.py]",
+        "build_and_query_session_graph [session_runtime.py]",
+        "_graph_nodes_from_session [session_runtime.py]",
+        "query_session_graph [session_runtime.py]",
+        "__init__ [drain.py]",
+        "build_session_graph [session_runtime.py]",
+        "query_session_graph [session_query.py]",
+        "_rank_nodes [session_runtime.py]",
+        "_graph_edges_from_session [session_runtime.py]"
+      ],
+      "top10_calls_ppr": [
+        "build_and_query_session_graph [session_runtime.py]",
+        "_compact_row_to_node [store.py]",
+        "_graph_edges_from_session [session_runtime.py]",
+        "write_compact_session_graph [session_graph_writer.py]",
+        "finalize_session [service.py]",
+        "_graph_node [views.py]",
+        "session_detail [service.py]",
+        "_rank_nodes [session_runtime.py]",
+        "default_session_graph_path [session_runtime.py]",
+        "build_session_graph [session_runtime.py]"
+      ],
+      "top10_theme_overlay": [
+        "build_and_query_session_graph [session_runtime.py]",
+        "_compact_row_to_node [store.py]",
+        "_graph_edges_from_session [session_runtime.py]",
+        "write_compact_session_graph [session_graph_writer.py]",
+        "finalize_session [service.py]",
+        "_graph_node [views.py]",
+        "session_detail [service.py]",
+        "_rank_nodes [session_runtime.py]",
+        "default_session_graph_path [session_runtime.py]",
+        "build_session_graph [session_runtime.py]"
+      ]
+    },
+    {
+      "id": "cross_memory_storage_write",
+      "query": "persist memory unit to vector index and full text search store",
+      "target_name": "add_memory_unit",
+      "rank_vector_only": 1,
+      "rank_calls_ppr": null,
+      "rank_theme_overlay": 10,
+      "top10_vector": [
+        "add_memory_unit [storage.py]",
+        "memory_search [server.py]",
+        "memory_rebuild_indexes [server.py]",
+        "_vector_candidates [retrieval.py]",
+        "memory_write [server.py]",
+        "memory_search [tools.py]",
+        "list_memory_units [views.py]",
+        "rebuild_indexes [storage.py]",
+        "search_memories [retrieval.py]",
+        "_vector_candidates [retrieval.py]"
+      ],
+      "top10_calls_ppr": [
+        "memory_search [server.py]",
+        "list_memory_units [views.py]",
+        "memory_import [server.py]",
+        "_vector_candidates [retrieval.py]",
+        "memory_search [tools.py]",
+        "memory_write [server.py]",
+        "memory_rebuild_indexes [tools.py]",
+        "_write_vector [storage.py]",
+        "memory_rebuild_indexes [server.py]",
+        "search_memories [retrieval.py]"
+      ],
+      "top10_theme_overlay": [
+        "memory_search [server.py]",
+        "memory_rebuild_indexes [tools.py]",
+        "_write_vector [storage.py]",
+        "memory_import [server.py]",
+        "memory_search [tools.py]",
+        "memory_write [server.py]",
+        "_vector_candidates [retrieval.py]",
+        "memory_rebuild_indexes [server.py]",
+        "search_memories [retrieval.py]",
+        "add_memory_unit [storage.py]"
+      ]
+    },
+    {
+      "id": "cross_session_graph_nodes",
+      "query": "collect graph nodes from current session thread and code context",
+      "target_name": "_graph_nodes_from_session",
+      "rank_vector_only": null,
+      "rank_calls_ppr": null,
+      "rank_theme_overlay": null,
+      "top10_vector": [
+        "_graph_nodes_from_session [session_runtime.py]",
+        "_thread_graph_node [session_runtime.py]",
+        "_graph_edges_from_session [session_runtime.py]",
+        "debug_graph [diagnostics.py]",
+        "build_compact_session_graph [session_graph_writer.py]",
+        "_code_graph_node [session_runtime.py]",
+        "query_session_graph [session_runtime.py]",
+        "current_context [service.py]",
+        "amo_current_context [tools.py]",
+        "_graph_node [views.py]"
+      ],
+      "top10_calls_ppr": [
+        "_graph_nodes_from_session [session_runtime.py]",
+        "amo_merge_status [server.py]",
+        "amo_current_context [tools.py]",
+        "debug_graph [diagnostics.py]",
+        "build_and_query_session_graph [session_runtime.py]",
+        "query_session_graph [session_runtime.py]",
+        "default_session_graph_path [session_runtime.py]",
+        "build_compact_session_graph [session_graph_writer.py]",
+        "_extraction_run_graph_node [session_runtime.py]",
+        "_code_graph_node [session_runtime.py]"
+      ],
+      "top10_theme_overlay": [
+        "_graph_nodes_from_session [session_runtime.py]",
+        "amo_merge_status [server.py]",
+        "amo_current_context [tools.py]",
+        "debug_graph [diagnostics.py]",
+        "build_and_query_session_graph [session_runtime.py]",
+        "query_session_graph [session_runtime.py]",
+        "default_session_graph_path [session_runtime.py]",
+        "build_compact_session_graph [session_graph_writer.py]",
+        "_extraction_run_graph_node [session_runtime.py]",
+        "_code_graph_node [session_runtime.py]"
       ]
     }
   ]
