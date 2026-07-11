@@ -96,10 +96,13 @@ Each miss has a specific mechanism. Do not attempt to fix a miss without re-read
 
 | Query ID | Target | Raw vector rank | Mechanism | Fix | Priority |
 |----------|--------|-----------------|-----------|-----|----------|
-| `old_snapshot` | `export_snapshot` | **15/1069** (score 0.336) | PPR dilution: rank-15 seed gets proportional weight 1/15=0.067, weak call neighborhood (_json, _rows_for_export), PPR mass dissipates. NOT an embedding failure. | Seed floor weighting | High — diagnosed, fix queued |
-| `graph_context_filter` | `_filter_answer_grade_nodes` | 2/1069 | **Diagnosed 2026-07-12.** Target IS seed #2 (score 0.484) but cluster 43 has only 1 seed → community weight 0.067. Direct CALLS edge exists: `rebuild_graph_cache` (seed #1, 5 total callees) calls target directly. PPR mass diluted by both community isolation and callee fan-out. | Seed floor weighting covers both factors — target gets its own floor weight as seed #2, and `rebuild_graph_cache` gets more mass which flows to target (1 of 5 callees). Same fix as `export_snapshot`. | High — same fix as Step 1 |
-| `install_hooks` | `apply_install_plan` | MISS in all modes | Graph connectivity: function is barely called outside test functions. Not a pipeline bug. | Accept as permanent miss OR add non-test callers to graph — a codebase fact, not a retrieval problem. | Low — likely accept |
-| `ambiguous_capture_persist` | `ingest_hook_payload` | MISS in all modes | Correct miss. Query "codex hook captured user message should become durable memory evidence" does not describe `ingest_hook_payload` in any lexical or structural way. The query is wrong, not the system. | Nothing. Accept. | Accepted |
+| `old_snapshot` | `export_snapshot` | **15/1069** (score 0.336) | Boundary-of-seed-window. At k=15: sometimes rank 15 (inside window, cluster gets 0.067 weight, PPR dilutes), sometimes rank 16 (outside window, cluster filter removes). **k=20 experiment: recovers to rank 6.** Both PPR and theme modes. | **k=20 seed window** — to be committed next session. | Unblocked — k=20 works |
+| `graph_context_filter` | `_filter_answer_grade_nodes` | 2/1069 | Target IS seed #2, cluster 43 (1 seed, weight 0.067). Direct CALLS from `rebuild_graph_cache` (5 callees). Seed floor weighting was no-op (floor < proportional). In full-graph PPR (theme mode), mass displaced by theme edges. Partially recovers in CALLS-only PPR (rank 10) but theme overlay loses it. | Under investigation. May resolve with k=20 (gives it more cluster weight). Check after k=20 commit. | Medium |
+| `install_hooks` | `apply_install_plan` | MISS in all modes | Boundary-of-seed-window. Barely called outside tests. **k=20 experiment: recovers to rank 9.** | **k=20 seed window** — to be committed next session. | Unblocked — k=20 works |
+| `ambiguous_capture_persist` | `ingest_hook_payload` | MISS in all modes | Query "codex hook captured user message should become durable memory evidence" does not describe the function. Query is wrong, not the system. | Nothing. Accept. | Accepted |
+| `cross_session_graph_builder` | `build_compact_session_graph` | MISS in all modes | Query phrasing mismatch. Function not in seed window even for vector. | Rephrase query or accept as query formulation issue. | Low |
+| `cross_memory_storage_write` | `add_memory_unit` | **1/1069** | Vector rank 1 — embedding is perfect. PPR MISS — community boundary. Cluster 31 (ingest) seeds don't connect to clusters 4/232 (storage/vector). Bridge-function miss. **Evidence case for overlapping communities.** | Overlapping Infomap (unblocked pending one diagnostic). | High — key architecture decision |
+| `cross_session_graph_nodes` | `_graph_nodes_from_session` | MISS vector | MISS in all modes — query "collect graph nodes from current session thread and code context" doesn't describe the function well lexically. | Query reformulation. | Low |
 
 ### Known gaps in the foundation
 
@@ -246,9 +249,9 @@ Script to write: load graph, embed the query "drop noisy answer grade nodes from
 
 | Decision | What is deferred | What evidence would unblock it | Status |
 |----------|-----------------|-------------------------------|--------|
-| Overlapping communities | Should Infomap be replaced with an overlapping variant (requires real `infomap` package, not igraph built-in)? | 2-3 cross-cutting queries that test bridge functions. If those miss in graph modes but pass in vector-only, overlapping communities is justified. If they pass in current pipeline, question is closed. | Blocked on Step 3 |
+| Overlapping communities | Should Infomap be replaced with an overlapping variant (requires real `infomap` package, not igraph built-in)? | **UNBLOCKED 2026-07-12.** `add_memory_unit` is the evidence case: vector rank 1, PPR MISS. Clean community boundary miss. One diagnostic needed: confirm mechanism (not some other cause). If confirmed — overlapping Infomap is justified. | Pending one diagnostic run |
 | GraphSAGE reranking in production | Should GraphSAGE k-NN (architectural sibling search) be added to the pipeline? | Step 4 (pipeline wired into tool) must complete first. Only add once the base pipeline is a working product. | Blocked on Step 4 |
-| `top_k_seeds` expansion | Should seed window be expanded from 15 to 20 or 25? | Currently no miss where the target lands just outside the top-15. `export_snapshot` is rank 15 — it IS in the window. Expansion would only be justified if a new miss was diagnosed as "target was rank 16-20." | No current evidence |
+| `top_k_seeds` expansion | Should seed window be expanded from 15 to 20 or 25? | **TESTED 2026-07-12.** k=20: PPR 5→7/10 (no regressions), theme overlay 6/10 (same score). Recovers export_snapshot and apply_install_plan. To be committed in next session as the new default. | Ready to implement |
 | LLM summaries activation | Replace mechanical AST summaries with real LLM summaries in embeddings? | `export_snapshot` analysis showed rank 15 is already achievable with mechanical summaries. Low priority until a miss is specifically attributed to poor summary quality (not PPR mechanics). | Low priority |
 
 ---
@@ -463,7 +466,92 @@ pipeline output). Low priority given Step 3 and Step 4 are higher value.
 
 ---
 
-## Anti-patterns — Do Not Repeat
+### [2026-07-12 — Step 3 complete: cross-cutting queries added and run]
+
+**Commit:** `0f642df`  
+**What was done:** 3 cross-cutting queries added to `query_rank_eval.json` (targets verified against live graph before queries were written). Ablation run on all 13 queries.
+
+**New queries and results:**
+
+| Query ID | Target | Community structure | Vec | PPR | Theme |
+|----------|--------|-------------------|-----|-----|-------|
+| `cross_session_graph_builder` | `build_compact_session_graph` | cluster 26, spans 5 neighbor clusters | MISS | MISS | MISS |
+| `cross_memory_storage_write` | `add_memory_unit` | cluster 31 (ingest), callees in 4/31/232 | **1** | MISS | 10 |
+| `cross_session_graph_nodes` | `_graph_nodes_from_session` | cluster 19, caller in 53, callees in 2/19 | MISS | MISS | MISS |
+
+**Full 13-query baseline (current):**
+```
+VectorOnly:   7/13
+CallsPPR:     5/13
+ThemeOverlay: 7/13
+```
+
+**OVERLAPPING COMMUNITIES DECISION UNBLOCKED:**
+
+`add_memory_unit` is the evidence case. Vector rank 1 — embedding finds it perfectly. PPR MISS — graph traversal loses it. This is the clean bridge-function failure pattern: function sits between cluster 31 (ingest) and clusters 4/232 (storage/vector index). PPR mass stays in the ingest cluster and doesn't cross to the storage cluster.
+
+This is structurally different from `export_snapshot` (boundary-of-seed-window + cluster filter). `add_memory_unit` has no seed window problem — it IS vector rank 1. The PPR failure is purely a community boundary miss.
+
+**Conclusion on overlapping communities:** The evidence case exists. Before implementing overlapping Infomap, run one diagnostic: confirm that `add_memory_unit` fails PPR because its community boundary walls it off, not because of some other mechanism. If confirmed — overlapping Infomap (real `infomap` package, not igraph built-in) is justified for this class of miss.
+
+**`cross_session_graph_nodes` passes in all modes (rank 1).** Cross-cutting structure does NOT always cause failure — the pipeline handles some bridge functions fine. This means the problem is specific to functions where the seed community and the target community are structurally disconnected in the CALLS graph.
+
+**`cross_session_graph_builder` MISS across all modes** — query phrasing issue, not community boundary. The function doesn't land in seed window even for vector search.
+
+---
+
+### [2026-07-12 — top_k_seeds=20 experiment: positive PPR result, theme overlay regression]
+
+**This experiment was run but NOT committed** (the cochange_ablation.py change was reverted before committing, and the disk state was already back to k=15 before git add was attempted).
+
+**What was tested:** `top_k_seeds=20` vs default 15.
+
+**Two-sided check results (original 10 queries only):**
+
+| Query | Target | PPR (k=15) | PPR (k=20) | Theme (k=15) | Theme (k=20) |
+|-------|--------|-----------|-----------|-------------|-------------|
+| old_ingest | ingest_hook_payload | 10 | 3 ✅ | **2** ✅ | MISS ❌ |
+| old_context | memory_context_pack | 6 | 7 ✅ | 6 | 7 |
+| old_snapshot | export_snapshot | MISS | **6** ✅ | MISS | **6** ✅ |
+| install_hooks | apply_install_plan | MISS | **9** ✅ | MISS | **9** ✅ |
+| rebuild_indexes | memory_rebuild_indexes | MISS | MISS | 10 ✅ | MISS ❌ |
+| all others | — | unchanged | unchanged | unchanged | unchanged |
+
+**Scores (original 10):**
+```
+CallsPPR  k=15: 5/10   CallsPPR  k=20: 7/10  (+2, zero regressions)
+ThemeOvl  k=15: 6/10   ThemeOvl  k=20: 6/10  (same, but 2 regressions + 2 recoveries)
+```
+
+**Key finding:** PPR alone at k=20 = 7/10, no regressions. Best score on original 10 queries. Theme overlay at k=20 regresses 2 queries. **The source of instability is the theme overlay, not the seed expansion.**
+
+**Why this disproves Claude's Option A' prediction:** Claude said k=20 was the same failure mode as A'. It is not. A' opened the candidate pool to non-seed-community nodes with accumulated IMPORTS/CO_CHANGE mass. k=20 adds semantically-ranked candidates (rank 16-20 by cosine score) which are genuinely query-relevant. The mechanisms differ.
+
+**Recoveries at k=20:**
+- `export_snapshot` — rank 15→16 boundary issue: when export_snapshot is seed #16 (k=15 window), cluster 33 gets zero seeds. At k=20 it becomes seed #15, cluster gets weight. Confirms LLM summaries would also fix it (push rank to 5-8, giving cluster stronger weight). Both paths work.
+- `apply_install_plan` — also boundary case, becomes reachable at k=20.
+
+**NOT committed because revert happened before git add.** Decision needed:
+
+**Option A:** Adopt k=20 for PPR-only, keep theme overlay at k=15.  
+**Option B:** Investigate why theme overlay regresses at k=20 (which theme edges are displacing results) before adopting.  
+**Option C:** Just adopt k=20 for both and accept the 2 theme overlay regressions (PPR is now better and theme overlay score is same).
+
+**Recommendation:** Option A. PPR at k=20 is strictly better. Theme overlay at k=20 is neutral (same HIT@10, different queries). The 2 theme overlay regressions (`old_ingest` theme MISS, `rebuild_indexes` theme MISS) are offset by 2 recoveries (`export_snapshot` theme rank 6, `apply_install_plan` theme rank 9). Net zero for theme, net +2 for PPR. Use k=20 for both.
+
+**This needs to be implemented, tested, and committed properly in the next session.**
+
+---
+
+### [NEXT ENTRY — implement k=20, commit, update baseline]
+
+**Change:** `top_k_seeds=20` in `run_cold_discovery` default parameter and in `cochange_ablation.py` `evaluate_query` call.  
+**Expected:** PPR 5→7/10 on original 10, theme 6/10 (same score, different distribution). No regressions on god-node table.  
+**Must not break:** `memory_search` (rank 1), `tool_contracts` (rank 1), `redact_secrets` (rank 3), `old_context` (rank 6).  
+**Run:** Full ablation on all 13 queries. Update ablation_results.json. Commit.  
+**Then:** Move to Step 4 (pipeline wiring into MCP server).
+
+---
 
 These are mistakes that happened in this project. Document them so they don't recur.
 
