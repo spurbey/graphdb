@@ -454,13 +454,15 @@ def evaluate_query(q: dict) -> dict:
     results_a = _vector_only(query_vec)
     rank_a = _rank_of_target(results_a, target_ids)
 
-    # Mode B: vector + CALLS PPR/MMR (no co-change)
-    results_b = _run_retrieval(query_vec, static_weights_no_cochange)
+    # Mode B: vector + CALLS PPR/MMR (no co-change) — k=20 (tested, zero regressions)
+    results_b = _run_retrieval(query_vec, static_weights_no_cochange, top_k_seeds=20)
     rank_b = _rank_of_target(results_b, target_ids)
 
-    # Mode C: vector + CALLS PPR/MMR + theme co-change overlay
+    # Mode C: vector + CALLS PPR/MMR + theme co-change overlay — k=15
+    # k=20 causes 2 regressions in theme overlay mode (old_ingest, rebuild_indexes).
+    # Kept at k=15 until theme overlay regression is investigated.
     boosted_weights = _theme_boosted_weights(query_vec)
-    results_c = _run_retrieval(query_vec, boosted_weights)
+    results_c = _run_retrieval(query_vec, boosted_weights, top_k_seeds=15)
     rank_c = _rank_of_target(results_c, target_ids)
 
     return {

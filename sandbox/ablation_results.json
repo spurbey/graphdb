@@ -2,7 +2,7 @@
   "summary": {
     "n_queries": 13,
     "hit_at_10_vector_only": 7,
-    "hit_at_10_calls_ppr": 5,
+    "hit_at_10_calls_ppr": 7,
     "hit_at_10_theme_overlay": 7,
     "theme_embedding_active": true
   },
@@ -12,7 +12,7 @@
       "query": "memory ingestion pipeline hook processing",
       "target_name": "ingest_hook_payload",
       "rank_vector_only": 3,
-      "rank_calls_ppr": 10,
+      "rank_calls_ppr": 3,
       "rank_theme_overlay": 2,
       "top10_vector": [
         "memory_metrics [server.py]",
@@ -28,15 +28,15 @@
       ],
       "top10_calls_ppr": [
         "memory_metrics [server.py]",
-        "codex_hook_response [hooks.py]",
+        "create_server [server.py]",
+        "ingest_hook_payload [ingest.py]",
         "memory_import [server.py]",
-        "memory_write [tools.py]",
         "search_memories [retrieval.py]",
-        "memory_import [tools.py]",
-        "add_memory [storage.py]",
-        "_memory_class [retrieval.py]",
+        "memory_rebuild_indexes [tools.py]",
         "_write_memory_relation_edge [storage.py]",
-        "ingest_hook_payload [ingest.py]"
+        "memory_metrics [tools.py]",
+        "memory_export [tools.py]",
+        "add_memory [storage.py]"
       ],
       "top10_theme_overlay": [
         "memory_metrics [server.py]",
@@ -56,7 +56,7 @@
       "query": "retrieve context from memory for agent",
       "target_name": "memory_context_pack",
       "rank_vector_only": 5,
-      "rank_calls_ppr": 6,
+      "rank_calls_ppr": 7,
       "rank_theme_overlay": 6,
       "top10_vector": [
         "memory_write [tools.py]",
@@ -74,13 +74,13 @@
         "memory_write [tools.py]",
         "amo_current_context [server.py]",
         "memory_context_pack [server.py]",
+        "memory_write [server.py]",
         "startup_context [service.py]",
         "tool_contracts [server.py]",
         "memory_context_pack [tools.py]",
         "search_memories [retrieval.py]",
         "memory_metrics [tools.py]",
-        "memory_rebuild_indexes [tools.py]",
-        "create_server [server.py]"
+        "memory_rebuild_indexes [tools.py]"
       ],
       "top10_theme_overlay": [
         "memory_write [tools.py]",
@@ -100,7 +100,7 @@
       "query": "store and save session memory snapshot",
       "target_name": "export_snapshot",
       "rank_vector_only": null,
-      "rank_calls_ppr": null,
+      "rank_calls_ppr": 6,
       "rank_theme_overlay": null,
       "top10_vector": [
         "memory_import [server.py]",
@@ -116,15 +116,15 @@
       ],
       "top10_calls_ppr": [
         "memory_import [server.py]",
-        "session_id [events.py]",
+        "create_session [ingest.py]",
         "memory_metrics [tools.py]",
-        "snapshot [git.py]",
-        "query_session_graph [session_runtime.py]",
         "create_server [server.py]",
+        "_consolidate_memory [storage.py]",
+        "export_snapshot [snapshots.py]",
         "memory_write [server.py]",
         "search_memories [retrieval.py]",
-        "memory_write [tools.py]",
-        "memory_import [tools.py]"
+        "memory_import [tools.py]",
+        "memory_write [tools.py]"
       ],
       "top10_theme_overlay": [
         "memory_import [server.py]",
@@ -163,12 +163,12 @@
         "memory_write [server.py]",
         "amo_raw_evidence [server.py]",
         "should_capture_message [events.py]",
+        "should_promote_to_memory [cleaning.py]",
+        "_hook_log_candidates [hook.py]",
         "_is_relevant_record [window.py]",
         "log_message [daemon.py]",
         "_hook_events [service.py]",
-        "_codex_hooks_snippet [cli.py]",
-        "codex_hook_response [hooks.py]",
-        "_uninstall_codex_hooks [service.py]"
+        "_codex_hooks_snippet [cli.py]"
       ],
       "top10_theme_overlay": [
         "_is_amo_codex_hook [service.py]",
@@ -206,13 +206,13 @@
         "tool_contracts [tools.py]",
         "health_ping [server.py]",
         "memory_context_pack [server.py]",
-        "_claude_agent [claude.py]",
-        "config_path [config.py]",
+        "memory_write [tools.py]",
+        "__init__ [retrieval.py]",
+        "load_slack_config [config.py]",
         "without_tokens [config.py]",
-        "__init__ [service.py]",
-        "list_nodes [session_query.py]",
-        "_load_secret_json [config.py]",
-        "tool_contracts [server.py]"
+        "_pick [config.py]",
+        "tool_contracts [server.py]",
+        "config_path [config.py]"
       ],
       "top10_theme_overlay": [
         "tool_contracts [tools.py]",
@@ -232,7 +232,7 @@
       "query": "installer writes codex hook settings and applies the local mcp configuration",
       "target_name": "apply_install_plan",
       "rank_vector_only": null,
-      "rank_calls_ppr": null,
+      "rank_calls_ppr": 9,
       "rank_theme_overlay": null,
       "top10_vector": [
         "_uninstall_codex_hooks [service.py]",
@@ -248,15 +248,15 @@
       ],
       "top10_calls_ppr": [
         "_uninstall_codex_hooks [service.py]",
-        "health_ping [server.py]",
         "_backup_path [service.py]",
+        "ingest_hook_payload [ingest.py]",
         "build_install_plan [service.py]",
+        "_hook_log_candidates [hook.py]",
         "_hook_events [service.py]",
+        "_rebuild_clean_db [cli.py]",
         "_is_amo_claude_hook [service.py]",
-        "_infer_codex_session [ingest.py]",
-        "_write_hook_log [hook.py]",
-        "_codex_hooks_snippet [cli.py]",
-        "codex_hook_response [hooks.py]"
+        "apply_install_plan [service.py]",
+        "_codex_hooks_snippet [cli.py]"
       ],
       "top10_theme_overlay": [
         "_uninstall_codex_hooks [service.py]",
@@ -276,7 +276,7 @@
       "query": "remove secrets from captured text before saving memory chunks",
       "target_name": "redact_secrets",
       "rank_vector_only": 9,
-      "rank_calls_ppr": 3,
+      "rank_calls_ppr": 4,
       "rank_theme_overlay": 3,
       "top10_vector": [
         "extract_memories_for_chunk [ingest.py]",
@@ -293,14 +293,14 @@
       "top10_calls_ppr": [
         "extract_memories_for_chunk [ingest.py]",
         "clean_event_text [cleaning.py]",
+        "search [embedding_store.py]",
         "redact_secrets [privacy.py]",
         "_strip_ide_context [cleaning.py]",
-        "_save_cursors [drain.py]",
+        "memory_import [server.py]",
         "memory_context_pack [tools.py]",
-        "chunk_text [tool_facts.py]",
-        "_build_chunks [chunking.py]",
-        "_packet_chunk [decision_packets.py]",
-        "_strip_transient_markdown [cleaning.py]"
+        "chunk_text [chunker.py]",
+        "memory_export [tools.py]",
+        "_packet_chunk [decision_packets.py]"
       ],
       "top10_theme_overlay": [
         "extract_memories_for_chunk [ingest.py]",
@@ -339,12 +339,12 @@
         "amo_current_context [server.py]",
         "_trim [session.py]",
         "upsert_node [store.py]",
-        "debug_graph [diagnostics.py]",
+        "work_history [service.py]",
         "_is_answer_quality_node [service.py]",
         "_remove_graph_path [service.py]",
-        "post_answer_reply [service.py]",
         "_answer_node [session.py]",
-        "_graph_nodes_from_session [session_runtime.py]"
+        "_graph_nodes_from_session [session_runtime.py]",
+        "amo_current_context [tools.py]"
       ],
       "top10_theme_overlay": [
         "rebuild_graph_cache [service.py]",
@@ -380,14 +380,14 @@
       ],
       "top10_calls_ppr": [
         "memory_search [tools.py]",
-        "memory_import [server.py]",
+        "memory_export [server.py]",
+        "amo_graph_search [server.py]",
         "memory_search [server.py]",
-        "_context_from_snapshots [service.py]",
-        "_mentions_target [extraction_window.py]",
+        "like_search [retrieval.py]",
         "create_server [server.py]",
         "memory_metrics [tools.py]",
-        "classify_memory_type [extraction.py]",
         "search [embedding_store.py]",
+        "extract_memory_candidates [extraction.py]",
         "_documents_for_node [retrieval.py]"
       ],
       "top10_theme_overlay": [
@@ -424,12 +424,12 @@
       ],
       "top10_calls_ppr": [
         "memory_rebuild_indexes [server.py]",
-        "_write_vector [storage.py]",
+        "memory_search [tools.py]",
+        "_filter_vector_candidates [retrieval.py]",
         "memory_write [server.py]",
         "memory_search [server.py]",
         "memory_import [tools.py]",
-        "_vector_candidates [retrieval.py]",
-        "add_memory [storage.py]",
+        "add_memory_unit [storage.py]",
         "memory_import [server.py]",
         "rebuild_indexes [storage.py]",
         "memory_export [server.py]"
@@ -468,15 +468,15 @@
       ],
       "top10_calls_ppr": [
         "build_and_query_session_graph [session_runtime.py]",
-        "_compact_row_to_node [store.py]",
+        "_rows [store.py]",
+        "_uses_compact_node_schema [store.py]",
+        "rebuild_graph_cache [service.py]",
         "_graph_edges_from_session [session_runtime.py]",
         "write_compact_session_graph [session_graph_writer.py]",
         "finalize_session [service.py]",
         "_graph_node [views.py]",
         "session_detail [service.py]",
-        "_rank_nodes [session_runtime.py]",
-        "default_session_graph_path [session_runtime.py]",
-        "build_session_graph [session_runtime.py]"
+        "_rank_nodes [session_runtime.py]"
       ],
       "top10_theme_overlay": [
         "build_and_query_session_graph [session_runtime.py]",
@@ -512,15 +512,15 @@
       ],
       "top10_calls_ppr": [
         "memory_search [server.py]",
-        "list_memory_units [views.py]",
-        "memory_import [server.py]",
-        "_vector_candidates [retrieval.py]",
-        "memory_search [tools.py]",
-        "memory_write [server.py]",
         "memory_rebuild_indexes [tools.py]",
         "_write_vector [storage.py]",
+        "memory_import [server.py]",
+        "search [embedding_store.py]",
+        "search_memories [retrieval.py]",
+        "memory_write [server.py]",
+        "_vector_candidates [retrieval.py]",
         "memory_rebuild_indexes [server.py]",
-        "search_memories [retrieval.py]"
+        "build_context_pack [retrieval.py]"
       ],
       "top10_theme_overlay": [
         "memory_search [server.py]",
@@ -556,15 +556,15 @@
       ],
       "top10_calls_ppr": [
         "_graph_nodes_from_session [session_runtime.py]",
+        "amo_current_context [server.py]",
         "amo_merge_status [server.py]",
+        "_code_nodes [session_graph_writer.py]",
         "amo_current_context [tools.py]",
-        "debug_graph [diagnostics.py]",
         "build_and_query_session_graph [session_runtime.py]",
         "query_session_graph [session_runtime.py]",
         "default_session_graph_path [session_runtime.py]",
         "build_compact_session_graph [session_graph_writer.py]",
-        "_extraction_run_graph_node [session_runtime.py]",
-        "_code_graph_node [session_runtime.py]"
+        "_extraction_run_graph_node [session_runtime.py]"
       ],
       "top10_theme_overlay": [
         "_graph_nodes_from_session [session_runtime.py]",
