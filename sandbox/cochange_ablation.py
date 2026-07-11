@@ -377,12 +377,14 @@ def _run_retrieval(
     )
     ranked = sorted(enumerate(ppr_scores), key=lambda x: x[1], reverse=True)[:60]
 
-    # Include all clusters that had at least 1 seed (Phase 1: no hard top-3 cutoff)
+    # Hard cluster filter — Option A' (soft 0.1 weight) tested 2026-07-12, FAILED.
+    # Caused god-node contamination, dropped CallsPPR 5->4, ThemeOverlay 6->4.
+    # Reverted. export_snapshot accepted as permanent miss.
     top_cluster_set = set(cluster_counts.keys())
     ranked = [
         (i, s) for i, s in ranked
         if G.vs[i]["cluster_id"] in top_cluster_set
-        and _is_candidate(G.vs[i])  # Phase 0b: exclude test functions from results
+        and _is_candidate(G.vs[i])
     ][:30]
 
     # Step 4: MMR

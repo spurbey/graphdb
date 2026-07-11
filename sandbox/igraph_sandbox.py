@@ -410,11 +410,16 @@ def run_cold_discovery(query_embedding: np.ndarray, top_k_seeds=15, final_k=10,
     ranked_ppr = sorted(enumerate(ppr_scores), key=lambda x: x[1], reverse=True)[:60]
 
     # Include all clusters that had at least 1 seed (Phase 1 fix: no hard top-3 cutoff)
+    # Hard cluster filter confirmed necessary (2026-07-12): softening to 0.1 weight
+    # caused god-node contamination (config/util functions flooding results) and
+    # regressed old_context and rebuild_indexes. Score dropped 5->4 and 6->4.
+    # export_snapshot remains a permanent miss — its cluster has no seeds for this query.
+    # See PIPELINE_SPEC.md Result Log for full diagnosis.
     top_cluster_set = set(cluster_counts.keys())
     ranked_ppr = [
         (idx, score) for idx, score in ranked_ppr
         if G.vs[idx]["cluster_id"] in top_cluster_set
-        and _is_candidate(G.vs[idx])  # Phase 0b: exclude test functions from results
+        and _is_candidate(G.vs[idx])
     ][:30]
 
     # Step 4: MMR diverse selection
