@@ -437,7 +437,74 @@ def run_cold_discovery(query_embedding: np.ndarray, top_k_seeds=15, final_k=10,
         selected.append(best_idx)
         candidates = [(i, s) for i, s in candidates if i != best_idx]
 
-    return selected
+    # Build vector score lookup for subgraph output
+    vec_score_map = {idx: score for idx, score in seed_scores}
+
+    return selected, ppr_scores, vec_score_map
+
+
+# ── Phase 3: Subgraph output ──────────────────────────────────────────────────
+
+def build_subgraph_output(
+    selected_indices: list[int],
+    query: str,
+    ppr_scores: list[float] | None = None,
+    vector_scores: dict[int, float] | None = None,
+    mode: str = "general_retrieval",
+) -> dict:
+    """
+    Given MMR-selected node indices, return a structured subgraph:
+      - nodes: id, name, file, summary, code, ppr_score, vector_score, community_id
+      - edges: all edges between selected nodes, filtered by consumer policy mode
+
+    mode mirrors cochange_consumer_policy modes:
+      general_retrieval / risk / pre_edit / why_coupled
+    temporal_burst CO_CHANGE edges are excluded in general_retrieval and risk modes
+    structural_redundant edges are excluded in why_coupled mode.
+    """
+    selected_set = set(selected_indices)
+
+    # Build nodes
+    node_lookup = {n["id"]: n for n in nodes_data}
+    nodes_out = []
+    for idx in selected_indices:
+        v = G.vs[idx]
+        nd = node_lookup.get(v["id"], {})
+        nodes_out.append({
+            "id":           v["id"],
+            "name":         v["name"],
+            "file":         v["file"],
+            "summary":      nd.get("text_summary", ""),
+            "code":         nd.get("code", ""),
+            "ppr_score":    float(ppr_scores[idx]) if ppr_scores else None,
+            "vector_score": float(vector_scores[idx]) if vector_scores and idx in vector_scores else None,
+            "community_id": G.vs[idx]["cluster_id"],
+        })
+
+    # Build edges — only between selected nodes, filtered by consumer policy
+    edges_out = []
+    for edge in G.es:
+        if edge.source not in selected_set or edge.target not in selected_set:
+            continue
+        etype = edge["type"]
+        if etype == "CO_CHANGE":
+            policy = cochange_consumer_policy(edge["category"], mode)
+            if not policy["include"]:
+                continue
+        edges_out.append({
+            "source":              G.vs[edge.source]["id"],
+            "target":              G.vs[edge.target]["id"],
+            "type":                etype,
+            "co_change_category":  edge["category"] if etype == "CO_CHANGE" else "",
+            "co_change_count":     edge["co_change_count"],
+        })
+
+    return {
+        "query":        query,
+        "consumer_mode": mode,
+        "nodes":        nodes_out,
+        "edges":        edges_out,
+    }
 
 
 # ── Phase 4: Warm Connector ───────────────────────────────────────────────────
@@ -468,6 +535,7 @@ def run_validation():
     """
     Run 3 ground-truth validation queries.
     Each query has a known target function — pass if it appears in top-10.
+    For the first passing query, also write a subgraph JSON to sandbox/out/.
     """
     tests = [
         {
@@ -491,6 +559,9 @@ def run_validation():
     print("GROUND-TRUTH VALIDATION")
     print("=" * 60)
 
+    out_dir = ROOT / "sandbox" / "out"
+    out_dir.mkdir(parents=True, exist_ok=True)
+
     passed = 0
     for test in tests:
         query  = test["query"]
@@ -500,8 +571,8 @@ def run_validation():
         print(f"\nQuery: {repr(query)}")
         print(f"Target: function named ~'{t_name}' in a file containing '{t_hint}'")
 
-        vec      = load_query_embedding(query)
-        selected = run_cold_discovery(vec, top_k_seeds=15, final_k=10)
+        vec = load_query_embedding(query)
+        selected, ppr_scores, vec_scores = run_cold_discovery(vec, top_k_seeds=15, final_k=10)
 
         found = False
         print(f"  Top-10 results:")
@@ -509,7 +580,9 @@ def run_validation():
             v    = G.vs[node_idx]
             name = v["name"]
             file = v["file"].split("/")[-1]
-            print(f"    {rank+1}. {name} ({file})")
+            ppr  = ppr_scores[node_idx] if ppr_scores else 0.0
+            vscore = vec_scores.get(node_idx, 0.0)
+            print(f"    {rank+1}. {name} ({file})  ppr={ppr:.5f} vec={vscore:.3f}")
             if name == t_name and t_hint.lower() in v["file"].lower():
                 found = True
 
@@ -517,6 +590,15 @@ def run_validation():
         print(f"  Result: {status}")
         if found:
             passed += 1
+            # Write subgraph JSON for this query
+            subgraph = build_subgraph_output(
+                selected, query, ppr_scores, vec_scores, mode="general_retrieval"
+            )
+            slug = query.replace(" ", "_")[:40]
+            out_path = out_dir / f"subgraph_{slug}.json"
+            out_path.write_text(json.dumps(subgraph, indent=2), encoding="utf-8")
+            print(f"  Subgraph written: {out_path.name}  "
+                  f"({len(subgraph['nodes'])} nodes, {len(subgraph['edges'])} edges)")
 
     print(f"\n{'='*60}")
     print(f"Validation: {passed}/{len(tests)} passed")
