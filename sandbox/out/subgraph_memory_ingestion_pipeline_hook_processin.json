@@ -1,0 +1,157 @@
+{
+  "query": "memory ingestion pipeline hook processing",
+  "consumer_mode": "general_retrieval",
+  "nodes": [
+    {
+      "id": "src/agent_memory_orchestrator/mcp/server.py::memory_metrics",
+      "name": "memory_metrics",
+      "file": "src/agent_memory_orchestrator/mcp/server.py",
+      "summary": "Inspect memory pipeline/retrieval/consolidation row counts.",
+      "code": "@mcp.tool()\ndef memory_metrics() -> dict:\n    \"\"\"Inspect memory pipeline/retrieval/consolidation row counts.\"\"\"\n    return memory_tools.memory_metrics()",
+      "ppr_score": 0.03425442927045034,
+      "vector_score": 0.45708167552948,
+      "community_id": 172
+    },
+    {
+      "id": "src/agent_memory_orchestrator/memory/ingest.py::ingest_hook_payload",
+      "name": "ingest_hook_payload",
+      "file": "src/agent_memory_orchestrator/memory/ingest.py",
+      "summary": "`ingest_hook_payload` \u2014 calls normalize_event_payload, session_exists, get, lower, generate_session_summary \u2014 returns a value",
+      "code": "def ingest_hook_payload(self, payload: dict, default_agent: str='codex', *, process: bool=True) -> dict[str, object]:\n    normalized = self.normalize_event_payload(payload, default_agent=default_agent)\n    if normalized is None:\n        return {'event_id': None, 'session_id': payload.get('session_id') or 'default', 'skipped': True}\n    if not self.session_exists(normalized['session_id']):\n        self.create_session(normalized['session_id'], normalized['session_id'])\n    event = self.add_event(session_id=normalized['session_id'], agent=normalized['agent'], event_type=normalized['event_type'], content=normalized['content'], metadata=normalized['metadata'], created_at=normalized.get('created_at'), source_app=normalized['source_app'], process=process)\n    if process and event.event_type.lower() in {'stop', 'session_stop'}:\n        self.generate_session_summary(event.session_id)\n    return {'event_id': event.id, 'session_id': event.session_id}",
+      "ppr_score": 0.005258966213194147,
+      "vector_score": 0.41126978397369385,
+      "community_id": 33
+    },
+    {
+      "id": "src/agent_memory_orchestrator/mcp/server.py::memory_import",
+      "name": "memory_import",
+      "file": "src/agent_memory_orchestrator/mcp/server.py",
+      "summary": "Import a JSONL memory snapshot into the local SQLite store.",
+      "code": "@mcp.tool()\ndef memory_import(in_path: str) -> dict:\n    \"\"\"Import a JSONL memory snapshot into the local SQLite store.\"\"\"\n    return memory_tools.memory_import(in_path=in_path)",
+      "ppr_score": 0.026616548886805775,
+      "vector_score": 0.35516390204429626,
+      "community_id": 172
+    },
+    {
+      "id": "src/agent_memory_orchestrator/mcp/tools.py::memory_rebuild_indexes",
+      "name": "memory_rebuild_indexes",
+      "file": "src/agent_memory_orchestrator/mcp/tools.py",
+      "summary": "`memory_rebuild_indexes` \u2014 calls rebuild_indexes \u2014 returns a value",
+      "code": "def memory_rebuild_indexes(self, *, force_vectors: bool=False) -> dict[str, Any]:\n    return {'ok': True, 'result': self.memory.rebuild_indexes(force_vectors=force_vectors)}",
+      "ppr_score": 0.02854106597029258,
+      "vector_score": 0.3714931011199951,
+      "community_id": 172
+    },
+    {
+      "id": "src/agent_memory_orchestrator/memory/ingest.py::extract_memories_for_chunk",
+      "name": "extract_memories_for_chunk",
+      "file": "src/agent_memory_orchestrator/memory/ingest.py",
+      "summary": "`extract_memories_for_chunk` \u2014 calls append, _id, execute, _utc_now, extract_memory_candidates \u2014 returns a value",
+      "code": "def extract_memories_for_chunk(self, event: Event, chunk: Chunk, pipeline_run_id: str | None=None) -> list[MemoryUnit]:\n    candidates = extract_memory_candidates(chunk.text, content_type=chunk.content_type, event_type=event.event_type, agent=event.agent, metadata=chunk.metadata)\n    units: list[MemoryUnit] = []\n    confidence_debug: dict[str, float] = {}\n    for candidate in candidates:\n        unit = self.add_memory_unit(session_id=event.session_id, source_event_id=event.id, source_chunk_id=chunk.id, memory_type=candidate.memory_type, subject=candidate.subject, predicate=candidate.predicate, object_text=candidate.object, summary=candidate.summary, topic_key=candidate.topic_key, entities=candidate.entities, tags=candidate.tags, confidence=candidate.confidence, importance=candidate.importance)\n        units.append(unit)\n        confidence_debug[unit.id] = candidate.confidence\n    self.conn.execute('\\n            INSERT INTO extraction_runs(\\n              id, pipeline_run_id, session_id, source_chunk_id, extractor,\\n              memory_count, confidence_json, created_at\\n            )\\n            VALUES(?, ?, ?, ?, ?, ?, ?, ?)\\n            ', (_id('xrun'), pipeline_run_id, event.session_id, chunk.id, 'rule_v1', len(units), _json(confidence_debug), _utc_now()))\n    self.conn.commit()\n    return units",
+      "ppr_score": 0.013132233521878948,
+      "vector_score": 0.34969383478164673,
+      "community_id": 31
+    },
+    {
+      "id": "src/agent_memory_orchestrator/mcp/tools.py::memory_export",
+      "name": "memory_export",
+      "file": "src/agent_memory_orchestrator/mcp/tools.py",
+      "summary": "`memory_export` \u2014 calls Path, resolve, export_snapshot, str \u2014 returns a value",
+      "code": "def memory_export(self, *, out_path: str='', session_id: str='') -> dict[str, Any]:\n    target = Path(out_path) if out_path else self.settings.export_dir / 'memory_snapshot.jsonl'\n    rows = self.memory.export_snapshot(out_path=target, session_id=session_id or None)\n    return {'ok': True, 'rows': rows, 'out_path': str(target.resolve())}",
+      "ppr_score": 0.026650893300517772,
+      "vector_score": 0.3462711572647095,
+      "community_id": 172
+    },
+    {
+      "id": "src/agent_memory_orchestrator/memory/storage.py::_write_memory_relation_edge",
+      "name": "_write_memory_relation_edge",
+      "file": "src/agent_memory_orchestrator/memory/storage.py",
+      "summary": "`_write_memory_relation_edge` \u2014 calls _insert_edge, _upsert_entity \u2014 no explicit return",
+      "code": "def _write_memory_relation_edge(self, memory_id: str, related_memory_id: str, relation: str, source_chunk_id: str | None, confidence: float) -> None:\n    source_entity_id = self._upsert_entity('memory', memory_id)\n    target_entity_id = self._upsert_entity('memory', related_memory_id)\n    self._insert_edge(source_entity_id, target_entity_id, relation, memory_id, source_chunk_id, confidence)",
+      "ppr_score": 0.00899023721289847,
+      "vector_score": 0.35872969031333923,
+      "community_id": 4
+    },
+    {
+      "id": "src/agent_memory_orchestrator/mcp/tools.py::memory_write",
+      "name": "memory_write",
+      "file": "src/agent_memory_orchestrator/mcp/tools.py",
+      "summary": "`memory_write` \u2014 calls _normalize_agent, _parse_metadata, execute, session_exists, create_session \u2014 returns a value",
+      "code": "def memory_write(self, *, session_id: str, agent: str, event_type: str, content: str, metadata_json: str='{}', create_memory: bool=True) -> dict[str, Any]:\n    session_id = _require_text(session_id, 'session_id')\n    agent = _normalize_agent(agent)\n    event_type = _require_text(event_type, 'event_type')\n    content = _require_text(content, 'content')\n    metadata = _parse_metadata(metadata_json)\n    if not self.memory.session_exists(session_id):\n        self.memory.create_session(session_id=session_id, title=session_id)\n    event = self.memory.add_event(session_id=session_id, agent=agent, event_type=event_type, content=content, metadata=metadata, source_app=agent, process=create_memory)\n    rows = self.memory.conn.execute('\\n            SELECT id\\n            FROM memory_units\\n            WHERE source_event_id = ?\\n            ORDER BY created_at DESC\\n            ', (event.id,)).fetchall()\n    memory_ids = [row['id'] for row in rows]\n    return {'ok': True, 'event_id': event.id, 'session_id': event.session_id, 'memory_ids': memory_ids, 'memory_id': memory_ids[0] if memory_ids else None, 'memory_count': len(memory_ids), 'redacted': event.redacted}",
+      "ppr_score": 0.02849407899714931,
+      "vector_score": 0.3708661198616028,
+      "community_id": 172
+    },
+    {
+      "id": "src/agent_memory_orchestrator/memory/storage.py::_memory_fingerprint",
+      "name": "_memory_fingerprint",
+      "file": "src/agent_memory_orchestrator/memory/storage.py",
+      "summary": "`_memory_fingerprint` \u2014 calls str, lower, sub, strip, join \u2014 returns a value",
+      "code": "def _memory_fingerprint(row: sqlite3.Row) -> str:\n    summary = str(row['summary'] or '')\n    summary = re.sub('^(decision|fix|bug|validation|reference|observation|file change)\\\\s*(\\\\[[^\\\\]]+\\\\])?:\\\\s*', '', summary, flags=re.I)\n    text = ' '.join([str(row['memory_type'] or ''), str(row['topic_key'] or ''), summary])\n    return re.sub('[^a-z0-9]+', ' ', text.lower()).strip()",
+      "ppr_score": 0.008834039804894368,
+      "vector_score": 0.35247692465782166,
+      "community_id": 4
+    },
+    {
+      "id": "src/agent_memory_orchestrator/memory/storage.py::add_memory_unit",
+      "name": "add_memory_unit",
+      "file": "src/agent_memory_orchestrator/memory/storage.py",
+      "summary": "`add_memory_unit` \u2014 calls _id, _write_vector, execute, _utc_now, MemoryUnit \u2014 returns a value",
+      "code": "def add_memory_unit(self, *, session_id: str, source_event_id: str, source_chunk_id: str | None, memory_type: str, subject: str, predicate: str, object_text: str, summary: str, topic_key: str, entities: list[str] | None=None, tags: list[str] | None=None, confidence: float=0.4, importance: float=0.5, status: str='active', memory_id: str | None=None) -> MemoryUnit:\n    ts = _utc_now()\n    mid = memory_id or _id('mem')\n    entity_list = entities or []\n    tag_list = tags or []\n    self.conn.execute('\\n            INSERT INTO memory_units(\\n              id, session_id, source_event_id, source_chunk_id, memory_type,\\n              subject, predicate, object, summary, topic_key, entities_json,\\n              tags_json, confidence, importance, status, owner_user_id,\\n              workspace_id, project_id, visibility_scope, sensitivity_level,\\n              created_at, updated_at\\n            )\\n            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)\\n            ', (mid, session_id, source_event_id, source_chunk_id, memory_type, subject, predicate, object_text, summary, topic_key, _json(entity_list), _json(tag_list), confidence, importance, status, self.settings.owner_user_id, self.settings.workspace_id, self.settings.project_id, self.settings.visibility_scope, self.settings.sensitivity_level, ts, ts))\n    self._mirror_legacy_memory(mid, session_id, source_event_id, summary, tag_list, importance, ts)\n    if not self.defer_vectors:\n        self._write_vector(mid, summary)\n    self._write_fts(mid, summary, subject, object_text, topic_key)\n    self._write_kg_for_memory(mid, source_chunk_id, subject, entity_list, memory_type, confidence)\n    self._consolidate_memory(mid, topic_key)\n    self.conn.commit()\n    return MemoryUnit(id=mid, session_id=session_id, source_event_id=source_event_id, source_chunk_id=source_chunk_id, memory_type=memory_type, subject=subject, predicate=predicate, object=object_text, summary=summary, topic_key=topic_key, entities=entity_list, tags=tag_list, confidence=confidence, importance=importance, status=status, created_at=ts)",
+      "ppr_score": 0.013566148925723451,
+      "vector_score": 0.3583279252052307,
+      "community_id": 31
+    }
+  ],
+  "edges": [
+    {
+      "source": "src/agent_memory_orchestrator/memory/ingest.py::extract_memories_for_chunk",
+      "target": "src/agent_memory_orchestrator/memory/storage.py::add_memory_unit",
+      "type": "CALLS",
+      "co_change_category": "",
+      "co_change_count": 0
+    },
+    {
+      "source": "src/agent_memory_orchestrator/mcp/server.py::memory_metrics",
+      "target": "src/agent_memory_orchestrator/mcp/tools.py::memory_write",
+      "type": "IMPORTS",
+      "co_change_category": "",
+      "co_change_count": 0
+    },
+    {
+      "source": "src/agent_memory_orchestrator/mcp/server.py::memory_metrics",
+      "target": "src/agent_memory_orchestrator/mcp/tools.py::memory_rebuild_indexes",
+      "type": "IMPORTS",
+      "co_change_category": "",
+      "co_change_count": 0
+    },
+    {
+      "source": "src/agent_memory_orchestrator/mcp/server.py::memory_metrics",
+      "target": "src/agent_memory_orchestrator/mcp/tools.py::memory_export",
+      "type": "IMPORTS",
+      "co_change_category": "",
+      "co_change_count": 0
+    },
+    {
+      "source": "src/agent_memory_orchestrator/mcp/server.py::memory_import",
+      "target": "src/agent_memory_orchestrator/mcp/tools.py::memory_write",
+      "type": "IMPORTS",
+      "co_change_category": "",
+      "co_change_count": 0
+    },
+    {
+      "source": "src/agent_memory_orchestrator/mcp/server.py::memory_import",
+      "target": "src/agent_memory_orchestrator/mcp/tools.py::memory_rebuild_indexes",
+      "type": "IMPORTS",
+      "co_change_category": "",
+      "co_change_count": 0
+    },
+    {
+      "source": "src/agent_memory_orchestrator/mcp/server.py::memory_import",
+      "target": "src/agent_memory_orchestrator/mcp/tools.py::memory_export",
+      "type": "IMPORTS",
+      "co_change_category": "",
+      "co_change_count": 0
+    }
+  ]
+}

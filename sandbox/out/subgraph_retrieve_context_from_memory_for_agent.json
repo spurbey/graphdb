@@ -1,0 +1,262 @@
+{
+  "query": "retrieve context from memory for agent",
+  "consumer_mode": "general_retrieval",
+  "nodes": [
+    {
+      "id": "src/agent_memory_orchestrator/mcp/tools.py::memory_write",
+      "name": "memory_write",
+      "file": "src/agent_memory_orchestrator/mcp/tools.py",
+      "summary": "`memory_write` \u2014 calls _normalize_agent, _parse_metadata, execute, session_exists, create_session \u2014 returns a value",
+      "code": "def memory_write(self, *, session_id: str, agent: str, event_type: str, content: str, metadata_json: str='{}', create_memory: bool=True) -> dict[str, Any]:\n    session_id = _require_text(session_id, 'session_id')\n    agent = _normalize_agent(agent)\n    event_type = _require_text(event_type, 'event_type')\n    content = _require_text(content, 'content')\n    metadata = _parse_metadata(metadata_json)\n    if not self.memory.session_exists(session_id):\n        self.memory.create_session(session_id=session_id, title=session_id)\n    event = self.memory.add_event(session_id=session_id, agent=agent, event_type=event_type, content=content, metadata=metadata, source_app=agent, process=create_memory)\n    rows = self.memory.conn.execute('\\n            SELECT id\\n            FROM memory_units\\n            WHERE source_event_id = ?\\n            ORDER BY created_at DESC\\n            ', (event.id,)).fetchall()\n    memory_ids = [row['id'] for row in rows]\n    return {'ok': True, 'event_id': event.id, 'session_id': event.session_id, 'memory_ids': memory_ids, 'memory_id': memory_ids[0] if memory_ids else None, 'memory_count': len(memory_ids), 'redacted': event.redacted}",
+      "ppr_score": 0.03238735017818099,
+      "vector_score": 0.4561496078968048,
+      "community_id": 172
+    },
+    {
+      "id": "src/agent_memory_orchestrator/mcp/server.py::amo_current_context",
+      "name": "amo_current_context",
+      "file": "src/agent_memory_orchestrator/mcp/server.py",
+      "summary": "Read current AMO graph context without hook auto-retrieval.",
+      "code": "@mcp.tool()\ndef amo_current_context(session_id: str='', limit: int=8) -> dict:\n    \"\"\"Read current AMO graph context without hook auto-retrieval.\"\"\"\n    return memory_tools.amo_current_context(session_id=session_id, limit=limit)",
+      "ppr_score": 0.02447957649673782,
+      "vector_score": 0.36002057790756226,
+      "community_id": 172
+    },
+    {
+      "id": "src/agent_memory_orchestrator/mcp/server.py::memory_context_pack",
+      "name": "memory_context_pack",
+      "file": "src/agent_memory_orchestrator/mcp/server.py",
+      "summary": "Build an agent-ready context pack with provenance and exclusions.",
+      "code": "@mcp.tool()\ndef memory_context_pack(query: str, session_id: str='', budget: int=2500, limit: int=12, include_historical: bool=False) -> dict:\n    \"\"\"Build an agent-ready context pack with provenance and exclusions.\"\"\"\n    return memory_tools.memory_context_pack(query=query, session_id=session_id, budget=budget, limit=limit, include_historical=include_historical)",
+      "ppr_score": 0.02898959256770026,
+      "vector_score": 0.4263492822647095,
+      "community_id": 172
+    },
+    {
+      "id": "src/agent_memory_orchestrator/graph/service.py::startup_context",
+      "name": "startup_context",
+      "file": "src/agent_memory_orchestrator/graph/service.py",
+      "summary": "`startup_context` \u2014 calls str, get \u2014 returns a value",
+      "code": "def startup_context(self, *, session_id: str, source_app: str, git: dict[str, Any] | None=None) -> str:\n    repo = ''\n    if git and git.get('available'):\n        repo = f' repo={git.get('repo_root')} branch={git.get('branch')} head={str(git.get('head') or '')[:12]}'\n    return f'AMO GraphRAG is active for this session. Hooks are capture-only; use MCP tool amo_graph_search for explicit memory retrieval. session={session_id} app={source_app}{repo}'",
+      "ppr_score": 0.006563318027809732,
+      "vector_score": 0.3861062526702881,
+      "community_id": 109
+    },
+    {
+      "id": "src/agent_memory_orchestrator/mcp/server.py::tool_contracts",
+      "name": "tool_contracts",
+      "file": "src/agent_memory_orchestrator/mcp/server.py",
+      "summary": "Return stable AMO memory tool contracts for agents/tests.",
+      "code": "@mcp.tool()\ndef tool_contracts() -> dict:\n    \"\"\"Return stable AMO memory tool contracts for agents/tests.\"\"\"\n    return memory_tools.tool_contracts()",
+      "ppr_score": 0.029076420056199474,
+      "vector_score": 0.42762625217437744,
+      "community_id": 172
+    },
+    {
+      "id": "src/agent_memory_orchestrator/mcp/tools.py::memory_context_pack",
+      "name": "memory_context_pack",
+      "file": "src/agent_memory_orchestrator/mcp/tools.py",
+      "summary": "`memory_context_pack` \u2014 calls build_context_pack, max, _bounded_limit, _require_text, int \u2014 returns a value",
+      "code": "def memory_context_pack(self, *, query: str, session_id: str='', budget: int=2500, limit: int=12, include_historical: bool=False) -> dict[str, Any]:\n    query = _require_text(query, 'query')\n    return {'ok': True, **self.memory.build_context_pack(query=query, session_id=session_id or None, budget_tokens=max(1, int(budget)), limit=_bounded_limit(limit, default=12, maximum=100), include_historical=include_historical)}",
+      "ppr_score": 0.028455782726506146,
+      "vector_score": 0.3942378759384155,
+      "community_id": 172
+    },
+    {
+      "id": "src/agent_memory_orchestrator/memory/retrieval.py::search_memories",
+      "name": "search_memories",
+      "file": "src/agent_memory_orchestrator/memory/retrieval.py",
+      "summary": "`search_memories` \u2014 calls stable_json, elapsed_ms, execute, _materialize_results, understand_query \u2014 returns a value",
+      "code": "def search_memories(self, query: str, session_id: str | None=None, limit: int=10, *, include_historical: bool | None=None) -> list[dict]:\n    started = time.perf_counter()\n    run_id = new_id('rrun')\n    understood = understand_query(query, limit)\n    historical = understood.include_historical if include_historical is None else include_historical\n    ts = utc_now()\n    self.conn.execute('\\n            INSERT INTO retrieval_runs(\\n              id, query, intent, session_id, include_historical, status,\\n              started_at, config_json\\n            )\\n            VALUES(?, ?, ?, ?, ?, ?, ?, ?)\\n            ', (run_id, query, understood.intent, session_id, 1 if historical else 0, 'running', ts, stable_json({'pools': understood.pools, 'entities': understood.entities, 'reranker': {'backend': self.settings.reranker_backend, 'model': self.settings.reranker_model, 'top_k': self.settings.rerank_top_k, 'max_chars': self.settings.rerank_max_chars}, 'vector_backend': self.settings.vector_backend})))\n    self.conn.commit()\n    try:\n        bm25 = self._bm25_candidates(query, session_id, understood.pools['bm25'], historical)\n        vector = self._vector_candidates(query, session_id, understood.pools['vector'], historical)\n        kg = self._kg_candidates(query, session_id, understood.pools['kg'], historical)\n        fused = reciprocal_rank_fusion({'bm25': bm25, 'vector': vector, 'kg': kg})\n        results = self._materialize_results(query, fused, run_id, limit, historical)\n        self.conn.execute('\\n                UPDATE retrieval_runs\\n                SET status = ?, finished_at = ?, duration_ms = ?\\n                WHERE id = ?\\n                ', ('completed', utc_now(), elapsed_ms(started), run_id))\n        self.conn.commit()\n        return results\n    except Exception:\n        self.conn.execute('UPDATE retrieval_runs SET status = ?, finished_at = ?, duration_ms = ? WHERE id = ?', ('failed', utc_now(), elapsed_ms(started), run_id))\n        self.conn.commit()\n        raise",
+      "ppr_score": 0.005720407431072831,
+      "vector_score": 0.25226032733917236,
+      "community_id": 33
+    },
+    {
+      "id": "src/agent_memory_orchestrator/mcp/tools.py::memory_metrics",
+      "name": "memory_metrics",
+      "file": "src/agent_memory_orchestrator/mcp/tools.py",
+      "summary": "`memory_metrics` \u2014 calls inspect_metrics \u2014 returns a value",
+      "code": "def memory_metrics(self) -> dict[str, Any]:\n    return {'ok': True, 'metrics': self.memory.inspect_metrics()}",
+      "ppr_score": 0.02427569349016147,
+      "vector_score": 0.33685165643692017,
+      "community_id": 172
+    },
+    {
+      "id": "src/agent_memory_orchestrator/mcp/tools.py::memory_rebuild_indexes",
+      "name": "memory_rebuild_indexes",
+      "file": "src/agent_memory_orchestrator/mcp/tools.py",
+      "summary": "`memory_rebuild_indexes` \u2014 calls rebuild_indexes \u2014 returns a value",
+      "code": "def memory_rebuild_indexes(self, *, force_vectors: bool=False) -> dict[str, Any]:\n    return {'ok': True, 'result': self.memory.rebuild_indexes(force_vectors=force_vectors)}",
+      "ppr_score": 0.024292050645854688,
+      "vector_score": 0.33709222078323364,
+      "community_id": 172
+    },
+    {
+      "id": "src/agent_memory_orchestrator/mcp/server.py::create_server",
+      "name": "create_server",
+      "file": "src/agent_memory_orchestrator/mcp/server.py",
+      "summary": "`create_server` \u2014 calls memory_import, memory_write, amo_current_context, config_view, tool \u2014 returns a value",
+      "code": "def create_server(settings: Settings) -> FastMCP:\n    mcp = FastMCP('agent-memory-orchestrator')\n    memory_tools = MemoryMcpToolService(settings)\n    orchestrator = OrchestratorService(settings)\n\n    @mcp.tool()\n    def health_ping() -> dict:\n        \"\"\"Check that the local AMO MCP server is alive.\"\"\"\n        return memory_tools.health_ping()\n\n    @mcp.tool()\n    def config_view() -> dict:\n        \"\"\"Return local-only AMO runtime configuration.\"\"\"\n        return memory_tools.config_view()\n\n    @mcp.tool()\n    def tool_contracts() -> dict:\n        \"\"\"Return stable AMO memory tool contracts for agents/tests.\"\"\"\n        return memory_tools.tool_contracts()\n\n    @mcp.tool()\n    def memory_write(session_id: str, agent: str, event_type: str, content: str, metadata_json: str='{}', create_memory: bool=True) -> dict:\n        \"\"\"Persist a local event and optionally extract durable memory.\"\"\"\n        return memory_tools.memory_write(session_id=session_id, agent=agent, event_type=event_type, content=content, metadata_json=metadata_json, create_memory=create_memory)\n\n    @mcp.tool()\n    def memory_search(query: str, session_id: str='', limit: int=10, include_historical: bool=False) -> dict:\n        \"\"\"Search local memory with BM25/vector/KG fusion and provenance.\"\"\"\n        return memory_tools.memory_search(query=query, session_id=session_id, limit=limit, include_historical=include_historical)\n\n    @mcp.tool()\n    def memory_context_pack(query: str, session_id: str='', budget: int=2500, limit: int=12, include_historical: bool=False) -> dict:\n        \"\"\"Build an agent-ready context pack with provenance and exclusions.\"\"\"\n        return memory_tools.memory_context_pack(query=query, session_id=session_id, budget=budget, limit=limit, include_historical=include_historical)\n\n    @mcp.tool()\n    def memory_metrics() -> dict:\n        \"\"\"Inspect memory pipeline/retrieval/consolidation row counts.\"\"\"\n        return memory_tools.memory_metrics()\n\n    @mcp.tool()\n    def memory_rebuild_indexes(force_vectors: bool=False) -> dict:\n        \"\"\"Rebuild local FTS/vector indexes from canonical SQLite memory rows.\"\"\"\n        return memory_tools.memory_rebuild_indexes(force_vectors=force_vectors)\n\n    @mcp.tool()\n    def memory_timeline(session_id: str, limit: int=50) -> dict:\n        \"\"\"Read a redacted raw event timeline for one session.\"\"\"\n        return memory_tools.memory_timeline(session_id=session_id, limit=limit)\n\n    @mcp.tool()\n    def memory_export(out_path: str='', session_id: str='') -> dict:\n        \"\"\"Export canonical local memory rows to JSONL.\"\"\"\n        return memory_tools.memory_export(out_path=out_path, session_id=session_id)\n\n    @mcp.tool()\n    def memory_import(in_path: str) -> dict:\n        \"\"\"Import a JSONL memory snapshot into the local SQLite store.\"\"\"\n        return memory_tools.memory_import(in_path=in_path)\n\n    @mcp.tool()\n    def amo_graph_search(query: str, limit: int=8, include_raw: bool=False, include_historical: bool=False) -> dict:\n        \"\"\"",
+      "ppr_score": 0.024459790658479176,
+      "vector_score": 0.3597295880317688,
+      "community_id": 172
+    }
+  ],
+  "edges": [
+    {
+      "source": "src/agent_memory_orchestrator/mcp/server.py::create_server",
+      "target": "src/agent_memory_orchestrator/mcp/tools.py::memory_write",
+      "type": "CALLS",
+      "co_change_category": "",
+      "co_change_count": 0
+    },
+    {
+      "source": "src/agent_memory_orchestrator/mcp/server.py::create_server",
+      "target": "src/agent_memory_orchestrator/mcp/tools.py::memory_context_pack",
+      "type": "CALLS",
+      "co_change_category": "",
+      "co_change_count": 0
+    },
+    {
+      "source": "src/agent_memory_orchestrator/mcp/server.py::create_server",
+      "target": "src/agent_memory_orchestrator/mcp/tools.py::memory_rebuild_indexes",
+      "type": "CALLS",
+      "co_change_category": "",
+      "co_change_count": 0
+    },
+    {
+      "source": "src/agent_memory_orchestrator/mcp/server.py::create_server",
+      "target": "src/agent_memory_orchestrator/mcp/tools.py::memory_metrics",
+      "type": "CALLS",
+      "co_change_category": "",
+      "co_change_count": 0
+    },
+    {
+      "source": "src/agent_memory_orchestrator/mcp/server.py::memory_context_pack",
+      "target": "src/agent_memory_orchestrator/mcp/tools.py::memory_context_pack",
+      "type": "CALLS",
+      "co_change_category": "",
+      "co_change_count": 0
+    },
+    {
+      "source": "src/agent_memory_orchestrator/mcp/server.py::create_server",
+      "target": "src/agent_memory_orchestrator/mcp/tools.py::memory_write",
+      "type": "IMPORTS",
+      "co_change_category": "",
+      "co_change_count": 0
+    },
+    {
+      "source": "src/agent_memory_orchestrator/mcp/server.py::create_server",
+      "target": "src/agent_memory_orchestrator/mcp/tools.py::memory_context_pack",
+      "type": "IMPORTS",
+      "co_change_category": "",
+      "co_change_count": 0
+    },
+    {
+      "source": "src/agent_memory_orchestrator/mcp/server.py::create_server",
+      "target": "src/agent_memory_orchestrator/mcp/tools.py::memory_metrics",
+      "type": "IMPORTS",
+      "co_change_category": "",
+      "co_change_count": 0
+    },
+    {
+      "source": "src/agent_memory_orchestrator/mcp/server.py::create_server",
+      "target": "src/agent_memory_orchestrator/mcp/tools.py::memory_rebuild_indexes",
+      "type": "IMPORTS",
+      "co_change_category": "",
+      "co_change_count": 0
+    },
+    {
+      "source": "src/agent_memory_orchestrator/mcp/server.py::tool_contracts",
+      "target": "src/agent_memory_orchestrator/mcp/tools.py::memory_write",
+      "type": "IMPORTS",
+      "co_change_category": "",
+      "co_change_count": 0
+    },
+    {
+      "source": "src/agent_memory_orchestrator/mcp/server.py::tool_contracts",
+      "target": "src/agent_memory_orchestrator/mcp/tools.py::memory_context_pack",
+      "type": "IMPORTS",
+      "co_change_category": "",
+      "co_change_count": 0
+    },
+    {
+      "source": "src/agent_memory_orchestrator/mcp/server.py::tool_contracts",
+      "target": "src/agent_memory_orchestrator/mcp/tools.py::memory_metrics",
+      "type": "IMPORTS",
+      "co_change_category": "",
+      "co_change_count": 0
+    },
+    {
+      "source": "src/agent_memory_orchestrator/mcp/server.py::tool_contracts",
+      "target": "src/agent_memory_orchestrator/mcp/tools.py::memory_rebuild_indexes",
+      "type": "IMPORTS",
+      "co_change_category": "",
+      "co_change_count": 0
+    },
+    {
+      "source": "src/agent_memory_orchestrator/mcp/server.py::memory_context_pack",
+      "target": "src/agent_memory_orchestrator/mcp/tools.py::memory_write",
+      "type": "IMPORTS",
+      "co_change_category": "",
+      "co_change_count": 0
+    },
+    {
+      "source": "src/agent_memory_orchestrator/mcp/server.py::memory_context_pack",
+      "target": "src/agent_memory_orchestrator/mcp/tools.py::memory_context_pack",
+      "type": "IMPORTS",
+      "co_change_category": "",
+      "co_change_count": 0
+    },
+    {
+      "source": "src/agent_memory_orchestrator/mcp/server.py::memory_context_pack",
+      "target": "src/agent_memory_orchestrator/mcp/tools.py::memory_metrics",
+      "type": "IMPORTS",
+      "co_change_category": "",
+      "co_change_count": 0
+    },
+    {
+      "source": "src/agent_memory_orchestrator/mcp/server.py::memory_context_pack",
+      "target": "src/agent_memory_orchestrator/mcp/tools.py::memory_rebuild_indexes",
+      "type": "IMPORTS",
+      "co_change_category": "",
+      "co_change_count": 0
+    },
+    {
+      "source": "src/agent_memory_orchestrator/mcp/server.py::amo_current_context",
+      "target": "src/agent_memory_orchestrator/mcp/tools.py::memory_write",
+      "type": "IMPORTS",
+      "co_change_category": "",
+      "co_change_count": 0
+    },
+    {
+      "source": "src/agent_memory_orchestrator/mcp/server.py::amo_current_context",
+      "target": "src/agent_memory_orchestrator/mcp/tools.py::memory_context_pack",
+      "type": "IMPORTS",
+      "co_change_category": "",
+      "co_change_count": 0
+    },
+    {
+      "source": "src/agent_memory_orchestrator/mcp/server.py::amo_current_context",
+      "target": "src/agent_memory_orchestrator/mcp/tools.py::memory_metrics",
+      "type": "IMPORTS",
+      "co_change_category": "",
+      "co_change_count": 0
+    },
+    {
+      "source": "src/agent_memory_orchestrator/mcp/server.py::amo_current_context",
+      "target": "src/agent_memory_orchestrator/mcp/tools.py::memory_rebuild_indexes",
+      "type": "IMPORTS",
+      "co_change_category": "",
+      "co_change_count": 0
+    },
+    {
+      "source": "src/agent_memory_orchestrator/memory/retrieval.py::search_memories",
+      "target": "src/agent_memory_orchestrator/memory/retrieval.py::search_memories",
+      "type": "IMPORTS",
+      "co_change_category": "",
+      "co_change_count": 0
+    }
+  ]
+}
