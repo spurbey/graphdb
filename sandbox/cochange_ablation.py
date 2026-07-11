@@ -195,11 +195,17 @@ theme_vec_map: dict[str, np.ndarray] = dict(zip(theme_ids, theme_vecs))
 
 # ── Weight computation ─────────────────────────────────────────────────────────
 def _is_candidate(v) -> bool:
-    """Phase 0b: exclude test functions and inactive/unembedded nodes from results."""
+    """Phase 0b: exclude test functions and inactive/unembedded nodes from results.
+    Filters by both function name prefix AND file path — catches functions named
+    e.g. 'snapshot' that live in test_graph_rag.py."""
+    name: str = v["name"] or ""
+    file: str = v["file"] or ""
+    file_base = file.replace("\\", "/").split("/")[-1]
     return (
         v["status"] == "active"
         and v["embedding"] is not None
-        and not v["name"].startswith("test_")
+        and not name.startswith("test_")
+        and not file_base.startswith("test_")
     )
 
 
