@@ -954,5 +954,44 @@
         "file": "src/agent_memory_orchestrator/mcp/tools.py"
       }
     ]
+  },
+  {
+    "id": "cross_session_graph_builder",
+    "query": "build and serialize compact session graph nodes for storage",
+    "target_name": "build_compact_session_graph",
+    "target_hint": "session_graph_writer",
+    "targets": [
+      "src/agent_memory_orchestrator/memory/session_graph_writer.py::build_compact_session_graph"
+    ],
+    "expected_mechanism": "cross-cutting bridge: cluster 26, callers in cluster 27 (session builder), callees spanning clusters 2/11/26/28 (packet/code/graph node builders). Hard Infomap partition assigns it to cluster 26 — queries entering from session runtime (cluster 19/53) or storage (cluster 31) may miss it. If graph modes miss but vector finds it, overlapping communities is justified.",
+    "vector_rank": null,
+    "final_rank": null,
+    "vector_top5": []
+  },
+  {
+    "id": "cross_memory_storage_write",
+    "query": "persist memory unit to vector index and full text search store",
+    "target_name": "add_memory_unit",
+    "target_hint": "storage",
+    "targets": [
+      "src/agent_memory_orchestrator/memory/storage.py::add_memory_unit"
+    ],
+    "expected_mechanism": "cross-cutting bridge: cluster 31 (ingest), callers span clusters 31/33, callees span clusters 4/31/232 (vector write, utc, fts). Bridges ingest pipeline to storage/embedding layer. Query phrasing 'vector index and full text search' should semantically match. If PPR misses due to cluster boundary between ingest and storage communities, overlapping communities would help.",
+    "vector_rank": null,
+    "final_rank": null,
+    "vector_top5": []
+  },
+  {
+    "id": "cross_session_graph_nodes",
+    "query": "collect graph nodes from current session thread and code context",
+    "target_name": "_graph_nodes_from_session",
+    "target_hint": "session_runtime",
+    "targets": [
+      "src/agent_memory_orchestrator/memory/session_runtime.py::_graph_nodes_from_session"
+    ],
+    "expected_mechanism": "cross-cutting bridge: cluster 19 (session runtime), called by build_session_graph (cluster 53), calls into clusters 2/19 (graph node builders). Query enters from graph/context direction — if Infomap places it in cluster 19 but seeds land in cluster 53 or graph clusters, it may miss in PPR modes but rank well in vector.",
+    "vector_rank": null,
+    "final_rank": null,
+    "vector_top5": []
   }
 ]
