@@ -17,7 +17,13 @@ Source: `sandbox/ablation_results.json`, 10-query eval, theme embedding active.
 | Theme overlay (Mode C) | 4/10 | Proves one additional recovery (`redact_secrets`). But also loses `memory_search` vs vector-only. |
 
 **Known misses across all modes:**
-- `export_snapshot` — MISS in all 3 modes. Vector top-10 has test variants but not the function itself.
+- `export_snapshot` — MISS in all modes. **Diagnosed post-Phase-0 (deterministic).**
+  Raw cosine rank: 15/1069 (score 0.336) — embedding is NOT the problem, it IS
+  a top-15 seed. Root cause: rank-15 seed gets proportional weight 1/15=0.067,
+  cluster 33 gets minimal PPR mass, call neighborhood (_json, _rows_for_export)
+  is generic utilities with no structural amplification. PPR dilution, not
+  embedding failure. Fix: seed floor weighting (separate task). Excluded from
+  Phase 1/2 acceptance criteria.
 - `apply_install_plan` — MISS in all 3 modes. PPR gets `build_install_plan` (adjacent) but not the target.
 - `_filter_answer_grade_nodes` — MISS in PPR/theme. Vector-only ranks it 2nd. Infomap scoping kills it in graph modes.
 - `ingest_hook_payload` — Ranks 3 vector, 4 PPR/theme. Should be rank 1 for its query.
