@@ -28,7 +28,7 @@ def validate_username(username):
 
 
 def signup(username, password):
-    """Register a new user with validation and password strength check."""
+    """Register a new user. Enforces 8-char password minimum."""
     try:
         validate_username(username)
         if len(password) < 8:
