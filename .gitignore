@@ -18,3 +18,23 @@ graphsage_minimal/__pycache__/
 
 # colab bundle — built from graphsage_minimal/
 graphsage_minimal_bundle.zip
+
+# scratch/dev files from early development — not part of pipeline
+check_json.py
+patch_semantics.py
+verify_semantics.py
+level_1_parser.py
+ingestion_process.txt
+graphsage.ipynb
+
+# conversation dumps — not source code
+convo1
+convo1_clean.json
+convo2.json
+_read_convo2.py
+
+# kiro editor settings (local only)
+.kiro/settings/lsp.json
+
+# tests directory (not yet wired into CI)
+tests/
