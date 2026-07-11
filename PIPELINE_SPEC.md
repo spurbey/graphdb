@@ -425,6 +425,44 @@ The floor-weighting hypothesis is closed as incorrect for the specific mechanism
 
 ---
 
+### [2026-07-12 — Option A' soft cluster filter tested and failed]
+
+**Change:** `ZERO_SEED_CLUSTER_WEIGHT = 0.1` in post-PPR candidate filter.  
+Zero-seed-cluster nodes get 10% of PPR score instead of hard removal.  
+**Hypothesis:** `export_snapshot` (PPR rank 6 without filter) could survive.
+
+**Expected to fix:** `export_snapshot`  
+**Must not break:** All 6 currently passing queries
+
+**Raw result:**
+```
+Before: VectorOnly 6/10, CallsPPR 5/10, ThemeOverlay 6/10
+After:  VectorOnly 6/10, CallsPPR 4/10, ThemeOverlay 4/10
+```
+
+**Regressed:** `old_context` (rank 6 → MISS), `rebuild_indexes` (rank 10 → MISS).  
+**`export_snapshot`:** Still MISS.
+
+**Why it failed:** Softening the filter let config/util functions flood results from zero-seed
+clusters: `config_path`, `without_tokens`, `slack_secret_path`, `load`, `get`, `append` in
+top-5 across multiple queries. These are not caught by hub penalty (which targets high-degree
+CALLS nodes). The cluster filter and the reset-vector mask serve different roles — softening
+the mask worked because teleportation origin is constrained by cosine score. Softening the
+candidate filter opens the pool to any node that accumulated IMPORTS/CO_CHANGE PPR mass.
+
+**Reverted immediately.** Scores confirmed 6/5/6 after revert + ablation rerun.
+
+**Settled conclusion:** `export_snapshot` is a **permanent miss**.
+Both algorithmic fixes attempted (seed floor, soft cluster filter) failed.
+No retrieval tuning within current CALLS/CO_CHANGE/community architecture recovers it.
+Add to deferred decisions: possible fix is CO_CHANGE bridge if `export_snapshot` co-changes
+with any high-seed-community function (not yet checked — would require adding it to the co-change
+pipeline output). Low priority given Step 3 and Step 4 are higher value.
+
+**Next: Step 3 (cross-cutting queries) then Step 4 (pipeline wiring).**
+
+---
+
 ## Anti-patterns — Do Not Repeat
 
 These are mistakes that happened in this project. Document them so they don't recur.
