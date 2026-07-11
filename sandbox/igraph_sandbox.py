@@ -328,8 +328,8 @@ def _is_candidate(v) -> bool:
     )
 
 
-def run_cold_discovery(query_embedding: np.ndarray, top_k_seeds=15, final_k=10,
-                       use_theme_overlay=True):
+def run_cold_discovery(query_embedding: np.ndarray, top_k_seeds=20, final_k=10,
+                       use_theme_overlay=False):
     """
     Step 1: Vector seed search (cosine similarity) — test functions excluded
     Step 2: Infomap community scope (pre-computed at startup, deterministic)
@@ -588,7 +588,7 @@ def run_validation():
         print(f"Target: function named ~'{t_name}' in a file containing '{t_hint}'")
 
         vec = load_query_embedding(query)
-        selected, ppr_scores, vec_scores = run_cold_discovery(vec, top_k_seeds=15, final_k=10)
+        selected, ppr_scores, vec_scores = run_cold_discovery(vec, top_k_seeds=20, final_k=10)
 
         found = False
         print(f"  Top-10 results:")
