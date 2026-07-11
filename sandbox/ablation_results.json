@@ -104,39 +104,39 @@
       "rank_theme_overlay": null,
       "top10_vector": [
         "memory_import [server.py]",
-        "snapshot [test_graph_rag.py]",
-        "snapshot [test_session_cockpit.py]",
-        "snapshot [test_evidence_drain.py]",
         "dashboard_snapshot [views.py]",
-        "snapshot [test_graph_consolidation.py]",
-        "snapshot [test_graph_cache.py]",
-        "snapshot [test_graph_merge.py]",
         "memory_export [tools.py]",
-        "memory_write [tools.py]"
+        "memory_write [tools.py]",
+        "memory_import [tools.py]",
+        "session_id [events.py]",
+        "memory_write [server.py]",
+        "snapshot [git.py]",
+        "query_session_graph [session_runtime.py]",
+        "graph_snapshot [views.py]"
       ],
       "top10_calls_ppr": [
         "memory_import [server.py]",
         "session_id [events.py]",
-        "memory_write [tools.py]",
+        "memory_metrics [tools.py]",
         "snapshot [git.py]",
         "query_session_graph [session_runtime.py]",
+        "create_server [server.py]",
         "memory_write [server.py]",
-        "dashboard_snapshot [views.py]",
-        "memory_import [tools.py]",
-        "snapshot [test_graph_rag.py]",
-        "memory_export [tools.py]"
+        "search_memories [retrieval.py]",
+        "memory_write [tools.py]",
+        "memory_import [tools.py]"
       ],
       "top10_theme_overlay": [
         "memory_import [server.py]",
         "session_id [events.py]",
-        "memory_write [tools.py]",
+        "memory_metrics [tools.py]",
         "snapshot [git.py]",
         "query_session_graph [session_runtime.py]",
+        "create_server [server.py]",
         "memory_write [server.py]",
-        "dashboard_snapshot [views.py]",
-        "memory_import [tools.py]",
-        "snapshot [test_graph_rag.py]",
-        "memory_export [tools.py]"
+        "search_memories [retrieval.py]",
+        "memory_write [tools.py]",
+        "memory_import [tools.py]"
       ]
     },
     {
@@ -249,33 +249,33 @@
       "top10_calls_ppr": [
         "_uninstall_codex_hooks [service.py]",
         "health_ping [server.py]",
-        "make_settings [test_graph_merge.py]",
         "_backup_path [service.py]",
+        "build_install_plan [service.py]",
+        "_hook_events [service.py]",
         "_is_amo_claude_hook [service.py]",
         "_infer_codex_session [ingest.py]",
+        "_write_hook_log [hook.py]",
         "_codex_hooks_snippet [cli.py]",
-        "codex_hook_response [hooks.py]",
-        "_codex_hooks_operation [service.py]",
-        "_codex_has_amo_hooks [service.py]"
+        "codex_hook_response [hooks.py]"
       ],
       "top10_theme_overlay": [
         "_uninstall_codex_hooks [service.py]",
         "health_ping [server.py]",
-        "make_settings [test_graph_merge.py]",
         "_backup_path [service.py]",
+        "build_install_plan [service.py]",
+        "_hook_events [service.py]",
         "_is_amo_claude_hook [service.py]",
-        "_infer_codex_session [ingest.py]",
+        "import_codex_sessions [ingest.py]",
         "_codex_hooks_snippet [cli.py]",
         "codex_hook_response [hooks.py]",
-        "_codex_hooks_operation [service.py]",
-        "_codex_has_amo_hooks [service.py]"
+        "_codex_hooks_operation [service.py]"
       ]
     },
     {
       "id": "privacy_redaction",
       "query": "remove secrets from captured text before saving memory chunks",
       "target_name": "redact_secrets",
-      "rank_vector_only": 10,
+      "rank_vector_only": 9,
       "rank_calls_ppr": 3,
       "rank_theme_overlay": 3,
       "top10_vector": [
@@ -287,8 +287,8 @@
         "_documents_for_node [retrieval.py]",
         "_save_cursors [drain.py]",
         "memory_search [tools.py]",
-        "_chunk [test_reasoning_graph_decision_packets.py]",
-        "redact_secrets [privacy.py]"
+        "redact_secrets [privacy.py]",
+        "create_chunks_for_event [ingest.py]"
       ],
       "top10_calls_ppr": [
         "extract_memories_for_chunk [ingest.py]",
@@ -376,7 +376,7 @@
         "extract_memory_candidates [extraction.py]",
         "memory_import [server.py]",
         "create_server [server.py]",
-        "search_nodes [test_graph_cache.py]"
+        "classify_memory_type [extraction.py]"
       ],
       "top10_calls_ppr": [
         "memory_search [tools.py]",
@@ -386,9 +386,9 @@
         "_mentions_target [extraction_window.py]",
         "create_server [server.py]",
         "memory_metrics [tools.py]",
-        "search_nodes [test_graph_cache.py]",
         "classify_memory_type [extraction.py]",
-        "extract_memories_for_chunk [ingest.py]"
+        "search [embedding_store.py]",
+        "_documents_for_node [retrieval.py]"
       ],
       "top10_theme_overlay": [
         "memory_search [tools.py]",
@@ -397,9 +397,9 @@
         "_mentions_target [extraction_window.py]",
         "create_server [server.py]",
         "memory_metrics [tools.py]",
-        "search_nodes [test_graph_cache.py]",
         "classify_memory_type [extraction.py]",
-        "extract_memories_for_chunk [ingest.py]",
+        "search [embedding_store.py]",
+        "_documents_for_node [retrieval.py]",
         "build_context_pack [retrieval.py]"
       ]
     },
