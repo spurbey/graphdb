@@ -1,8 +1,9 @@
 """
 Agent toolset for the graph knowledge base.
 
-Five tools:
-  search_code_semantics(prompt)            — text search on active FunctionState.ai_summary
+Six tools:
+  search_code_semantics(prompt)            — igraph PPR pipeline (primary, recommended)
+  search_code_semantics_helix(prompt)      — raw HelixDB vector search (fallback if igraph unavailable)
   get_code_time_travel_diff(state_node_id) — PREVIOUS_VERSION traversal
   trace_blast_radius(function_identity_id) — reverse CALLS traversal
   get_temporal_vulnerability_trace(target_func, timestamp_iso) — multi-hop commit filter
@@ -17,6 +18,23 @@ from helixdb import Client, g, read_batch, define_params, param, Predicate, Proj
 
 HELIX_URL  = "http://127.0.0.1:6969"
 REPO_ROOT  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+# ── igraph pipeline (primary search) ──────────────────────────────────────────
+_pipeline_ready = False
+
+def _ensure_pipeline() -> bool:
+    """Initialize the igraph pipeline on first use. Returns True if available."""
+    global _pipeline_ready
+    if _pipeline_ready:
+        return True
+    try:
+        from pipeline_api import initialize
+        initialize(data_root=REPO_ROOT)
+        _pipeline_ready = True
+        return True
+    except Exception as e:
+        print(f"[graph_tools] igraph pipeline unavailable: {e}")
+        return False
 
 # ── Embedding helper (same model as scalable_ingest) ──────────────────────────
 _EMBED_MODEL = "nvidia/llama-nemotron-embed-vl-1b-v2:free"
@@ -57,16 +75,46 @@ def _rows(result: dict, key: str) -> list[dict]:
     return result.get(key, {}).get("properties", [])
 
 
-# ── Tool 1: Semantic search ────────────────────────────────────────────────
+# ── Tool 1: Semantic search (igraph pipeline — primary) ───────────────────────
 
-def search_code_semantics(prompt: str, k: int = 5) -> list[dict]:
+def search_code_semantics(prompt: str, k: int = 10, mode: str = "general_retrieval") -> dict | list[dict]:
     """
-    Vector similarity search on FunctionState.ai_summary_vec where status == 'active'.
-    Fetches k*3 candidates from the vector index then filters to active, returns top k.
+    Primary semantic search using the igraph PPR pipeline.
+
+    Returns a subgraph dict. Always includes "pipeline_mode" field:
+    - "igraph": full PPR subgraph with nodes + edges (use this)
+    - "unavailable": pipeline not loaded; "error" field explains why.
+      In this case, also returns HelixDB flat-list fallback under "helix_fallback".
+
+    If you see pipeline_mode == "unavailable", check that:
+    1. sandbox/amo_nodes.json exists (run sandbox/amo_ingest.py if missing)
+    2. igraph and numpy are installed
+    3. The MCP server was started from the graphdb repo root
+    """
+    if _ensure_pipeline():
+        from pipeline_api import search as _igraph_search
+        result = _igraph_search(prompt, k=k, mode=mode)
+        if result.get("pipeline_mode") == "igraph":
+            return result
+        # pipeline_api returned an error — fall through to HelixDB with the error attached
+        result["helix_fallback"] = search_code_semantics_helix(prompt, k=k)
+        return result
+
+    # pipeline unavailable entirely
+    return {
+        "pipeline_mode": "unavailable",
+        "error": "igraph pipeline could not be loaded — see server startup log",
+        "helix_fallback": search_code_semantics_helix(prompt, k=k),
+    }
+
+
+def search_code_semantics_helix(prompt: str, k: int = 5) -> list[dict]:
+    """
+    Raw HelixDB vector search fallback. Returns flat list without graph structure.
+    Use search_code_semantics() for the full pipeline with subgraph output.
     """
     c = _c()
     vec = _embed(prompt)
-    # Fetch more candidates than needed so the active filter doesn't starve results
     batch = (
         read_batch()
         .var_as("states",
@@ -88,6 +136,49 @@ def search_code_semantics(prompt: str, k: int = 5) -> list[dict]:
         return _rows(result, "states")
     except Exception as e:
         return [{"error": str(e)}]
+
+
+# ── Tool: explain_coupling ─────────────────────────────────────────────────────
+
+def explain_coupling(func_id_a: str, func_id_b: str) -> dict:
+    """
+    Return the CO_CHANGE relationship between two functions if it exists.
+
+    func_id_a / func_id_b: full node IDs, e.g.
+        "src/agent_memory_orchestrator/memory/ingest.py::ingest_hook_payload"
+
+    Returns the co-change edge data (category, jaccard-implied count,
+    theme proportions) or {"coupled": false} if no relationship exists.
+    """
+    if _ensure_pipeline():
+        try:
+            from pipeline_api import explain_coupling as _explain
+            result = _explain(func_id_a, func_id_b)
+            if result is not None:
+                result["coupled"] = True
+                return result
+            return {"coupled": False, "func_id_a": func_id_a, "func_id_b": func_id_b}
+        except Exception as e:
+            return {"error": str(e)}
+    return {"error": "igraph pipeline unavailable"}
+
+
+# ── Tool: pipeline_status ──────────────────────────────────────────────────────
+
+def pipeline_status() -> dict:
+    """
+    Return igraph pipeline health. Use to verify which search mode is active.
+
+    If pipeline is unavailable, search_code_semantics falls back to HelixDB
+    vector search — results will be a flat list instead of a subgraph.
+    """
+    if _ensure_pipeline():
+        try:
+            from pipeline_api import status as _status
+            return _status()
+        except Exception as e:
+            return {"pipeline": "unavailable", "error": str(e)}
+    return {"pipeline": "unavailable", "error": "igraph pipeline failed to initialize"}
 
 
 # ── Tool 2: Time-travel diff ───────────────────────────────────────────────

@@ -13,11 +13,23 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from tools.graph_tools import (
     search_code_semantics,
+    search_code_semantics_helix,
+    explain_coupling,
+    pipeline_status,
     get_code_time_travel_diff,
     trace_blast_radius,
     get_temporal_vulnerability_trace,
     edit_code,
 )
+
+# Initialize igraph pipeline at startup (loads graph, runs Infomap once)
+try:
+    from pipeline_api import initialize as _init_pipeline
+    _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    _init_pipeline(data_root=_REPO_ROOT)
+    print("[graph_mcp_server] igraph pipeline ready")
+except Exception as _e:
+    print(f"[graph_mcp_server] igraph pipeline unavailable, will use HelixDB fallback: {_e}")
 
 PORT = 7700
 
@@ -28,11 +40,29 @@ MANIFEST = {
     "tools": [
         {
             "name":        "search_code_semantics",
-            "description": "Semantic search over active function implementations. Use to find relevant functions by behavior description.",
+            "description": (
+                "Semantic search over the AMO codebase using PPR graph traversal. "
+                "Returns a subgraph: ranked nodes (id, name, file, summary, code, ppr_score) "
+                "plus edges between them. Better than raw vector search — finds structurally "
+                "adjacent functions even when their names don't match the query."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "prompt": {"type": "string", "description": "Natural language description of what you're looking for"},
+                    "prompt": {"type": "string",  "description": "Natural language description of what you're looking for"},
+                    "k":      {"type": "integer", "description": "Number of results (default 10)", "default": 10},
+                    "mode":   {"type": "string",  "description": "Consumer mode: general_retrieval (default), risk, pre_edit, why_coupled", "default": "general_retrieval"},
+                },
+                "required": ["prompt"],
+            },
+        },
+        {
+            "name":        "search_code_semantics_helix",
+            "description": "Raw HelixDB vector search fallback. Returns flat list without graph structure. Use search_code_semantics instead unless HelixDB comparison is needed.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "prompt": {"type": "string",  "description": "Natural language description of what you're looking for"},
                     "k":      {"type": "integer", "description": "Number of results (default 5)", "default": 5},
                 },
                 "required": ["prompt"],
@@ -86,11 +116,43 @@ MANIFEST = {
                 "required": ["file", "function_name", "new_code"],
             },
         },
+        {
+            "name":        "explain_coupling",
+            "description": (
+                "Explain why two functions historically change together. "
+                "Returns co-change category (shared_dependency / shared_commit_only / structural_redundant / temporal_burst), "
+                "occurrence count, and theme proportions showing the underlying reason for coupling."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "func_id_a": {"type": "string", "description": "First function node ID (e.g. 'src/memory/ingest.py::ingest_hook_payload')"},
+                    "func_id_b": {"type": "string", "description": "Second function node ID"},
+                },
+                "required": ["func_id_a", "func_id_b"],
+            },
+        },
+        {
+            "name":        "pipeline_status",
+            "description": (
+                "Check which search mode is active. "
+                "Returns pipeline=igraph (full PPR pipeline) or pipeline=unavailable (HelixDB fallback). "
+                "Call this if search_code_semantics results look unexpectedly flat or wrong."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {},
+                "required": [],
+            },
+        },
     ],
 }
 
 TOOL_MAP = {
-    "search_code_semantics":            lambda p: search_code_semantics(p["prompt"], p.get("k", 5)),
+    "search_code_semantics":            lambda p: search_code_semantics(p["prompt"], p.get("k", 10), p.get("mode", "general_retrieval")),
+    "search_code_semantics_helix":      lambda p: search_code_semantics_helix(p["prompt"], p.get("k", 5)),
+    "explain_coupling":                 lambda p: explain_coupling(p["func_id_a"], p["func_id_b"]),
+    "pipeline_status":                  lambda p: pipeline_status(),
     "get_code_time_travel_diff":        lambda p: get_code_time_travel_diff(p["state_node_id"]),
     "trace_blast_radius":               lambda p: trace_blast_radius(p["function_identity_id"], p.get("depth", 3)),
     "get_temporal_vulnerability_trace": lambda p: get_temporal_vulnerability_trace(p["target_func"], p["timestamp_iso"]),
@@ -139,5 +201,5 @@ class MCPHandler(BaseHTTPRequestHandler):
 if __name__ == "__main__":
     server = HTTPServer(("127.0.0.1", PORT), MCPHandler)
     print(f"Graph MCP server running on http://127.0.0.1:{PORT}")
-    print("Tools: search_code_semantics | get_code_time_travel_diff | trace_blast_radius | get_temporal_vulnerability_trace")
+    print("Tools: search_code_semantics (igraph PPR) | search_code_semantics_helix (HelixDB) | get_code_time_travel_diff | trace_blast_radius | get_temporal_vulnerability_trace | edit_code")
     server.serve_forever()
