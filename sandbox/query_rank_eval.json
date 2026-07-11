@@ -1,0 +1,958 @@
+[
+  {
+    "id": "old_ingest",
+    "query": "memory ingestion pipeline hook processing",
+    "target_name": "ingest_hook_payload",
+    "target_hint": "ingest",
+    "targets": [
+      "src/agent_memory_orchestrator/memory/ingest.py::ingest_hook_payload"
+    ],
+    "vector_rank": 3,
+    "final_rank": null,
+    "vector_top5": [
+      {
+        "rank": 1,
+        "score": 0.4508,
+        "name": "memory_metrics",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 2,
+        "score": 0.361,
+        "name": "test_hook_ingestion_redacts_chunks_extracts_and_summarizes",
+        "file": "tests/test_memory_service.py"
+      },
+      {
+        "rank": 3,
+        "score": 0.3312,
+        "name": "ingest_hook_payload",
+        "file": "src/agent_memory_orchestrator/memory/ingest.py"
+      },
+      {
+        "rank": 4,
+        "score": 0.3147,
+        "name": "memory_import",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 5,
+        "score": 0.2848,
+        "name": "memory_rebuild_indexes",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      }
+    ],
+    "final_top10": [
+      {
+        "rank": 1,
+        "name": "memory_import",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 2,
+        "name": "_bounded_limit",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 3,
+        "name": "session_exists",
+        "file": "src/agent_memory_orchestrator/memory/ingest.py"
+      },
+      {
+        "rank": 4,
+        "name": "amo_current_context",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 5,
+        "name": "_parse_metadata",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 6,
+        "name": "config_view",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 7,
+        "name": "memory_metrics",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 8,
+        "name": "_graph_call",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 9,
+        "name": "health_ping",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 10,
+        "name": "_normalize_agent",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      }
+    ]
+  },
+  {
+    "id": "old_context",
+    "query": "retrieve context from memory for agent",
+    "target_name": "memory_context_pack",
+    "target_hint": "tools",
+    "targets": [
+      "src/agent_memory_orchestrator/mcp/tools.py::memory_context_pack",
+      "src/agent_memory_orchestrator/mcp_memory_tools.py::memory_context_pack"
+    ],
+    "vector_rank": 9,
+    "final_rank": 1,
+    "vector_top5": [
+      {
+        "rank": 1,
+        "score": 0.4519,
+        "name": "memory_context_pack",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 2,
+        "score": 0.4309,
+        "name": "tool_contracts",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 3,
+        "score": 0.3729,
+        "name": "snapshot",
+        "file": "src/agent_memory_orchestrator/versioning/base.py"
+      },
+      {
+        "rank": 4,
+        "score": 0.3699,
+        "name": "amo_current_context",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 5,
+        "score": 0.3307,
+        "name": "amo_graph_search",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      }
+    ],
+    "final_top10": [
+      {
+        "rank": 1,
+        "name": "memory_context_pack",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 2,
+        "name": "_graph_call",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 3,
+        "name": "import_snapshot",
+        "file": "src/agent_memory_orchestrator/memory/snapshots.py"
+      },
+      {
+        "rank": 4,
+        "name": "amo_decision_history",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 5,
+        "name": "tool_contracts",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 6,
+        "name": "_parse_metadata",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 7,
+        "name": "memory_metrics",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 8,
+        "name": "memory_write",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 9,
+        "name": "_normalize_agent",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 10,
+        "name": "memory_context_pack",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      }
+    ]
+  },
+  {
+    "id": "old_snapshot",
+    "query": "store and save session memory snapshot",
+    "target_name": "export_snapshot",
+    "target_hint": "snapshots",
+    "targets": [
+      "src/agent_memory_orchestrator/memory/snapshots.py::export_snapshot"
+    ],
+    "vector_rank": 81,
+    "final_rank": null,
+    "vector_top5": [
+      {
+        "rank": 1,
+        "score": 0.5112,
+        "name": "memory_import",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 2,
+        "score": 0.4343,
+        "name": "snapshot",
+        "file": "tests/test_graph_rag.py"
+      },
+      {
+        "rank": 3,
+        "score": 0.4343,
+        "name": "snapshot",
+        "file": "tests/test_session_cockpit.py"
+      },
+      {
+        "rank": 4,
+        "score": 0.4343,
+        "name": "snapshot",
+        "file": "tests/test_evidence_drain.py"
+      },
+      {
+        "rank": 5,
+        "score": 0.4184,
+        "name": "test_export_snapshot_with_session_filter",
+        "file": "tests/test_memory_service.py"
+      }
+    ],
+    "final_top10": [
+      {
+        "rank": 1,
+        "name": "memory_write",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 2,
+        "name": "_require_text",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 3,
+        "name": "memory_import",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 4,
+        "name": "session_exists",
+        "file": "src/agent_memory_orchestrator/memory/ingest.py"
+      },
+      {
+        "rank": 5,
+        "name": "memory_import",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 6,
+        "name": "_parse_metadata",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 7,
+        "name": "memory_write",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 8,
+        "name": "import_snapshot",
+        "file": "src/agent_memory_orchestrator/memory/snapshots.py"
+      },
+      {
+        "rank": 9,
+        "name": "add_event",
+        "file": "src/agent_memory_orchestrator/memory/ingest.py"
+      },
+      {
+        "rank": 10,
+        "name": "generate_session_summary",
+        "file": "src/agent_memory_orchestrator/memory/summary.py"
+      }
+    ]
+  },
+  {
+    "id": "ambiguous_capture_persist",
+    "query": "codex hook captured user message should become durable memory evidence",
+    "target_name": "ingest_hook_payload",
+    "target_hint": "ingest",
+    "targets": [
+      "src/agent_memory_orchestrator/memory/ingest.py::ingest_hook_payload"
+    ],
+    "vector_rank": 48,
+    "final_rank": null,
+    "vector_top5": [
+      {
+        "rank": 1,
+        "score": 0.3487,
+        "name": "memory_write",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 2,
+        "score": 0.3402,
+        "name": "amo_raw_evidence",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 3,
+        "score": 0.3352,
+        "name": "test_codex_user_prompt_hook_returns_additional_context_when_auto_safe",
+        "file": "tests/test_memory_service.py"
+      },
+      {
+        "rank": 4,
+        "score": 0.3117,
+        "name": "should_capture_message",
+        "file": "src/agent_memory_orchestrator/integrations/connectors/slack/events.py"
+      },
+      {
+        "rank": 5,
+        "score": 0.2948,
+        "name": "test_codex_hooks_retrieval_eval_fixture",
+        "file": "tests/test_memory_service.py"
+      }
+    ],
+    "final_top10": [
+      {
+        "rank": 1,
+        "name": "memory_write",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 2,
+        "name": "_require_text",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 3,
+        "name": "tool_contracts",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 4,
+        "name": "_bounded_limit",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 5,
+        "name": "session_exists",
+        "file": "src/agent_memory_orchestrator/memory/ingest.py"
+      },
+      {
+        "rank": 6,
+        "name": "_graph_call",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 7,
+        "name": "amo_raw_evidence",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 8,
+        "name": "redact_secrets",
+        "file": "src/agent_memory_orchestrator/core/privacy.py"
+      },
+      {
+        "rank": 9,
+        "name": "memory_write",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 10,
+        "name": "amo_raw_evidence",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      }
+    ]
+  },
+  {
+    "id": "ambiguous_tool_contract",
+    "query": "which mcp tool exposes the contract list and argument schema for agents",
+    "target_name": "tool_contracts",
+    "target_hint": "tools",
+    "targets": [
+      "src/agent_memory_orchestrator/mcp/tools.py::tool_contracts",
+      "src/agent_memory_orchestrator/mcp_memory_tools.py::tool_contracts"
+    ],
+    "vector_rank": 5,
+    "final_rank": null,
+    "vector_top5": [
+      {
+        "rank": 1,
+        "score": 0.3818,
+        "name": "health_ping",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 2,
+        "score": 0.3744,
+        "name": "test_mcp_memory_tool_contracts_are_explicit",
+        "file": "tests/test_mcp_memory_tools.py"
+      },
+      {
+        "rank": 3,
+        "score": 0.3488,
+        "name": "memory_context_pack",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 4,
+        "score": 0.3223,
+        "name": "tool_contracts",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 5,
+        "score": 0.2716,
+        "name": "tool_contracts",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      }
+    ],
+    "final_top10": [
+      {
+        "rank": 1,
+        "name": "health_ping",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 2,
+        "name": "_graph_call",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 3,
+        "name": "memory_context_pack",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 4,
+        "name": "export_snapshot",
+        "file": "src/agent_memory_orchestrator/memory/snapshots.py"
+      },
+      {
+        "rank": 5,
+        "name": "close",
+        "file": "src/agent_memory_orchestrator/memory/service.py"
+      },
+      {
+        "rank": 6,
+        "name": "make_settings",
+        "file": "tests/test_graph_merge.py"
+      },
+      {
+        "rank": 7,
+        "name": "health_ping",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 8,
+        "name": "search_memories",
+        "file": "src/agent_memory_orchestrator/memory/retrieval.py"
+      },
+      {
+        "rank": 9,
+        "name": "amo_work_history",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 10,
+        "name": "create_session",
+        "file": "src/agent_memory_orchestrator/memory/ingest.py"
+      }
+    ]
+  },
+  {
+    "id": "install_hooks",
+    "query": "installer writes codex hook settings and applies the local mcp configuration",
+    "target_name": "apply_install_plan",
+    "target_hint": "install",
+    "targets": [
+      "src/agent_memory_orchestrator/install/service.py::apply_install_plan",
+      "src/agent_memory_orchestrator/install_service.py::apply_install_plan"
+    ],
+    "vector_rank": 56,
+    "final_rank": null,
+    "vector_top5": [
+      {
+        "rank": 1,
+        "score": 0.4298,
+        "name": "test_codex_install_applies_managed_hooks_and_mcp",
+        "file": "tests/test_install_service.py"
+      },
+      {
+        "rank": 2,
+        "score": 0.4177,
+        "name": "health_ping",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 3,
+        "score": 0.3334,
+        "name": "test_codex_user_prompt_hook_returns_additional_context_when_auto_safe",
+        "file": "tests/test_memory_service.py"
+      },
+      {
+        "rank": 4,
+        "score": 0.3024,
+        "name": "test_codex_hooks_retrieval_eval_fixture",
+        "file": "tests/test_memory_service.py"
+      },
+      {
+        "rank": 5,
+        "score": 0.3003,
+        "name": "_uninstall_codex_hooks",
+        "file": "src/agent_memory_orchestrator/install/service.py"
+      }
+    ],
+    "final_top10": [
+      {
+        "rank": 1,
+        "name": "health_ping",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 2,
+        "name": "config_view",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 3,
+        "name": "memory_search",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 4,
+        "name": "close",
+        "file": "src/agent_memory_orchestrator/memory/service.py"
+      },
+      {
+        "rank": 5,
+        "name": "_parse_metadata",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 6,
+        "name": "health_ping",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 7,
+        "name": "add_event",
+        "file": "src/agent_memory_orchestrator/memory/ingest.py"
+      },
+      {
+        "rank": 8,
+        "name": "make_settings",
+        "file": "tests/test_graph_merge.py"
+      },
+      {
+        "rank": 9,
+        "name": "timeline",
+        "file": "src/agent_memory_orchestrator/memory/views.py"
+      },
+      {
+        "rank": 10,
+        "name": "elapsed_ms",
+        "file": "src/agent_memory_orchestrator/memory/common.py"
+      }
+    ]
+  },
+  {
+    "id": "privacy_redaction",
+    "query": "remove secrets from captured text before saving memory chunks",
+    "target_name": "redact_secrets",
+    "target_hint": "privacy",
+    "targets": [
+      "src/agent_memory_orchestrator/core/privacy.py::redact_secrets",
+      "src/agent_memory_orchestrator/privacy.py::redact_secrets"
+    ],
+    "vector_rank": 14,
+    "final_rank": 8,
+    "vector_top5": [
+      {
+        "rank": 1,
+        "score": 0.4193,
+        "name": "clean_event_text",
+        "file": "src/agent_memory_orchestrator/memory/processing/cleaning.py"
+      },
+      {
+        "rank": 2,
+        "score": 0.3115,
+        "name": "chunk_input_text",
+        "file": "src/agent_memory_orchestrator/reasoning_graph/extraction_window.py"
+      },
+      {
+        "rank": 3,
+        "score": 0.3057,
+        "name": "extract_memories_for_chunk",
+        "file": "src/agent_memory_orchestrator/memory/ingest.py"
+      },
+      {
+        "rank": 4,
+        "score": 0.3023,
+        "name": "chunk_text",
+        "file": "src/agent_memory_orchestrator/reasoning_graph/tool_facts.py"
+      },
+      {
+        "rank": 5,
+        "score": 0.293,
+        "name": "memory_import",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      }
+    ],
+    "final_top10": [
+      {
+        "rank": 1,
+        "name": "memory_import",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 2,
+        "name": "_require_text",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 3,
+        "name": "rebuild_indexes",
+        "file": "src/agent_memory_orchestrator/memory/storage.py"
+      },
+      {
+        "rank": 4,
+        "name": "_json",
+        "file": "src/agent_memory_orchestrator/memory/service.py"
+      },
+      {
+        "rank": 5,
+        "name": "_utc_now",
+        "file": "src/agent_memory_orchestrator/memory/service.py"
+      },
+      {
+        "rank": 6,
+        "name": "_bounded_limit",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 7,
+        "name": "_id",
+        "file": "src/agent_memory_orchestrator/memory/service.py"
+      },
+      {
+        "rank": 8,
+        "name": "redact_secrets",
+        "file": "src/agent_memory_orchestrator/core/privacy.py"
+      },
+      {
+        "rank": 9,
+        "name": "_write_fts",
+        "file": "src/agent_memory_orchestrator/memory/storage.py"
+      },
+      {
+        "rank": 10,
+        "name": "process_event",
+        "file": "src/agent_memory_orchestrator/memory/ingest.py"
+      }
+    ]
+  },
+  {
+    "id": "graph_context_filter",
+    "query": "drop noisy answer grade nodes from current graph context results",
+    "target_name": "_filter_answer_grade_nodes",
+    "target_hint": "graph_service",
+    "targets": [
+      "src/agent_memory_orchestrator/graph_service.py::_filter_answer_grade_nodes"
+    ],
+    "vector_rank": null,
+    "final_rank": null,
+    "vector_top5": [
+      {
+        "rank": 1,
+        "score": 0.4436,
+        "name": "test_write_context_with_changed_files_is_answer_grade",
+        "file": "tests/test_graph_rag.py"
+      },
+      {
+        "rank": 2,
+        "score": 0.4416,
+        "name": "rebuild_graph_cache",
+        "file": "src/agent_memory_orchestrator/graph/service.py"
+      },
+      {
+        "rank": 3,
+        "score": 0.4179,
+        "name": "amo_current_context",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 4,
+        "score": 0.4167,
+        "name": "_filter_answer_grade_nodes",
+        "file": "src/agent_memory_orchestrator/graph/service.py"
+      },
+      {
+        "rank": 5,
+        "score": 0.3484,
+        "name": "test_rejects_answer_grade_node_without_evidence_ids",
+        "file": "tests/test_reasoning_graph_models.py"
+      }
+    ],
+    "final_top10": [
+      {
+        "rank": 1,
+        "name": "test_write_context_with_changed_files_is_answer_grade",
+        "file": "tests/test_graph_rag.py"
+      },
+      {
+        "rank": 2,
+        "name": "_require_text",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 3,
+        "name": "close",
+        "file": "src/agent_memory_orchestrator/memory/service.py"
+      },
+      {
+        "rank": 4,
+        "name": "_bounded_limit",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 5,
+        "name": "make_settings",
+        "file": "tests/test_graph_merge.py"
+      },
+      {
+        "rank": 6,
+        "name": "upsert_node",
+        "file": "src/agent_memory_orchestrator/graph/store.py"
+      },
+      {
+        "rank": 7,
+        "name": "graph_search",
+        "file": "src/agent_memory_orchestrator/graph/service.py"
+      },
+      {
+        "rank": 8,
+        "name": "amo_graph_search",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 9,
+        "name": "_graph_call",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 10,
+        "name": "amo_graph_search",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      }
+    ]
+  },
+  {
+    "id": "memory_search",
+    "query": "search saved memories by natural language and return matching context",
+    "target_name": "memory_search",
+    "target_hint": "tools",
+    "targets": [
+      "src/agent_memory_orchestrator/mcp/tools.py::memory_search",
+      "src/agent_memory_orchestrator/mcp_memory_tools.py::memory_search"
+    ],
+    "vector_rank": 2,
+    "final_rank": 1,
+    "vector_top5": [
+      {
+        "rank": 1,
+        "score": 0.3756,
+        "name": "memory_search",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 2,
+        "score": 0.3611,
+        "name": "memory_search",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 3,
+        "score": 0.3602,
+        "name": "search_memories",
+        "file": "src/agent_memory_orchestrator/memory/retrieval.py"
+      },
+      {
+        "rank": 4,
+        "score": 0.3535,
+        "name": "build_context_pack",
+        "file": "src/agent_memory_orchestrator/memory/retrieval.py"
+      },
+      {
+        "rank": 5,
+        "score": 0.2852,
+        "name": "amo_graph_search",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      }
+    ],
+    "final_top10": [
+      {
+        "rank": 1,
+        "name": "memory_search",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 2,
+        "name": "memory_context_pack",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 3,
+        "name": "_graph_call",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 4,
+        "name": "import_snapshot",
+        "file": "src/agent_memory_orchestrator/memory/snapshots.py"
+      },
+      {
+        "rank": 5,
+        "name": "new_id",
+        "file": "src/agent_memory_orchestrator/memory/common.py"
+      },
+      {
+        "rank": 6,
+        "name": "stable_json",
+        "file": "src/agent_memory_orchestrator/memory/common.py"
+      },
+      {
+        "rank": 7,
+        "name": "_bm25_candidates",
+        "file": "src/agent_memory_orchestrator/memory/retrieval.py"
+      },
+      {
+        "rank": 8,
+        "name": "elapsed_ms",
+        "file": "src/agent_memory_orchestrator/memory/common.py"
+      },
+      {
+        "rank": 9,
+        "name": "memory_export",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 10,
+        "name": "_require_text",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      }
+    ]
+  },
+  {
+    "id": "rebuild_indexes",
+    "query": "recompute local vector indexes after memory storage changes",
+    "target_name": "memory_rebuild_indexes",
+    "target_hint": "tools",
+    "targets": [
+      "src/agent_memory_orchestrator/mcp/tools.py::memory_rebuild_indexes",
+      "src/agent_memory_orchestrator/mcp_memory_tools.py::memory_rebuild_indexes"
+    ],
+    "vector_rank": 3,
+    "final_rank": null,
+    "vector_top5": [
+      {
+        "rank": 1,
+        "score": 0.5664,
+        "name": "memory_rebuild_indexes",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 2,
+        "score": 0.4537,
+        "name": "memory_search",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 3,
+        "score": 0.3934,
+        "name": "memory_rebuild_indexes",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 4,
+        "score": 0.3661,
+        "name": "memory_write",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 5,
+        "score": 0.3432,
+        "name": "memory_import",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      }
+    ],
+    "final_top10": [
+      {
+        "rank": 1,
+        "name": "rebuild_indexes",
+        "file": "src/agent_memory_orchestrator/memory/storage.py"
+      },
+      {
+        "rank": 2,
+        "name": "_require_text",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 3,
+        "name": "health_ping",
+        "file": "src/agent_memory_orchestrator/mcp/server.py"
+      },
+      {
+        "rank": 4,
+        "name": "_json",
+        "file": "src/agent_memory_orchestrator/memory/service.py"
+      },
+      {
+        "rank": 5,
+        "name": "_utc_now",
+        "file": "src/agent_memory_orchestrator/memory/service.py"
+      },
+      {
+        "rank": 6,
+        "name": "_id",
+        "file": "src/agent_memory_orchestrator/memory/service.py"
+      },
+      {
+        "rank": 7,
+        "name": "_bounded_limit",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 8,
+        "name": "create_session",
+        "file": "src/agent_memory_orchestrator/memory/ingest.py"
+      },
+      {
+        "rank": 9,
+        "name": "memory_export",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      },
+      {
+        "rank": 10,
+        "name": "tool_contracts",
+        "file": "src/agent_memory_orchestrator/mcp/tools.py"
+      }
+    ]
+  }
+]
