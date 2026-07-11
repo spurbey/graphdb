@@ -455,12 +455,18 @@ candidate filter opens the pool to any node that accumulated IMPORTS/CO_CHANGE P
 
 **Reverted immediately.** Scores confirmed 6/5/6 after revert + ablation rerun.
 
-**Settled conclusion:** `export_snapshot` is a **permanent miss**.
-Both algorithmic fixes attempted (seed floor, soft cluster filter) failed.
-No retrieval tuning within current CALLS/CO_CHANGE/community architecture recovers it.
-Add to deferred decisions: possible fix is CO_CHANGE bridge if `export_snapshot` co-changes
-with any high-seed-community function (not yet checked — would require adding it to the co-change
-pipeline output). Low priority given Step 3 and Step 4 are higher value.
+**Settled conclusion — CORRECTED by k=20 experiment:**
+The "permanent miss" conclusion here was **wrong**. The k=20 experiment (run after this entry,
+not committed) recovered `export_snapshot` to rank 6 with identical mechanical embeddings.
+This directly falsifies the embedding-quality theory: a bad embedding doesn't recover by
+widening the window, but a seed-window boundary case (rank 15 at k=15 cutoff) does.
+
+The actual mechanism: `export_snapshot` hovers at rank 14-16 depending on the API call.
+At k=15: sometimes in window (cluster 33 gets 0.067 weight, PPR dilutes it, cluster filter
+sometimes removes it), sometimes out. At k=20: reliably included as seed #15, cluster gets
+weight, recovers to PPR rank 6. **LLM summaries are not required. Seed window is the fix.**
+
+Fix: commit k=20 (next session). Do not treat as permanently unsolvable.
 
 **Next: Step 3 (cross-cutting queries) then Step 4 (pipeline wiring).**
 
@@ -538,6 +544,10 @@ ThemeOvl  k=15: 6/10   ThemeOvl  k=20: 6/10  (same, but 2 regressions + 2 recove
 **Option C:** Just adopt k=20 for both and accept the 2 theme overlay regressions (PPR is now better and theme overlay score is same).
 
 **Recommendation:** Option A. PPR at k=20 is strictly better. Theme overlay at k=20 is neutral (same HIT@10, different queries). The 2 theme overlay regressions (`old_ingest` theme MISS, `rebuild_indexes` theme MISS) are offset by 2 recoveries (`export_snapshot` theme rank 6, `apply_install_plan` theme rank 9). Net zero for theme, net +2 for PPR. Use k=20 for both.
+
+**⚠️ CURRENT PIPELINE CODE IS STILL k=15. `export_snapshot` and `apply_install_plan` will still MISS until k=20 is actually committed to `igraph_sandbox.py` and `cochange_ablation.py`. Do not read this spec entry and assume the fix is live — it is not.**
+
+**⚠️ THEME OVERLAY REGRESSION WARNING: k=20 causes 2 known regressions in theme overlay mode (`old_ingest` ingest_hook_payload drops from rank 2 to MISS, `rebuild_indexes` memory_rebuild_indexes drops from rank 10 to MISS). These regressions are unresolved. If committing k=20 globally, verify these two queries hold or accept the trade. Do not commit k=20 for theme overlay without this check.**
 
 **This needs to be implemented, tested, and committed properly in the next session.**
 
