@@ -185,7 +185,29 @@ Script to write: load graph, embed the query "drop noisy answer grade nodes from
 
 ### Step 4: Wire pipeline into MCP tool interface
 
-**Prerequisite for any product test.** Right now `igraph_sandbox.py` and `tools/graph_tools.py` are disconnected. A coding agent calling `search_code_semantics` gets raw HelixDB vector search — no PPR, no community scoping, no theme overlay, no subgraph edges.
+**STATUS: COMPLETE — commit `f26b087` (2026-07-12)**
+
+**What was built:**
+
+`pipeline_api.py` — importable wrapper over `igraph_sandbox.py`:
+- `initialize(data_root)` — loads graph, runs Infomap once at startup, idempotent
+- `search(prompt, k, use_theme_overlay, mode)` — returns subgraph JSON with `pipeline_mode` field so callers can detect if fallback happened
+- `explain_coupling(func_id_a, func_id_b)` — CO_CHANGE edge data between two functions
+- `status()` — health check: nodes loaded, community count, top_k_seeds, theme_overlay availability
+
+`tools/graph_tools.py` — updated:
+- `search_code_semantics` now calls igraph PPR pipeline, falls back to HelixDB if unavailable. Returns subgraph JSON (nodes + edges) not flat list.
+- `search_code_semantics_helix` — raw HelixDB kept as explicit fallback
+- `explain_coupling` — new, wraps pipeline_api
+- `pipeline_status` — new, agents can verify which mode is active
+
+`tools/graph_mcp_server.py` — updated:
+- Initializes igraph pipeline at startup
+- All 8 tools registered in manifest + TOOL_MAP
+
+**Silent failure mode resolved:** `search()` returns `{"pipeline_mode": "unavailable", "error": "..."}` so callers know when fallback happened. Previously would have returned different schema silently.
+
+**Next:** Step 5 — the product test.
 
 **What needs to change:**
 
