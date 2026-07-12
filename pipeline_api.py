@@ -239,3 +239,87 @@ def status() -> dict:
         "top_k_seeds": 20,
         "theme_overlay": bool(getattr(p, "_themes_data", [])),
     }
+
+
+
+def find_structural_siblings(func_id: str, k: int = 8) -> list[dict]:
+    """
+    Find functions that play the same architectural role as func_id.
+
+    Uses GraphSAGE structural embeddings (128-dim), not semantic embeddings.
+    Two functions are structurally similar if they have similar:
+    - call depth from entry points
+    - fan-out (how many things they call)
+    - community membership in the CALLS graph
+
+    This finds things vector search misses:
+    - memory_write [server.py] -> memory_write [tools.py], add_memory_unit
+      (the MCP -> tool -> storage chain)
+    - rebuild_graph_cache -> do_GET, do_POST (same service tier)
+
+    Returns list of {"id", "name", "file", "similarity"} sorted by similarity.
+    Test functions are excluded.
+
+    func_id: full node ID like
+        "src/agent_memory_orchestrator/memory/ingest.py::ingest_hook_payload"
+    """
+    _require_init()
+
+    sage_path = ROOT / "graphsage_minimal" / "out" / "graphsage_embeddings.npy"
+    meta_path  = ROOT / "graphsage_minimal" / "data" / "node_meta.json"
+
+    if not sage_path.exists() or not meta_path.exists():
+        return [{"error": "GraphSAGE embeddings not found. Run graphsage_minimal/train_graphsage.py first."}]
+
+    import json as _json
+    sage_emb = np.load(sage_path)
+    meta = _json.loads(meta_path.read_text(encoding="utf-8"))
+    meta_by_id = {m["id"]: m for m in meta}
+
+    if func_id not in meta_by_id:
+        return [{"error": f"Function '{func_id}' not found in GraphSAGE embeddings."}]
+
+    anchor_idx = meta_by_id[func_id]["idx"]
+    anchor_vec = sage_emb[anchor_idx]
+    anchor_norm = float(np.linalg.norm(anchor_vec))
+    if anchor_norm < 1e-8:
+        return [{"error": "Anchor has zero embedding."}]
+
+    # Score all meta nodes
+    sage_norms = np.linalg.norm(sage_emb, axis=1)
+    safe_norms = np.maximum(sage_norms, 1e-8)
+    scores = (sage_emb @ anchor_vec) / (safe_norms * anchor_norm)
+
+    # Filter: exclude test functions, exclude anchor itself
+    p = _pipeline
+    node_filter = {}
+    for m in meta:
+        v_idx = p.id_to_idx.get(m["id"])
+        if v_idx is None:
+            continue
+        v = p.G.vs[v_idx]
+        name = v["name"] or ""
+        file = v["file"] or ""
+        file_base = file.replace("\\", "/").split("/")[-1]
+        if (v["status"] == "active"
+                and v["embedding"] is not None
+                and not name.startswith("test_")
+                and not file_base.startswith("test_")
+                and m["id"] != func_id):
+            node_filter[m["id"]] = m["idx"]
+
+    ranked = sorted(
+        [(float(scores[idx]), nid) for nid, idx in node_filter.items()],
+        reverse=True
+    )[:k]
+
+    return [
+        {
+            "id": nid,
+            "name": meta_by_id[nid]["name"],
+            "file": meta_by_id[nid]["file"].split("/")[-1],
+            "similarity": round(sim, 4),
+        }
+        for sim, nid in ranked
+    ]
+

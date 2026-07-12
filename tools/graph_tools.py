@@ -181,6 +181,34 @@ def pipeline_status() -> dict:
     return {"pipeline": "unavailable", "error": "igraph pipeline failed to initialize"}
 
 
+def find_structural_siblings(func_id: str, k: int = 8) -> list[dict]:
+    """
+    Find functions that play the same architectural role as func_id.
+
+    Uses GraphSAGE structural embeddings (128-dim). Finds functions at the
+    same depth in the call hierarchy with similar call patterns — regardless
+    of whether their names or code are semantically similar.
+
+    Different from search_code_semantics (which finds semantically similar
+    functions). This finds architecturally equivalent functions:
+      memory_write [server.py] -> memory_write [tools.py], add_memory_unit,
+      process_event (the full MCP->tool->storage chain)
+
+    Use this when you want to know: "what other functions do the same job
+    as this one, possibly in a different module?"
+
+    func_id: full node ID like
+        "src/agent_memory_orchestrator/memory/ingest.py::ingest_hook_payload"
+    """
+    if _ensure_pipeline():
+        try:
+            from pipeline_api import find_structural_siblings as _find
+            return _find(func_id, k=k)
+        except Exception as e:
+            return [{"error": str(e)}]
+    return [{"error": "igraph pipeline unavailable"}]
+
+
 # ── Tool 2: Time-travel diff ───────────────────────────────────────────────
 
 _P_NID = define_params({"nid": param.string()})
