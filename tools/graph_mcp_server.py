@@ -16,6 +16,7 @@ from tools.graph_tools import (
     search_code_semantics_helix,
     explain_coupling,
     pipeline_status,
+    find_structural_siblings,
     get_code_time_travel_diff,
     trace_blast_radius,
     get_temporal_vulnerability_trace,
@@ -145,6 +146,24 @@ MANIFEST = {
                 "required": [],
             },
         },
+        {
+            "name":        "find_structural_siblings",
+            "description": (
+                "Find functions that play the same architectural role as a given function. "
+                "Uses GraphSAGE structural embeddings — finds functions at the same call depth "
+                "with similar fan-out patterns, regardless of semantic similarity. "
+                "Example: memory_write [server.py] -> finds memory_write [tools.py], add_memory_unit "
+                "(the full MCP->tool->storage chain). Use this when refactoring a pattern across modules."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "func_id": {"type": "string", "description": "Full node ID e.g. 'src/agent_memory_orchestrator/memory/ingest.py::ingest_hook_payload'"},
+                    "k":       {"type": "integer", "description": "Number of siblings to return (default 8)", "default": 8},
+                },
+                "required": ["func_id"],
+            },
+        },
     ],
 }
 
@@ -153,6 +172,7 @@ TOOL_MAP = {
     "search_code_semantics_helix":      lambda p: search_code_semantics_helix(p["prompt"], p.get("k", 5)),
     "explain_coupling":                 lambda p: explain_coupling(p["func_id_a"], p["func_id_b"]),
     "pipeline_status":                  lambda p: pipeline_status(),
+    "find_structural_siblings":         lambda p: find_structural_siblings(p["func_id"], p.get("k", 8)),
     "get_code_time_travel_diff":        lambda p: get_code_time_travel_diff(p["state_node_id"]),
     "trace_blast_radius":               lambda p: trace_blast_radius(p["function_identity_id"], p.get("depth", 3)),
     "get_temporal_vulnerability_trace": lambda p: get_temporal_vulnerability_trace(p["target_func"], p["timestamp_iso"]),
