@@ -1,0 +1,428 @@
+{
+  "experiment": 1,
+  "description": "BFS vs PPR core architecture comparison",
+  "scores": {
+    "vector": {
+      "hit_at_13": 10,
+      "total_god_nodes": 2
+    },
+    "ppr": {
+      "hit_at_13": 7,
+      "total_god_nodes": 5
+    },
+    "bfs_out": {
+      "hit_at_13": 10,
+      "total_god_nodes": 10
+    },
+    "bfs_in": {
+      "hit_at_13": 9,
+      "total_god_nodes": 3
+    },
+    "bfs_both": {
+      "hit_at_13": 10,
+      "total_god_nodes": 9
+    }
+  },
+  "per_query": {
+    "vector": [
+      {
+        "id": "old_ingest",
+        "target": "ingest_hook_payload",
+        "rank": 3,
+        "god_nodes": 0
+      },
+      {
+        "id": "old_context",
+        "target": "memory_context_pack",
+        "rank": 3,
+        "god_nodes": 0
+      },
+      {
+        "id": "old_snapshot",
+        "target": "export_snapshot",
+        "rank": null,
+        "god_nodes": 0
+      },
+      {
+        "id": "ambiguous_capture_persist",
+        "target": "ingest_hook_payload",
+        "rank": null,
+        "god_nodes": 0
+      },
+      {
+        "id": "ambiguous_tool_contract",
+        "target": "tool_contracts",
+        "rank": 1,
+        "god_nodes": 1
+      },
+      {
+        "id": "install_hooks",
+        "target": "apply_install_plan",
+        "rank": null,
+        "god_nodes": 1
+      },
+      {
+        "id": "privacy_redaction",
+        "target": "redact_secrets",
+        "rank": 9,
+        "god_nodes": 0
+      },
+      {
+        "id": "graph_context_filter",
+        "target": "_filter_answer_grade_nodes",
+        "rank": 2,
+        "god_nodes": 0
+      },
+      {
+        "id": "memory_search",
+        "target": "memory_search",
+        "rank": 2,
+        "god_nodes": 0
+      },
+      {
+        "id": "rebuild_indexes",
+        "target": "memory_rebuild_indexes",
+        "rank": 1,
+        "god_nodes": 0
+      },
+      {
+        "id": "cross_session_graph_builder",
+        "target": "build_compact_session_graph",
+        "rank": 1,
+        "god_nodes": 0
+      },
+      {
+        "id": "cross_memory_storage_write",
+        "target": "add_memory_unit",
+        "rank": 1,
+        "god_nodes": 0
+      },
+      {
+        "id": "cross_session_graph_nodes",
+        "target": "_graph_nodes_from_session",
+        "rank": 1,
+        "god_nodes": 0
+      }
+    ],
+    "ppr": [
+      {
+        "id": "old_ingest",
+        "target": "ingest_hook_payload",
+        "rank": null,
+        "god_nodes": 0
+      },
+      {
+        "id": "old_context",
+        "target": "memory_context_pack",
+        "rank": 1,
+        "god_nodes": 0
+      },
+      {
+        "id": "old_snapshot",
+        "target": "export_snapshot",
+        "rank": 9,
+        "god_nodes": 0
+      },
+      {
+        "id": "ambiguous_capture_persist",
+        "target": "ingest_hook_payload",
+        "rank": null,
+        "god_nodes": 0
+      },
+      {
+        "id": "ambiguous_tool_contract",
+        "target": "tool_contracts",
+        "rank": 1,
+        "god_nodes": 2
+      },
+      {
+        "id": "install_hooks",
+        "target": "apply_install_plan",
+        "rank": 2,
+        "god_nodes": 2
+      },
+      {
+        "id": "privacy_redaction",
+        "target": "redact_secrets",
+        "rank": 9,
+        "god_nodes": 0
+      },
+      {
+        "id": "graph_context_filter",
+        "target": "_filter_answer_grade_nodes",
+        "rank": null,
+        "god_nodes": 0
+      },
+      {
+        "id": "memory_search",
+        "target": "memory_search",
+        "rank": 1,
+        "god_nodes": 0
+      },
+      {
+        "id": "rebuild_indexes",
+        "target": "memory_rebuild_indexes",
+        "rank": null,
+        "god_nodes": 0
+      },
+      {
+        "id": "cross_session_graph_builder",
+        "target": "build_compact_session_graph",
+        "rank": 10,
+        "god_nodes": 1
+      },
+      {
+        "id": "cross_memory_storage_write",
+        "target": "add_memory_unit",
+        "rank": null,
+        "god_nodes": 0
+      },
+      {
+        "id": "cross_session_graph_nodes",
+        "target": "_graph_nodes_from_session",
+        "rank": null,
+        "god_nodes": 0
+      }
+    ],
+    "bfs_out": [
+      {
+        "id": "old_ingest",
+        "target": "ingest_hook_payload",
+        "rank": 3,
+        "god_nodes": 0
+      },
+      {
+        "id": "old_context",
+        "target": "memory_context_pack",
+        "rank": 3,
+        "god_nodes": 1
+      },
+      {
+        "id": "old_snapshot",
+        "target": "export_snapshot",
+        "rank": null,
+        "god_nodes": 0
+      },
+      {
+        "id": "ambiguous_capture_persist",
+        "target": "ingest_hook_payload",
+        "rank": 8,
+        "god_nodes": 0
+      },
+      {
+        "id": "ambiguous_tool_contract",
+        "target": "tool_contracts",
+        "rank": 1,
+        "god_nodes": 2
+      },
+      {
+        "id": "install_hooks",
+        "target": "apply_install_plan",
+        "rank": null,
+        "god_nodes": 2
+      },
+      {
+        "id": "privacy_redaction",
+        "target": "redact_secrets",
+        "rank": null,
+        "god_nodes": 1
+      },
+      {
+        "id": "graph_context_filter",
+        "target": "_filter_answer_grade_nodes",
+        "rank": 2,
+        "god_nodes": 1
+      },
+      {
+        "id": "memory_search",
+        "target": "memory_search",
+        "rank": 2,
+        "god_nodes": 0
+      },
+      {
+        "id": "rebuild_indexes",
+        "target": "memory_rebuild_indexes",
+        "rank": 1,
+        "god_nodes": 1
+      },
+      {
+        "id": "cross_session_graph_builder",
+        "target": "build_compact_session_graph",
+        "rank": 1,
+        "god_nodes": 1
+      },
+      {
+        "id": "cross_memory_storage_write",
+        "target": "add_memory_unit",
+        "rank": 1,
+        "god_nodes": 0
+      },
+      {
+        "id": "cross_session_graph_nodes",
+        "target": "_graph_nodes_from_session",
+        "rank": 1,
+        "god_nodes": 1
+      }
+    ],
+    "bfs_in": [
+      {
+        "id": "old_ingest",
+        "target": "ingest_hook_payload",
+        "rank": 3,
+        "god_nodes": 0
+      },
+      {
+        "id": "old_context",
+        "target": "memory_context_pack",
+        "rank": 3,
+        "god_nodes": 0
+      },
+      {
+        "id": "old_snapshot",
+        "target": "export_snapshot",
+        "rank": null,
+        "god_nodes": 0
+      },
+      {
+        "id": "ambiguous_capture_persist",
+        "target": "ingest_hook_payload",
+        "rank": null,
+        "god_nodes": 0
+      },
+      {
+        "id": "ambiguous_tool_contract",
+        "target": "tool_contracts",
+        "rank": 1,
+        "god_nodes": 1
+      },
+      {
+        "id": "install_hooks",
+        "target": "apply_install_plan",
+        "rank": null,
+        "god_nodes": 1
+      },
+      {
+        "id": "privacy_redaction",
+        "target": "redact_secrets",
+        "rank": null,
+        "god_nodes": 1
+      },
+      {
+        "id": "graph_context_filter",
+        "target": "_filter_answer_grade_nodes",
+        "rank": 2,
+        "god_nodes": 0
+      },
+      {
+        "id": "memory_search",
+        "target": "memory_search",
+        "rank": 2,
+        "god_nodes": 0
+      },
+      {
+        "id": "rebuild_indexes",
+        "target": "memory_rebuild_indexes",
+        "rank": 1,
+        "god_nodes": 0
+      },
+      {
+        "id": "cross_session_graph_builder",
+        "target": "build_compact_session_graph",
+        "rank": 1,
+        "god_nodes": 0
+      },
+      {
+        "id": "cross_memory_storage_write",
+        "target": "add_memory_unit",
+        "rank": 1,
+        "god_nodes": 0
+      },
+      {
+        "id": "cross_session_graph_nodes",
+        "target": "_graph_nodes_from_session",
+        "rank": 1,
+        "god_nodes": 0
+      }
+    ],
+    "bfs_both": [
+      {
+        "id": "old_ingest",
+        "target": "ingest_hook_payload",
+        "rank": 3,
+        "god_nodes": 0
+      },
+      {
+        "id": "old_context",
+        "target": "memory_context_pack",
+        "rank": 3,
+        "god_nodes": 1
+      },
+      {
+        "id": "old_snapshot",
+        "target": "export_snapshot",
+        "rank": null,
+        "god_nodes": 0
+      },
+      {
+        "id": "ambiguous_capture_persist",
+        "target": "ingest_hook_payload",
+        "rank": 10,
+        "god_nodes": 0
+      },
+      {
+        "id": "ambiguous_tool_contract",
+        "target": "tool_contracts",
+        "rank": 1,
+        "god_nodes": 2
+      },
+      {
+        "id": "install_hooks",
+        "target": "apply_install_plan",
+        "rank": null,
+        "god_nodes": 2
+      },
+      {
+        "id": "privacy_redaction",
+        "target": "redact_secrets",
+        "rank": null,
+        "god_nodes": 1
+      },
+      {
+        "id": "graph_context_filter",
+        "target": "_filter_answer_grade_nodes",
+        "rank": 2,
+        "god_nodes": 0
+      },
+      {
+        "id": "memory_search",
+        "target": "memory_search",
+        "rank": 2,
+        "god_nodes": 0
+      },
+      {
+        "id": "rebuild_indexes",
+        "target": "memory_rebuild_indexes",
+        "rank": 1,
+        "god_nodes": 1
+      },
+      {
+        "id": "cross_session_graph_builder",
+        "target": "build_compact_session_graph",
+        "rank": 1,
+        "god_nodes": 1
+      },
+      {
+        "id": "cross_memory_storage_write",
+        "target": "add_memory_unit",
+        "rank": 1,
+        "god_nodes": 0
+      },
+      {
+        "id": "cross_session_graph_nodes",
+        "target": "_graph_nodes_from_session",
+        "rank": 1,
+        "god_nodes": 1
+      }
+    ]
+  }
+}
