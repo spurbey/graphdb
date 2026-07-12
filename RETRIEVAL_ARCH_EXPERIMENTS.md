@@ -328,7 +328,25 @@ Every experiment runs against all 13 queries in `query_rank_eval.json`.
 
 ---
 
-### [Experiment 2 — fill in after running]
+### Experiment 4: CO_CHANGE bridges — 2026-07-12
+
+**Change:** Added CO_CHANGE neighbor expansion to vector results. Tested 4 thresholds (0.1-0.4) and unthresholded (any CO_CHANGE neighbor).
+
+**Expected:** HIT@13 improves from 10, redact_secrets recovered.
+
+**Actual:** 10/13 at every threshold including no threshold. Zero bridges added for any missing query. Same 2 god-nodes as vector alone.
+
+**Why:** The 437 co-change pairs simply don't contain edges connecting the vector seeds for the missing queries to their targets. `old_snapshot`, `ambiguous_capture_persist`, `install_hooks` — none of their missing targets have CO_CHANGE edges to the functions that appear as seeds for those queries.
+
+**Verdict: SKIP. CO_CHANGE bridge expansion adds no value for retrieval across the 13-query eval set.**
+
+CO_CHANGE data is still valuable for `explain_coupling` (why do two functions change together) and commit review risk assessment. It's not a retrieval mechanism for the current dataset at 437 pairs / 100 commit window.
+
+**Next:** Experiment 6 (MMR vs file-dedup) and Experiment 7 (query type classification). The 3 remaining misses are structural — accept them or expand the co-change dataset.
+
+---
+
+### [Experiment 6 — fill in after running]
 
 ---
 
