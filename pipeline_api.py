@@ -131,6 +131,9 @@ def search(
     """
     Natural language search over AMO codebase using the igraph pipeline.
 
+    Default mode: vector + MMR(lambda=0.8) — scores 11/13 HIT on eval set.
+    use_theme_overlay=True: PPR with theme-conditioned CO_CHANGE weights (slower).
+
     Always returns a dict with a "pipeline_mode" field so callers can tell
     which path was taken:
     {
@@ -141,11 +144,6 @@ def search(
         "edges": [...],   # present when pipeline_mode == "igraph"
         "error": str,     # present when pipeline_mode == "unavailable"
     }
-
-    If pipeline is unavailable (amo_nodes.json missing, igraph not installed,
-    etc.) returns {"pipeline_mode": "unavailable", "error": "..."} so the
-    caller can fall back to HelixDB search rather than silently getting wrong
-    results.
     """
     if not _initialized or _pipeline is None:
         return {
@@ -157,12 +155,23 @@ def search(
     os.chdir(ROOT)
     try:
         query_vec = _embed(prompt)
-        selected, ppr_scores, vec_scores = _pipeline.run_cold_discovery(
-            query_vec,
-            top_k_seeds=20,
-            final_k=k,
-            use_theme_overlay=use_theme_overlay,
-        )
+
+        if use_theme_overlay:
+            # PPR with theme-conditioned CO_CHANGE weights
+            selected, ppr_scores, vec_scores = _pipeline.run_cold_discovery(
+                query_vec,
+                top_k_seeds=20,
+                final_k=k,
+                use_theme_overlay=True,
+            )
+        else:
+            # Default: vector + MMR(0.8) — Experiment 6 winner (11/13 HIT)
+            selected, ppr_scores, vec_scores = _pipeline.run_vector_mmr(
+                query_vec,
+                final_k=k,
+                lam=0.8,
+            )
+
         result = _pipeline.build_subgraph_output(
             selected, prompt, ppr_scores, vec_scores, mode=mode
         )

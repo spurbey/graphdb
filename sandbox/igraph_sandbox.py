@@ -459,6 +459,56 @@ def run_cold_discovery(query_embedding: np.ndarray, top_k_seeds=20, final_k=10,
     return selected, ppr_scores, vec_score_map
 
 
+def run_vector_mmr(query_embedding: np.ndarray, final_k: int = 10, lam: float = 0.8):
+    """
+    Experiment 6 winner: vector search + MMR at lambda=0.8.
+    Scores 11/13 HIT vs 10/13 for vector alone or PPR.
+
+    lambda=0.8: 80% score-weighted, 20% diversity penalty.
+    Acts as soft tiebreaker — keeps high-scoring functions even when similar
+    to already-selected, but breaks ties toward diversity.
+
+    Returns (selected_indices, None, vec_score_map) — same tuple shape as
+    run_cold_discovery for compatibility with build_subgraph_output.
+    """
+    # Score all candidates by cosine similarity
+    seed_scores = []
+    for v in G.vs:
+        if _is_candidate(v):
+            sim = cosine_sim(query_embedding, v["embedding"])
+            seed_scores.append((v.index, sim))
+    seed_scores.sort(key=lambda x: x[1], reverse=True)
+
+    # MMR selection from top-k*3 candidates
+    candidates_pool = [(idx, score) for idx, score in seed_scores[:final_k * 3]]
+    selected: list[int] = []
+    remaining = list(candidates_pool)
+
+    while len(selected) < final_k and remaining:
+        best_idx, best_score = None, -1e9
+        for node_idx, base_score in remaining:
+            emb = G.vs[node_idx]["embedding"]
+            if emb is None or not selected:
+                sim_sel = 0.0
+            else:
+                sims = [
+                    cosine_sim(emb, G.vs[s]["embedding"])
+                    for s in selected
+                    if G.vs[s]["embedding"] is not None
+                ]
+                sim_sel = max(sims) if sims else 0.0
+            mmr = lam * base_score - (1 - lam) * sim_sel
+            if mmr > best_score:
+                best_score, best_idx = mmr, node_idx
+        if best_idx is None:
+            break
+        selected.append(best_idx)
+        remaining = [(i, s) for i, s in remaining if i != best_idx]
+
+    vec_score_map = {idx: score for idx, score in seed_scores}
+    return selected, None, vec_score_map
+
+
 # ── Phase 3: Subgraph output ──────────────────────────────────────────────────
 
 def build_subgraph_output(

@@ -1,0 +1,209 @@
+{
+  "experiment": 6,
+  "results": [
+    {
+      "id": "old_ingest",
+      "target": "ingest_hook_payload",
+      "A_rank": 3,
+      "A_god": 0,
+      "B6_rank": null,
+      "B6_god": 0,
+      "B8_rank": 5,
+      "B8_god": 0,
+      "C2_rank": 3,
+      "C2_god": 0,
+      "C3_rank": 3,
+      "C3_god": 0
+    },
+    {
+      "id": "old_context",
+      "target": "memory_context_pack",
+      "A_rank": 3,
+      "A_god": 0,
+      "B6_rank": 3,
+      "B6_god": 0,
+      "B8_rank": 2,
+      "B8_god": 0,
+      "C2_rank": 3,
+      "C2_god": 0,
+      "C3_rank": 3,
+      "C3_god": 0
+    },
+    {
+      "id": "old_snapshot",
+      "target": "export_snapshot",
+      "A_rank": null,
+      "A_god": 0,
+      "B6_rank": null,
+      "B6_god": 0,
+      "B8_rank": null,
+      "B8_god": 0,
+      "C2_rank": null,
+      "C2_god": 0,
+      "C3_rank": null,
+      "C3_god": 0
+    },
+    {
+      "id": "ambiguous_capture_persist",
+      "target": "ingest_hook_payload",
+      "A_rank": null,
+      "A_god": 0,
+      "B6_rank": null,
+      "B6_god": 0,
+      "B8_rank": null,
+      "B8_god": 0,
+      "C2_rank": null,
+      "C2_god": 0,
+      "C3_rank": null,
+      "C3_god": 0
+    },
+    {
+      "id": "ambiguous_tool_contract",
+      "target": "tool_contracts",
+      "A_rank": 1,
+      "A_god": 1,
+      "B6_rank": 1,
+      "B6_god": 1,
+      "B8_rank": 1,
+      "B8_god": 1,
+      "C2_rank": 1,
+      "C2_god": 1,
+      "C3_rank": 1,
+      "C3_god": 1
+    },
+    {
+      "id": "install_hooks",
+      "target": "apply_install_plan",
+      "A_rank": null,
+      "A_god": 1,
+      "B6_rank": null,
+      "B6_god": 1,
+      "B8_rank": 8,
+      "B8_god": 1,
+      "C2_rank": null,
+      "C2_god": 1,
+      "C3_rank": null,
+      "C3_god": 1
+    },
+    {
+      "id": "privacy_redaction",
+      "target": "redact_secrets",
+      "A_rank": 9,
+      "A_god": 0,
+      "B6_rank": 3,
+      "B6_god": 0,
+      "B8_rank": 5,
+      "B8_god": 0,
+      "C2_rank": 9,
+      "C2_god": 0,
+      "C3_rank": 9,
+      "C3_god": 0
+    },
+    {
+      "id": "graph_context_filter",
+      "target": "_filter_answer_grade_nodes",
+      "A_rank": 2,
+      "A_god": 0,
+      "B6_rank": 7,
+      "B6_god": 0,
+      "B8_rank": 3,
+      "B8_god": 0,
+      "C2_rank": 2,
+      "C2_god": 0,
+      "C3_rank": 2,
+      "C3_god": 0
+    },
+    {
+      "id": "memory_search",
+      "target": "memory_search",
+      "A_rank": 2,
+      "A_god": 0,
+      "B6_rank": 2,
+      "B6_god": 0,
+      "B8_rank": 2,
+      "B8_god": 0,
+      "C2_rank": 2,
+      "C2_god": 0,
+      "C3_rank": 2,
+      "C3_god": 0
+    },
+    {
+      "id": "rebuild_indexes",
+      "target": "memory_rebuild_indexes",
+      "A_rank": 1,
+      "A_god": 0,
+      "B6_rank": 1,
+      "B6_god": 0,
+      "B8_rank": 1,
+      "B8_god": 0,
+      "C2_rank": 1,
+      "C2_god": 0,
+      "C3_rank": 1,
+      "C3_god": 0
+    },
+    {
+      "id": "cross_session_graph_builder",
+      "target": "build_compact_session_graph",
+      "A_rank": 1,
+      "A_god": 0,
+      "B6_rank": 1,
+      "B6_god": 0,
+      "B8_rank": 1,
+      "B8_god": 0,
+      "C2_rank": 1,
+      "C2_god": 0,
+      "C3_rank": 1,
+      "C3_god": 0
+    },
+    {
+      "id": "cross_memory_storage_write",
+      "target": "add_memory_unit",
+      "A_rank": 1,
+      "A_god": 0,
+      "B6_rank": 1,
+      "B6_god": 0,
+      "B8_rank": 1,
+      "B8_god": 0,
+      "C2_rank": 1,
+      "C2_god": 0,
+      "C3_rank": 1,
+      "C3_god": 0
+    },
+    {
+      "id": "cross_session_graph_nodes",
+      "target": "_graph_nodes_from_session",
+      "A_rank": 1,
+      "A_god": 0,
+      "B6_rank": 1,
+      "B6_god": 0,
+      "B8_rank": 1,
+      "B8_god": 0,
+      "C2_rank": 1,
+      "C2_god": 0,
+      "C3_rank": 1,
+      "C3_god": 0
+    }
+  ],
+  "summary": {
+    "A:  No diversity (top-k)": {
+      "hit": 10,
+      "god": 2
+    },
+    "B6: MMR lambda=0.6": {
+      "hit": 9,
+      "god": 2
+    },
+    "B8: MMR lambda=0.8": {
+      "hit": 11,
+      "god": 2
+    },
+    "C2: File-dedup max=2": {
+      "hit": 10,
+      "god": 2
+    },
+    "C3: File-dedup max=3": {
+      "hit": 10,
+      "god": 2
+    }
+  }
+}
