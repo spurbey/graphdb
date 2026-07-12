@@ -346,7 +346,37 @@ CO_CHANGE data is still valuable for `explain_coupling` (why do two functions ch
 
 ---
 
-### [Experiment 6 — fill in after running]
+### Experiment 6: MMR vs File-Dedup vs No-Diversity — 2026-07-12
+
+**Change:** Tested diversity mechanisms on top of vector search: no-diversity (top-k), MMR lambda=0.6, MMR lambda=0.8, file-dedup max=2, file-dedup max=3.
+
+**Expected:** No diversity = best (simplest, code functions are all distinct).
+
+**Actual:**
+
+| Mode | HIT@13 | God-nodes |
+|------|--------|-----------|
+| No diversity (top-k) | 10 | 2 |
+| MMR lambda=0.6 | 9 | 2 |
+| **MMR lambda=0.8** | **11** | **2** |
+| File-dedup max=2 | 10 | 2 |
+| File-dedup max=3 | 10 | 2 |
+
+**MMR lambda=0.8 wins (11/13, +1 over baseline).**
+
+Why lambda=0.8 helps: 80% score-weighted, 20% diversity penalty. Acts as a soft tiebreaker — keeps high-scoring functions even when similar to already-selected ones, but breaks ties toward diversity. Recovers `apply_install_plan` (rank 8) and improves `redact_secrets` (9→5).
+
+Why lambda=0.6 hurts: too aggressive — kicks out `ingest_hook_payload` and worsens `_filter_answer_grade_nodes`.
+
+File-dedup: neutral (10/13, same as no-diversity). Not worth adding complexity for no gain.
+
+**Verdict: ADOPT MMR lambda=0.8 on top of vector search.**
+
+Apply this in `igraph_sandbox.py` as the new default for vector-only retrieval mode. The PPR+MMR(0.6) path stays for backward compatibility.
+
+---
+
+### [Experiments complete — architecture settled]
 
 ---
 
