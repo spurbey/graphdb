@@ -292,20 +292,43 @@ Every experiment runs against all 13 queries in `query_rank_eval.json`.
 
 ## Result Log
 
-### [Fill in after each experiment]
+### Experiment 1: BFS vs PPR — 2026-07-12
 
-Format:
-```
-Experiment N: [name]
-Date: 
-Change: 
-Expected: 
-Actual: 
-Queries improved: 
-Queries regressed: 
-Verdict: adopt / revert / investigate
-Next: 
-```
+**Change:** Replaced PPR+MMR with three BFS variants (out, in, both) from top-5 vector seeds, depth=2.
+
+**Expected:** BFS >= PPR (7/13). Expected vector = 7/13 (wrong — actual baseline was 10/13 on this run, query embeddings varied slightly from earlier ablation).
+
+**Actual results:**
+
+| Mode | HIT@13 | God-nodes total |
+|------|--------|-----------------|
+| Vector only | 10/13 | 2 |
+| PPR (current) | 7/13 | 5 |
+| BFS-out 2-hop | 10/13 | 10 |
+| BFS-in 2-hop | 9/13 | 3 |
+| BFS-both 1-hop | 10/13 | 9 |
+
+**Key findings:**
+1. BFS-out: matches vector on HIT@10 but adds 10 god-nodes (append, health_ping, etc.) — following callees leads to generic utilities
+2. BFS-in: cleanest at 3 god-nodes, 9/13 HIT — following callers of the seed is cleaner but misses some queries
+3. BFS-both: 10/13 but 9 god-nodes — same contamination as BFS-out
+4. **Vector alone is already 10/13 with only 2 god-nodes** — BFS matches vector but doesn't improve it
+5. PPR uniquely finds: export_snapshot (rank 9), apply_install_plan (rank 2) — both boundary-of-seed-window cases that k=20 already handles
+6. BFS uniquely finds: ambiguous_capture_persist (BFS-out rank 8, BFS-both rank 10) — because `ingest_hook_payload` is 2 hops out from codex hook functions via CALLS
+
+**Verdict: Don't replace PPR with BFS. Outcome is more nuanced.**
+
+- Vector alone (10/13) is already the best single-mode retrieval
+- BFS-out adds contamination without net improvement
+- BFS-in (9/13) is cleanest but regresses vs vector on some queries
+- PPR adds value for boundary-of-seed-window cases (export_snapshot, apply_install_plan) — but k=20 already handles those
+- The real finding: most queries are already solved by vector. The remaining misses (redact_secrets, _filter_answer_grade_nodes, apply_install_plan, export_snapshot) need different mechanisms — CO_CHANGE bridge for redact_secrets, k=20 for the boundary cases
+
+**Next: Experiment 4 (CO_CHANGE bridges) to handle redact_secrets. Experiment 3 (clustering as BFS boundary) to reduce BFS-out god-node count.**
+
+---
+
+### [Experiment 2 — fill in after running]
 
 ---
 
