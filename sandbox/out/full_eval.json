@@ -1,0 +1,322 @@
+{
+  "task": "Understand AMO memory ingestion pipeline",
+  "condition_A": {
+    "tool_calls": 3,
+    "tokens": 3592,
+    "time": 0.0010936260223388672,
+    "knowledge": {
+      "ingest_grep": [
+        "ingest_basic_record [session.py]",
+        "ingest_transcript [ingest.py]",
+        "ingest_hook_payload [ingest.py]"
+      ],
+      "memory_grep": [
+        "_memory_type_boost [retrieval.py]",
+        "list_memory_units [views.py]",
+        "_graph_memory_fields [views.py]",
+        "memory_write [server.py]",
+        "memory_search [server.py]",
+        "memory_context_pack [server.py]",
+        "memory_metrics [server.py]",
+        "memory_rebuild_indexes [server.py]",
+        "memory_timeline [server.py]",
+        "memory_export [server.py]",
+        "memory_import [server.py]",
+        "extract_memory_candidates [extraction.py]",
+        "classify_memory_type [extraction.py]",
+        "memory_write [tools.py]",
+        "memory_search [tools.py]"
+      ],
+      "ingest_hook_payload_code": "def ingest_hook_payload(self, payload: dict, default_agent: str='codex', *, process: bool=True) -> dict[str, object]:\n    normalized = self.normalize_event_payload(payload, default_agent=default_agent)\n    if normalized is None:\n        return {'event_id': None, 'session_id': payload.get('session_id",
+      "cannot_answer": [
+        "Which functions play the same ROLE as ingest_hook_payload in other modules?",
+        "Why do any of these functions change together historically?",
+        "What is the structural blast radius beyond direct callers?",
+        "Which co-changes are structural_redundant vs shared_commit_only?"
+      ]
+    }
+  },
+  "condition_B": {
+    "tool_calls": 6,
+    "tokens": 720,
+    "time": 2.5727427005767822,
+    "knowledge": {
+      "pipeline_functions": [
+        [
+          "memory_metrics",
+          "server.py",
+          0.457
+        ],
+        [
+          "codex_hook_response",
+          "hooks.py",
+          0.419
+        ],
+        [
+          "ingest_hook_payload",
+          "ingest.py",
+          0.411
+        ],
+        [
+          "memory_import",
+          "tools.py",
+          0.378
+        ],
+        [
+          "_write_kg_for_memory",
+          "storage.py",
+          0.375
+        ],
+        [
+          "memory_rebuild_indexes",
+          "tools.py",
+          0.371
+        ],
+        [
+          "memory_write",
+          "tools.py",
+          0.371
+        ],
+        [
+          "add_memory",
+          "storage.py",
+          0.359
+        ],
+        [
+          "_write_memory_relation_edge",
+          "storage.py",
+          0.359
+        ],
+        [
+          "add_memory_unit",
+          "storage.py",
+          0.358
+        ]
+      ],
+      "pipeline_edges": [
+        [
+          "add_memory_unit",
+          "CALLS",
+          "_write_kg_for_memory"
+        ],
+        [
+          "add_memory",
+          "CALLS",
+          "add_memory_unit"
+        ],
+        [
+          "codex_hook_response",
+          "CALLS",
+          "ingest_hook_payload"
+        ],
+        [
+          "memory_metrics",
+          "IMPORTS",
+          "memory_write"
+        ],
+        [
+          "memory_metrics",
+          "IMPORTS",
+          "memory_rebuild_indexes"
+        ],
+        [
+          "memory_metrics",
+          "IMPORTS",
+          "memory_import"
+        ]
+      ],
+      "structural_siblings": [
+        [
+          "import_codex_sessions",
+          "ingest.py",
+          0.9624
+        ],
+        [
+          "ingest_transcript",
+          "ingest.py",
+          0.9619
+        ],
+        [
+          "generate_session_summary",
+          "summary.py",
+          0.9586
+        ],
+        [
+          "build_context_pack",
+          "retrieval.py",
+          0.9531
+        ],
+        [
+          "main",
+          "cli.py",
+          0.9517
+        ],
+        [
+          "main",
+          "cli.py",
+          0.9433
+        ],
+        [
+          "inspect_metrics",
+          "views.py",
+          0.9318
+        ],
+        [
+          "_codex_hooks_snippet",
+          "cli.py",
+          0.9271
+        ]
+      ],
+      "coupling_relationships": [
+        {
+          "pair": "_vector_candidates <-> ingest_hook_payload",
+          "category": "shared_dependency",
+          "jaccard": 0.75,
+          "count": 3
+        },
+        {
+          "pair": "codex_hook_response <-> ingest_hook_payload",
+          "category": "shared_dependency",
+          "jaccard": 1.0,
+          "count": 3
+        }
+      ],
+      "blast_radius": [
+        [
+          1,
+          "main",
+          "cli.py"
+        ],
+        [
+          1,
+          "codex_hook_response",
+          "service.py"
+        ],
+        [
+          1,
+          "codex_hook_response",
+          "memory_service.py"
+        ],
+        [
+          1,
+          "codex_hook_response",
+          "hooks.py"
+        ]
+      ]
+    }
+  },
+  "intermediate_B": [
+    {
+      "tool": "search_code_semantics",
+      "query": "memory ingestion pipeline hook processing",
+      "time_ms": 1335,
+      "nodes": 10,
+      "edges": 6,
+      "tokens_added": 320,
+      "top_5": [
+        "memory_metrics [server.py] vec=0.457",
+        "codex_hook_response [hooks.py] vec=0.419",
+        "ingest_hook_payload [ingest.py] vec=0.411",
+        "memory_import [tools.py] vec=0.378",
+        "_write_kg_for_memory [storage.py] vec=0.375"
+      ],
+      "target_rank": 3
+    },
+    {
+      "tool": "find_structural_siblings",
+      "anchor": "ingest_hook_payload",
+      "time_ms": 62,
+      "siblings": [
+        [
+          "import_codex_sessions",
+          "ingest.py",
+          0.9624
+        ],
+        [
+          "ingest_transcript",
+          "ingest.py",
+          0.9619
+        ],
+        [
+          "generate_session_summary",
+          "summary.py",
+          0.9586
+        ],
+        [
+          "build_context_pack",
+          "retrieval.py",
+          0.9531
+        ],
+        [
+          "main",
+          "cli.py",
+          0.9517
+        ],
+        [
+          "main",
+          "cli.py",
+          0.9433
+        ],
+        [
+          "inspect_metrics",
+          "views.py",
+          0.9318
+        ],
+        [
+          "_codex_hooks_snippet",
+          "cli.py",
+          0.9271
+        ]
+      ],
+      "insight": "Functions at same architectural depth/role as ingest_hook_payload"
+    },
+    {
+      "tool": "explain_coupling",
+      "anchor": "ingest_hook_payload",
+      "pairs_found": 2,
+      "results": [
+        {
+          "pair": "_vector_candidates <-> ingest_hook_payload",
+          "category": "shared_dependency",
+          "jaccard": 0.75,
+          "count": 3
+        },
+        {
+          "pair": "codex_hook_response <-> ingest_hook_payload",
+          "category": "shared_dependency",
+          "jaccard": 1.0,
+          "count": 3
+        }
+      ],
+      "insight": "Historical co-change patterns \u2014 what must change together"
+    },
+    {
+      "tool": "trace_blast_radius",
+      "anchor": "ingest_hook_payload",
+      "depth": 3,
+      "callers_found": 4,
+      "callers": [
+        [
+          1,
+          "main",
+          "cli.py"
+        ],
+        [
+          1,
+          "codex_hook_response",
+          "service.py"
+        ],
+        [
+          1,
+          "codex_hook_response",
+          "memory_service.py"
+        ],
+        [
+          1,
+          "codex_hook_response",
+          "hooks.py"
+        ]
+      ]
+    }
+  ]
+}
