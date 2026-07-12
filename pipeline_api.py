@@ -131,18 +131,18 @@ def search(
     """
     Natural language search over AMO codebase using the igraph pipeline.
 
-    Default mode: vector + MMR(lambda=0.8) — scores 11/13 HIT on eval set.
-    use_theme_overlay=True: PPR with theme-conditioned CO_CHANGE weights (slower).
+    Default: pure vector top-k (cosine similarity, no diversity penalty).
+    Every function is a distinct entity — MMR is wrong here (revert from
+    Exp 6 which showed 11/13 was a eval-set artifact, not a real improvement).
 
-    Always returns a dict with a "pipeline_mode" field so callers can tell
-    which path was taken:
+    use_theme_overlay=True: PPR with theme-conditioned CO_CHANGE weights.
+
+    Returns dict with pipeline_mode field:
     {
         "pipeline_mode": "igraph" | "unavailable",
-        "query": str,
-        "consumer_mode": str,
-        "nodes": [...],   # present when pipeline_mode == "igraph"
-        "edges": [...],   # present when pipeline_mode == "igraph"
-        "error": str,     # present when pipeline_mode == "unavailable"
+        "query": str, "consumer_mode": str,
+        "nodes": [...], "edges": [...],
+        "error": str  (only when unavailable)
     }
     """
     if not _initialized or _pipeline is None:
@@ -157,19 +157,14 @@ def search(
         query_vec = _embed(prompt)
 
         if use_theme_overlay:
-            # PPR with theme-conditioned CO_CHANGE weights
             selected, ppr_scores, vec_scores = _pipeline.run_cold_discovery(
-                query_vec,
-                top_k_seeds=20,
-                final_k=k,
-                use_theme_overlay=True,
+                query_vec, top_k_seeds=20, final_k=k, use_theme_overlay=True,
             )
         else:
-            # Default: vector + MMR(0.8) — Experiment 6 winner (11/13 HIT)
+            # Pure vector top-k — no diversity penalty, no random walk
+            # Functions are distinct entities; MMR penalizes them incorrectly
             selected, ppr_scores, vec_scores = _pipeline.run_vector_mmr(
-                query_vec,
-                final_k=k,
-                lam=0.8,
+                query_vec, final_k=k, lam=1.0,  # lam=1.0 = pure score, no diversity
             )
 
         result = _pipeline.build_subgraph_output(
@@ -178,10 +173,7 @@ def search(
         result["pipeline_mode"] = "igraph"
         return result
     except Exception as e:
-        return {
-            "pipeline_mode": "unavailable",
-            "error": str(e),
-        }
+        return {"pipeline_mode": "unavailable", "error": str(e)}
     finally:
         os.chdir(original_cwd)
 
