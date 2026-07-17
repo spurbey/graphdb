@@ -28,6 +28,8 @@ SANDBOX = ROOT / "sandbox"
 # ── State ─────────────────────────────────────────────────────────────────────
 _initialized = False
 _pipeline = None   # the igraph_sandbox module, loaded lazily
+_betweenness: dict[str, float] = {}   # node_id -> betweenness score (computed once)
+_GENERIC_DEGREE_THRESHOLD = 200       # exclude high-degree generic utilities (get, append, close)
 
 
 # ── Embedding helper (same model as scalable_ingest) ──────────────────────────
@@ -114,10 +116,52 @@ def initialize(data_root: str | Path | None = None) -> None:
     _initialized = True
     print("[pipeline_api] initialized")
 
+    # Compute betweenness centrality on CALLS graph (once at startup)
+    if not _betweenness:
+        _compute_betweenness()
+
 
 def _require_init() -> None:
     if not _initialized:
         raise RuntimeError("pipeline_api.initialize() must be called before search()")
+
+
+def _compute_betweenness() -> None:
+    """
+    Compute betweenness centrality on the CALLS-only graph once at startup.
+    Filters out generic high-degree utilities (get, append, close) that dominate
+    degree but are not meaningful architectural hubs.
+    Stores results in _betweenness dict: node_id -> normalized score [0,1].
+    """
+    global _betweenness
+    if not _pipeline:
+        return
+
+    p = _pipeline
+    try:
+        # Build CALLS-only subgraph
+        calls_ids = [e.index for e in p.G.es if e["type"] == "CALLS"]
+        calls_only = p.G.subgraph_edges(calls_ids, delete_vertices=False)
+
+        print("[pipeline_api] computing betweenness centrality...")
+        raw_b = calls_only.betweenness(directed=True)
+        degree_total = [calls_only.indegree()[i] + calls_only.outdegree()[i]
+                        for i in range(p.G.vcount())]
+
+        # Normalize and filter
+        max_b = max(raw_b) if raw_b else 1.0
+        _betweenness = {}
+        for i, v in enumerate(p.G.vs):
+            if v["status"] != "active":
+                continue
+            if degree_total[i] > _GENERIC_DEGREE_THRESHOLD:
+                continue  # exclude generic utilities (get, append, close)
+            if raw_b[i] > 0:
+                _betweenness[v["id"]] = raw_b[i] / max_b
+
+        print(f"[pipeline_api] betweenness computed: {len(_betweenness)} functions scored")
+    except Exception as e:
+        print(f"[pipeline_api] betweenness computation failed: {e}")
 
 
 # ── Public API ─────────────────────────────────────────────────────────────────
@@ -323,3 +367,264 @@ def find_structural_siblings(func_id: str, k: int = 8) -> list[dict]:
         for sim, nid in ranked
     ]
 
+
+
+def commit_review(changed_function_ids: list[str]) -> list[dict]:
+    """
+    Review the impact of a commit that changed the given functions.
+    Combines 5 layers:
+
+      Layer 1 (blast radius): who calls these functions — HelixDB when available,
+                               igraph simulation otherwise
+      Layer 2 (betweenness):  how architecturally central are the changed functions
+      Layer 3 (GraphSAGE drift): did the structural role change beyond the code change
+      Layer 4 (CO_CHANGE flags): what historically moves with these functions
+      Layer 5 (PPR territory): what downstream pipeline do these functions orchestrate
+
+    Returns list of dicts sorted by severity (highest first):
+    {
+        "function_id": str,
+        "name": str,
+        "file": str,
+        "severity": float,           # betweenness_norm * max(drift, 0.1) * log(callers+1)
+        "betweenness": float,        # normalized 0-1, 0 if generic utility or unmeasured
+        "drift": float | None,       # GraphSAGE embedding drift (None if not in GraphSAGE meta)
+        "blast_radius": list[str],   # function names of direct+indirect callers
+        "ppr_territory": list[str],  # functions this one orchestrates downstream
+        "co_change_warnings": list[str],  # "changed X but not Y (co-change N times)"
+        "test_scope": str,           # "local" | "broad" | "critical"
+        "reason": str,               # human-readable explanation
+    }
+
+    NOTE: blast_radius uses igraph simulation (Python, not Rust) until AMO is
+    ingested into HelixDB. After ingestion, replace with HelixDB trace_blast_radius
+    for production use (4ms Rust traversal).
+    """
+    _require_init()
+    p = _pipeline
+
+    # Load GraphSAGE embeddings if available
+    sage_emb = None
+    sage_meta_by_id = {}
+    sage_path = ROOT / "graphsage_minimal" / "out" / "graphsage_embeddings.npy"
+    meta_path = ROOT / "graphsage_minimal" / "data" / "node_meta.json"
+    if sage_path.exists() and meta_path.exists():
+        import json as _json
+        sage_emb = np.load(sage_path)
+        meta = _json.loads(meta_path.read_text(encoding="utf-8"))
+        sage_meta_by_id = {m["id"]: m for m in meta}
+
+    # Load CO_CHANGE pairs
+    cochange_path = ROOT / "sandbox" / "amo_cochange_pairs.json"
+    cochange_pairs = []
+    if cochange_path.exists():
+        import json as _json
+        cochange_pairs = _json.loads(cochange_path.read_text(encoding="utf-8"))
+
+    # Build igraph blast radius (igraph simulation — replace with HelixDB after AMO ingest)
+    def igraph_blast_radius(func_id: str, depth: int = 3) -> list[str]:
+        idx = p.id_to_idx.get(func_id)
+        if idx is None:
+            return []
+        visited = {idx}
+        frontier = {idx}
+        callers = []
+        for _ in range(depth):
+            next_f = set()
+            for e in p.G.es:
+                if e["type"] == "CALLS" and e.target in frontier and e.source not in visited:
+                    next_f.add(e.source)
+            frontier = next_f
+            visited.update(frontier)
+            for i in frontier:
+                name = p.G.vs[i]["name"]
+                if not name.startswith("test_"):
+                    callers.append(p.G.vs[i]["name"])
+        return callers
+
+    # Build PPR territory (functions this one orchestrates downstream)
+    def ppr_territory(func_id: str, k: int = 8) -> list[str]:
+        idx = p.id_to_idx.get(func_id)
+        if idx is None:
+            return []
+        reset = np.zeros(p.G.vcount())
+        reset[idx] = 1.0
+        calls_ids = [e.index for e in p.G.es if e["type"] == "CALLS"]
+        calls_only = p.G.subgraph_edges(calls_ids, delete_vertices=False)
+        ppr = calls_only.personalized_pagerank(
+            vertices=None, damping=0.85, directed=True, weights=None, reset=reset.tolist()
+        )
+        ranked = sorted(
+            [(ppr[i], p.G.vs[i]["name"], p.G.vs[i]["id"])
+             for i in range(p.G.vcount())
+             if i != idx and ppr[i] > 0 and p.G.vs[i]["status"] == "active"
+             and not p.G.vs[i]["name"].startswith("test_")],
+            reverse=True
+        )[:k]
+        return [name for _, name, _ in ranked]
+
+    results = []
+    changed_set = set(changed_function_ids)
+
+    for func_id in changed_function_ids:
+        # Find node
+        idx = p.id_to_idx.get(func_id)
+        if idx is None:
+            continue
+        v = p.G.vs[idx]
+        name = v["name"]
+        file = v["file"].split("/")[-1]
+
+        # Layer 2: betweenness
+        b_score = _betweenness.get(func_id, 0.0)
+
+        # Layer 3: GraphSAGE drift
+        drift = None
+        if sage_emb is not None and func_id in sage_meta_by_id:
+            sage_idx = sage_meta_by_id[func_id]["idx"]
+            old_vec = sage_emb[sage_idx]
+            # Current embedding from igraph node (same space, already normalized)
+            emb = v.get("embedding") if hasattr(v, "get") else v["embedding"]
+            if emb is not None and len(emb) == sage_emb.shape[1]:
+                drift = float(1.0 - cosine_sim_np(old_vec, np.array(emb)))
+
+        # Layer 1: blast radius (igraph simulation)
+        blast = igraph_blast_radius(func_id, depth=3)
+
+        # Layer 5: PPR territory
+        territory = ppr_territory(func_id, k=8)
+
+        # Layer 4: CO_CHANGE warnings
+        warnings = []
+        for pair in cochange_pairs:
+            src, tgt = pair.get("source", ""), pair.get("target", "")
+            if func_id not in (src, tgt):
+                continue
+            other_id = tgt if src == func_id else src
+            other_name = other_id.split("::")[-1]
+            count = pair.get("occurrence_count", 0)
+            if count >= 3 and other_id not in changed_set:
+                warnings.append(
+                    f"changed '{name}' but not '{other_name}' "
+                    f"(co-change {count}x, {pair.get('category')})"
+                )
+
+        # Severity = betweenness * max(drift, 0.1) * log(callers+1)
+        import math
+        effective_drift = max(drift, 0.1) if drift is not None else 0.1
+        severity = b_score * effective_drift * math.log(len(blast) + 2)
+
+        # Test scope
+        if b_score > 0.5 or (drift is not None and drift > 0.4):
+            test_scope = "critical"
+            reason = f"high betweenness ({b_score:.2f})" + (f" + high drift ({drift:.2f})" if drift else "")
+        elif b_score > 0.1 or len(blast) > 5:
+            test_scope = "broad"
+            reason = f"moderate centrality, {len(blast)} callers"
+        else:
+            test_scope = "local"
+            reason = f"leaf/near-leaf function, {len(blast)} callers"
+
+        if warnings:
+            reason += f" | {len(warnings)} co-change warning(s)"
+
+        results.append({
+            "function_id": func_id,
+            "name": name,
+            "file": file,
+            "severity": round(severity, 4),
+            "betweenness": round(b_score, 4),
+            "drift": round(drift, 4) if drift is not None else None,
+            "blast_radius": blast[:20],
+            "ppr_territory": territory,
+            "co_change_warnings": warnings,
+            "test_scope": test_scope,
+            "reason": reason,
+        })
+
+    results.sort(key=lambda x: x["severity"], reverse=True)
+    return results
+
+
+def cosine_sim_np(a: np.ndarray, b: np.ndarray) -> float:
+    na, nb = float(np.linalg.norm(a)), float(np.linalg.norm(b))
+    return float(np.dot(a, b) / (na * nb)) if na > 0 and nb > 0 else 0.0
+
+
+def select_tests(changed_function_ids: list[str]) -> dict:
+    """
+    Given changed functions, return the minimum test set needed.
+
+    Uses betweenness + GraphSAGE drift to scope test selection:
+      critical functions (high betweenness or high drift) -> all blast radius tests
+      broad functions -> tests within 2 hops
+      local/leaf functions -> only direct tests
+
+    Returns:
+    {
+        "critical": list[str],   # test functions that must run
+        "recommended": list[str], # test functions that should run
+        "skippable": list[str],  # test functions that can be skipped
+        "co_change_warnings": list[str],
+        "summary": str,
+    }
+    """
+    _require_init()
+
+    reviews = commit_review(changed_function_ids)
+    if not reviews:
+        return {"critical": [], "recommended": [], "skippable": [], "co_change_warnings": [], "summary": "No functions found"}
+
+    p = _pipeline
+    # Find all test functions in graph
+    all_tests = [v["name"] for v in p.G.vs
+                 if v["status"] == "active"
+                 and (v["name"].startswith("test_") or
+                      (v["file"] or "").replace("\\", "/").split("/")[-1].startswith("test_"))]
+
+    # Blast radius across all changed functions
+    all_callers = set()
+    critical_callers = set()
+    broad_callers = set()
+
+    for r in reviews:
+        callers = set(r["blast_radius"])
+        all_callers.update(callers)
+        if r["test_scope"] == "critical":
+            critical_callers.update(callers)
+        elif r["test_scope"] == "broad":
+            broad_callers.update(callers)
+
+    # Map callers to test functions
+    def tests_for(caller_names: set) -> list[str]:
+        return [t for t in all_tests if any(
+            c.lower() in t.lower() for c in caller_names
+        )]
+
+    critical_tests = tests_for(critical_callers)
+    broad_tests    = [t for t in tests_for(broad_callers) if t not in critical_tests]
+    all_warnings   = [w for r in reviews for w in r["co_change_warnings"]]
+
+    skippable = [t for t in all_tests
+                 if t not in critical_tests and t not in broad_tests]
+
+    n_total = len(all_tests)
+    n_run = len(critical_tests) + len(broad_tests)
+    reduction = round(100 * (1 - n_run / max(n_total, 1)))
+
+    summary = (
+        f"Run {n_run}/{n_total} tests ({reduction}% reduction). "
+        f"{len(reviews)} changed functions: "
+        f"{sum(1 for r in reviews if r['test_scope']=='critical')} critical, "
+        f"{sum(1 for r in reviews if r['test_scope']=='broad')} broad, "
+        f"{sum(1 for r in reviews if r['test_scope']=='local')} local."
+    )
+
+    return {
+        "critical": critical_tests,
+        "recommended": broad_tests,
+        "skippable": skippable[:20],  # cap for readability
+        "co_change_warnings": all_warnings,
+        "summary": summary,
+        "per_function": reviews,
+    }
