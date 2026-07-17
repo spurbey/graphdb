@@ -209,6 +209,52 @@ def find_structural_siblings(func_id: str, k: int = 8) -> list[dict]:
     return [{"error": "igraph pipeline unavailable"}]
 
 
+def commit_review(changed_function_ids: list[str]) -> list[dict]:
+    """
+    Review the impact of a commit that changed the given functions.
+    Combines 5 layers: blast radius, betweenness centrality, GraphSAGE drift,
+    CO_CHANGE warnings, and PPR downstream territory.
+
+    Returns list sorted by severity (highest first). Each entry:
+    {
+        "name": str, "file": str, "severity": float,
+        "betweenness": float,       # architectural centrality (0-1)
+        "drift": float | None,      # GraphSAGE structural role change
+        "blast_radius": list[str],  # functions that call this
+        "ppr_territory": list[str], # functions this orchestrates downstream
+        "co_change_warnings": list[str],  # "changed X but not Y"
+        "test_scope": "local" | "broad" | "critical",
+        "reason": str,
+    }
+    """
+    if _ensure_pipeline():
+        try:
+            from pipeline_api import commit_review as _cr
+            return _cr(changed_function_ids)
+        except Exception as e:
+            return [{"error": str(e)}]
+    return [{"error": "igraph pipeline unavailable"}]
+
+
+def select_tests(changed_function_ids: list[str]) -> dict:
+    """
+    Given changed functions, return the minimum test set to run.
+    Uses betweenness + GraphSAGE drift to scope:
+      critical -> all blast radius tests
+      broad -> 2-hop tests
+      local -> direct tests only
+
+    Returns: {critical, recommended, skippable, co_change_warnings, summary}
+    """
+    if _ensure_pipeline():
+        try:
+            from pipeline_api import select_tests as _st
+            return _st(changed_function_ids)
+        except Exception as e:
+            return {"error": str(e)}
+    return {"error": "igraph pipeline unavailable"}
+
+
 # ── Tool 2: Time-travel diff ───────────────────────────────────────────────
 
 _P_NID = define_params({"nid": param.string()})

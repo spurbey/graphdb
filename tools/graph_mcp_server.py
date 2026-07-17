@@ -17,6 +17,8 @@ from tools.graph_tools import (
     explain_coupling,
     pipeline_status,
     find_structural_siblings,
+    commit_review,
+    select_tests,
     get_code_time_travel_diff,
     trace_blast_radius,
     get_temporal_vulnerability_trace,
@@ -134,6 +136,28 @@ MANIFEST = {
             },
         },
         {
+            "name":        "commit_review",
+            "description": "Review commit impact: betweenness centrality, GraphSAGE drift, blast radius, CO_CHANGE warnings, PPR territory. Returns functions sorted by severity with test_scope (critical/broad/local).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "changed_function_ids": {"type": "array", "items": {"type": "string"}, "description": "Full node IDs of changed functions"},
+                },
+                "required": ["changed_function_ids"],
+            },
+        },
+        {
+            "name":        "select_tests",
+            "description": "Return minimum test set for a commit. Uses betweenness + drift to scope: critical/broad/local. Skips structurally-unreachable tests.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "changed_function_ids": {"type": "array", "items": {"type": "string"}, "description": "Full node IDs of changed functions"},
+                },
+                "required": ["changed_function_ids"],
+            },
+        },
+        {
             "name":        "pipeline_status",
             "description": (
                 "Check which search mode is active. "
@@ -148,6 +172,8 @@ MANIFEST = {
         },
         {
             "name":        "find_structural_siblings",
+    "commit_review":                    lambda p: commit_review(p["changed_function_ids"]),
+    "select_tests":                     lambda p: select_tests(p["changed_function_ids"]),
             "description": (
                 "Find functions that play the same architectural role as a given function. "
                 "Uses GraphSAGE structural embeddings — finds functions at the same call depth "
