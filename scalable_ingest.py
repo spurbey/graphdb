@@ -131,6 +131,11 @@ def _ensure_indexes(c):
         IndexSpec.node_vector(K_STATE, "ai_summary_vec")
     ))
     names.append("vec_idx")
+    # vector index on FunctionState.memory_vec for semantic history search
+    batch = batch.var_as("mem_vec_idx", g().create_index_if_not_exists(
+        IndexSpec.node_vector(K_STATE, "memory_vec")
+    ))
+    names.append("mem_vec_idx")
     c.query().dynamic(batch.returning(names).to_dynamic_request()).send()
 
 
@@ -260,6 +265,7 @@ def extract_graph(file_path: str, source: str, commit_hash: str,
             nodes.append({"kind": K_FUNC, "node_id": func_id,
                           "props": {"name": func_name, "file": file_path}})
             _summary = _summarise(code)
+            is_new = func_id not in state_tracker  # True = first time this function appears
             nodes.append({"kind": K_STATE, "node_id": state_id,
                           "props": {
                               "code":            code[:4000],
@@ -268,6 +274,8 @@ def extract_graph(file_path: str, source: str, commit_hash: str,
                               "function_id":     func_id,
                               "ai_summary":      _summary,
                               "ai_summary_vec":  _embed(_summary),
+                              "memory":          "",        # populated by /annotate-commit
+                              "memory_vec":      [0.0] * _EMBED_DIMS,  # zero until annotated
                               "status":          "active",
                           }})
 
@@ -276,6 +284,9 @@ def extract_graph(file_path: str, source: str, commit_hash: str,
             _edge(scope_id,              scope_kind, "CONTAINS",        func_id,  K_FUNC)
             _edge(func_id,               K_FUNC,     "HAS_STATE",       state_id, K_STATE)
             _edge(f"commit_{commit_hash}", K_COMMIT, "GENERATED",       state_id, K_STATE)
+            if is_new:
+                # INTRODUCED: first time this function appears in the repo
+                _edge(f"commit_{commit_hash}", K_COMMIT, "INTRODUCED",  state_id, K_STATE)
 
             if func_id in state_tracker:
                 _edge(state_id, K_STATE, "PREVIOUS_VERSION",
