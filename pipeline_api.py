@@ -628,3 +628,312 @@ def select_tests(changed_function_ids: list[str]) -> dict:
         "summary": summary,
         "per_function": reviews,
     }
+
+
+# ── Sub-agent tools for /annotate-commit ──────────────────────────────────────
+# These four functions are called by the sub-agent during commit annotation.
+# They are also exposed through the MCP server as standalone tools.
+
+def list_functions_changed_in_commit(sha: str) -> list[dict]:
+    """
+    Return functions changed in a commit, with their diffs.
+
+    Uses GitPython to read the commit, tree-sitter to parse changed .py files.
+    Returns list of:
+    {
+        "func_id": str,      # full node ID (file::function_name)
+        "name": str,
+        "file": str,
+        "is_new": bool,      # True if function didn't exist in parent commit
+        "diff_text": str,    # unified diff text for this function only
+        "new_code": str,     # current function code
+        "old_code": str,     # code before this commit (empty if new)
+    }
+    """
+    try:
+        import git
+        import re
+        from pathlib import Path as _Path
+
+        repo_path = ROOT / ".."/  "agent-memory-orchestrator"
+        if not repo_path.exists():
+            # fallback to current repo
+            repo_path = ROOT
+
+        repo = git.Repo(str(repo_path))
+        commit = repo.commit(sha)
+        parent = commit.parents[0] if commit.parents else None
+
+        results = []
+        changed_files = []
+        if parent:
+            for diff in parent.diff(commit):
+                path = diff.b_path or diff.a_path
+                if path and path.endswith(".py"):
+                    changed_files.append(path)
+        else:
+            for item in commit.tree.traverse():
+                if hasattr(item, "path") and item.path.endswith(".py"):
+                    changed_files.append(item.path)
+
+        import tree_sitter_python as _tspy
+        from tree_sitter import Language as _Lang, Parser as _Parser
+        _py = _Lang(_tspy.language(), "python")
+        _p = _Parser(); _p.set_language(_py)
+
+        def _extract_functions(source: str, file_path: str) -> dict[str, str]:
+            """Return {func_name: code} for all functions in source."""
+            src = source.encode("utf-8")
+            tree = _p.parse(src)
+            fns = {}
+            def walk(node):
+                if node.type in ("function_definition", "decorated_definition"):
+                    fn = node if node.type == "function_definition" else node.child_by_field_name("definition")
+                    if fn:
+                        nm = fn.child_by_field_name("name")
+                        if nm:
+                            name = src[nm.start_byte:nm.end_byte].decode("utf-8")
+                            code = src[fn.start_byte:fn.end_byte].decode("utf-8")
+                            fns[name] = code
+                for child in node.children:
+                    walk(child)
+            walk(tree.root_node)
+            return fns
+
+        for file_path in changed_files:
+            try:
+                new_blob = commit.tree / file_path
+                new_src = new_blob.data_stream.read().decode("utf-8", errors="replace")
+                new_fns = _extract_functions(new_src, file_path)
+            except KeyError:
+                new_fns = {}
+
+            try:
+                old_blob = (parent.tree / file_path) if parent else None
+                old_src = old_blob.data_stream.read().decode("utf-8", errors="replace") if old_blob else ""
+                old_fns = _extract_functions(old_src, file_path)
+            except KeyError:
+                old_fns = {}
+
+            safe = file_path.replace("/", "_").replace("\\", "_").replace(".py", "")
+
+            for func_name, new_code in new_fns.items():
+                old_code = old_fns.get(func_name, "")
+                if new_code == old_code:
+                    continue  # unchanged
+                is_new = func_name not in old_fns
+                func_id = f"{file_path}::{func_name}"
+
+                # Build simple diff text
+                import difflib
+                diff_lines = list(difflib.unified_diff(
+                    old_code.splitlines(keepends=True),
+                    new_code.splitlines(keepends=True),
+                    fromfile=f"a/{file_path}",
+                    tofile=f"b/{file_path}",
+                    n=3,
+                ))
+                diff_text = "".join(diff_lines)[:3000]
+
+                results.append({
+                    "func_id": func_id,
+                    "name": func_name,
+                    "file": file_path,
+                    "is_new": is_new,
+                    "diff_text": diff_text,
+                    "new_code": new_code[:2000],
+                    "old_code": old_code[:2000],
+                })
+
+        return results
+
+    except Exception as e:
+        return [{"error": str(e)}]
+
+
+def read_function_memory_history(func_id: str) -> list[dict]:
+    """
+    Return all annotated memories for a function, newest first.
+
+    Queries HelixDB for FunctionState nodes for this function,
+    returns only those with non-empty memory fields.
+
+    Returns list of:
+    {
+        "state_id": str,
+        "commit_sha": str,
+        "memory": str,
+        "edge_type": str,   # REDESIGNED / FIXED / EXTENDED / REFACTORED / INTRODUCED
+    }
+    Returns empty list if no memories exist yet.
+    """
+    try:
+        from helixdb import Client as _Client, g as _g, read_batch as _rb, Predicate as _Pred, Projection as _Proj, define_params as _dp, param as _p
+        c = _Client("http://127.0.0.1:6969")
+        batch = (
+            _rb()
+            .var_as("states",
+                _g().n_with_label("FunctionState")
+                   .where(_Pred.eq("function_id", func_id))
+                   .where(_Pred.is_not_null("memory"))
+                   .project([
+                       _Proj.property("node_id"),
+                       _Proj.property("commit"),
+                       _Proj.property("memory"),
+                   ])
+            )
+            .returning(["states"])
+        )
+        result = c.query().dynamic(batch.to_dynamic_request()).send()
+        states = result.get("states", {}).get("properties", [])
+        memories = [s for s in states if s.get("memory")]
+        return memories
+    except Exception as e:
+        return [{"error": str(e)}]
+
+
+_ALLOWED_EDGE_TYPES = {"REDESIGNED", "FIXED", "EXTENDED", "REFACTORED"}
+
+def write_function_memory(
+    func_id: str,
+    commit_sha: str,
+    edge_type: str,
+    memory_text: str,
+) -> dict:
+    """
+    Write an LLM-derived memory note to a FunctionState node.
+
+    Validates edge_type is one of: REDESIGNED / FIXED / EXTENDED / REFACTORED
+    Embeds memory_text to get memory_vec.
+    Updates FunctionState in HelixDB: memory + memory_vec fields.
+    Creates typed edge from Commit to FunctionState.
+
+    Returns:
+    {
+        "ok": bool,
+        "func_id": str,
+        "state_id": str,    # the FunctionState node that was updated
+        "edge_type": str,
+        "error": str | None,
+    }
+    """
+    if edge_type not in _ALLOWED_EDGE_TYPES:
+        return {
+            "ok": False, "func_id": func_id, "state_id": None,
+            "edge_type": edge_type,
+            "error": f"Invalid edge_type '{edge_type}'. Must be one of: {sorted(_ALLOWED_EDGE_TYPES)}"
+        }
+
+    if not memory_text or not memory_text.strip():
+        return {"ok": False, "func_id": func_id, "state_id": None,
+                "edge_type": edge_type, "error": "memory_text cannot be empty"}
+
+    # Find the FunctionState node for this function at this commit
+    # state_id convention: state_{safe_file}_{func_name}_{commit_hash7}
+    # But func_id is "file::name", so we need to query HelixDB
+    try:
+        from helixdb import Client as _Client, g as _g, write_batch as _wb, read_batch as _rb
+        from helixdb import Predicate as _Pred, Projection as _Proj, PropertyInput as _PI, PropertyValue as _PV
+        from helixdb import define_params as _dp, param as _p, NodeRef as _NR
+
+        c = _Client("http://127.0.0.1:6969")
+
+        # Find the FunctionState for this function + commit
+        batch = (
+            _rb()
+            .var_as("state",
+                _g().n_with_label("FunctionState")
+                   .where(_Pred.eq("function_id", func_id))
+                   .where(_Pred.eq("commit", commit_sha[:7]))
+                   .project([_Proj.property("node_id")])
+            )
+            .returning(["state"])
+        )
+        result = c.query().dynamic(batch.to_dynamic_request()).send()
+        states = result.get("state", {}).get("properties", [])
+        if not states:
+            return {"ok": False, "func_id": func_id, "state_id": None,
+                    "edge_type": edge_type,
+                    "error": f"No FunctionState found for {func_id} at commit {commit_sha[:7]}"}
+
+        state_id = states[0]["node_id"]
+
+        # Embed the memory text
+        memory_vec = _embed(memory_text)
+
+        # Write memory and memory_vec to FunctionState
+        _PARAMS = _dp({"nid": _p.string(), "mem": _p.string()})
+        update_batch = (
+            _wb()
+            .var_as("n",
+                _g().n_with_label("FunctionState")
+                   .where(_Pred.eq_param("node_id", "nid"))
+                   .set_property("memory", _PI.param("mem"))
+            )
+            .returning(["n"])
+        )
+        c.query().dynamic(
+            update_batch.to_dynamic_request(_PARAMS, {"nid": state_id, "mem": memory_text})
+        ).send()
+
+        # Write memory_vec
+        _PARAMS_VEC = _dp({"nid": _p.string()})
+        vec_batch = (
+            _wb()
+            .var_as("n",
+                _g().n_with_label("FunctionState")
+                   .where(_Pred.eq_param("node_id", "nid"))
+                   .set_property("memory_vec", _PI.value(_PV.f32_array(memory_vec)))
+            )
+            .returning(["n"])
+        )
+        c.query().dynamic(
+            vec_batch.to_dynamic_request(_PARAMS_VEC, {"nid": state_id})
+        ).send()
+
+        # Create typed edge from Commit to FunctionState
+        commit_id = f"commit_{commit_sha[:7]}"
+        _EDGE_PARAMS = _dp({"src_id": _p.string(), "tgt_id": _p.string()})
+        edge_batch = (
+            _wb()
+            .var_as("src", _g().n_with_label("Commit").where(_Pred.eq_param("node_id", "src_id")))
+            .var_as("tgt", _g().n_with_label("FunctionState").where(_Pred.eq_param("node_id", "tgt_id")))
+            .var_as("e", _g().n(_NR.var("src")).add_e(edge_type, _NR.var("tgt"), {}))
+            .returning(["e"])
+        )
+        c.query().dynamic(
+            edge_batch.to_dynamic_request(_EDGE_PARAMS, {"src_id": commit_id, "tgt_id": state_id})
+        ).send()
+
+        return {"ok": True, "func_id": func_id, "state_id": state_id,
+                "edge_type": edge_type, "error": None}
+
+    except Exception as e:
+        return {"ok": False, "func_id": func_id, "state_id": None,
+                "edge_type": edge_type, "error": str(e)}
+
+
+def log_new_cooccurrence(func_id_a: str, func_id_b: str, commit_sha: str) -> None:
+    """
+    Log a co-occurrence of two functions in a commit as a candidate CO_CHANGE pair.
+
+    Does NOT promote to CO_CHANGE. The existing cochange_analysis.py gate
+    (occurrence_count >= 3 AND jaccard >= 0.20) handles promotion on next full run.
+
+    Appends to sandbox/cooccurrence_candidates.jsonl.
+    """
+    import json as _json
+    from datetime import datetime, timezone
+
+    candidates_path = ROOT / "sandbox" / "cooccurrence_candidates.jsonl"
+    entry = {
+        "source": func_id_a,
+        "target": func_id_b,
+        "commit": commit_sha,
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    }
+    try:
+        with open(candidates_path, "a", encoding="utf-8") as f:
+            f.write(_json.dumps(entry) + "\n")
+    except Exception as e:
+        print(f"[pipeline_api] log_new_cooccurrence failed: {e}")
