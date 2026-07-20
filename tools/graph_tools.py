@@ -255,6 +255,58 @@ def select_tests(changed_function_ids: list[str]) -> dict:
     return {"error": "igraph pipeline unavailable"}
 
 
+def annotate_commit(sha: str, debug: bool = False) -> dict:
+    """
+    Annotate the semantic memory of functions changed in a commit.
+
+    Triggered by /annotate-commit slash command. Reads diffs, calls LLM
+    with skills/annotate_commit_prompt.md, writes memory + typed edges
+    (REDESIGNED/FIXED/EXTENDED/REFACTORED) to HelixDB.
+
+    sha: commit hash (full or short)
+    debug: if True, writes JSON log to sandbox/out/annotate_commit_{sha}.json
+
+    Returns: {sha, annotated: [{func_id, edge_type, memory}],
+              skipped: [{func_id, reason}], errors: [...],
+              cooccurrence_candidates: int}
+    """
+    if _ensure_pipeline():
+        try:
+            from pipeline_api import annotate_commit as _ac
+            return _ac(sha, debug=debug)
+        except Exception as e:
+            return {"sha": sha, "annotated": [], "skipped": [],
+                    "errors": [{"func_id": "global", "error": str(e)}],
+                    "cooccurrence_candidates": 0}
+    return {"sha": sha, "annotated": [], "skipped": [],
+            "errors": [{"func_id": "global", "error": "igraph pipeline unavailable"}],
+            "cooccurrence_candidates": 0}
+
+
+def query_function_history(func_id: str, topic: str) -> list[dict]:
+    """
+    Search a function's semantic memory history by topic.
+
+    Vector search on memory_vec across ALL FunctionState nodes for this function
+    (including superseded states — full design history). Returns memories ranked
+    by relevance to topic with commit SHA, edge type, and similarity score.
+
+    Use before modifying a function to understand its design decisions.
+
+    func_id: full node ID e.g.
+      'src/agent_memory_orchestrator/memory/ingest.py::ingest_hook_payload'
+    topic: natural language query e.g.
+      'session handling and agent normalization'
+    """
+    if _ensure_pipeline():
+        try:
+            from pipeline_api import query_function_history as _qfh
+            return _qfh(func_id, topic)
+        except Exception as e:
+            return [{"error": str(e)}]
+    return [{"error": "igraph pipeline unavailable"}]
+
+
 # ── Tool 2: Time-travel diff ───────────────────────────────────────────────
 
 _P_NID = define_params({"nid": param.string()})

@@ -937,3 +937,230 @@ def log_new_cooccurrence(func_id_a: str, func_id_b: str, commit_sha: str) -> Non
             f.write(_json.dumps(entry) + "\n")
     except Exception as e:
         print(f"[pipeline_api] log_new_cooccurrence failed: {e}")
+
+
+def annotate_commit(sha: str, debug: bool = False) -> dict:
+    """
+    Annotate the semantic memory of functions changed in a commit.
+
+    For each meaningfully changed function:
+    1. Reads the diff and commit message
+    2. Reads prior memory history for context
+    3. Calls LLM (with system prompt from skills/annotate_commit_prompt.md)
+       to decide: skip (trivial) or classify + write memory
+    4. Writes memory + typed edge to HelixDB via write_function_memory()
+    5. Logs unknown co-occurring pairs to sandbox/cooccurrence_candidates.jsonl
+
+    Returns:
+    {
+        "sha": str,
+        "annotated": [{"func_id", "edge_type", "memory"}],
+        "skipped": [{"func_id", "reason"}],
+        "errors": [{"func_id", "error"}],
+        "cooccurrence_candidates": int,
+    }
+
+    debug=True: writes full JSON log to sandbox/out/annotate_commit_{sha[:12]}.json
+    """
+    result = {
+        "sha": sha,
+        "annotated": [],
+        "skipped": [],
+        "errors": [],
+        "cooccurrence_candidates": 0,
+    }
+
+    # Load system prompt
+    prompt_path = ROOT / "skills" / "annotate_commit_prompt.md"
+    if not prompt_path.exists():
+        result["errors"].append({"func_id": "global", "error": "skills/annotate_commit_prompt.md not found"})
+        return result
+
+    system_prompt = prompt_path.read_text(encoding="utf-8")
+
+    # Step 1: get changed functions
+    changed = list_functions_changed_in_commit(sha)
+    if not changed:
+        result["skipped"].append({"func_id": "global", "reason": "no Python functions changed"})
+        return result
+    if changed and "error" in changed[0]:
+        result["errors"].append({"func_id": "global", "error": changed[0]["error"]})
+        return result
+
+    # Track annotated func_ids for co-occurrence logging
+    annotated_ids = []
+    known_cochange_ids = set()
+    try:
+        import json as _json
+        pairs_path = ROOT / "sandbox" / "amo_cochange_pairs.json"
+        if pairs_path.exists():
+            pairs = _json.loads(pairs_path.read_text(encoding="utf-8"))
+            for p in pairs:
+                known_cochange_ids.add((p.get("source",""), p.get("target","")))
+                known_cochange_ids.add((p.get("target",""), p.get("source","")))
+    except Exception:
+        pass
+
+    for func in changed:
+        func_id = func.get("func_id", "")
+        func_name = func.get("name", "")
+        is_new = func.get("is_new", False)
+
+        # Skip new functions — INTRODUCED edge created automatically by scalable_ingest
+        if is_new:
+            result["skipped"].append({"func_id": func_id, "reason": "new function (INTRODUCED edge created automatically)"})
+            continue
+
+        # Step 2: read prior history for context
+        history = read_function_memory_history(func_id)
+        prior_context = ""
+        if history and "error" not in history[0]:
+            prior_context = "\n".join(
+                f"- {h.get('edge_type','?')}: {h.get('memory','')}" for h in history[:3]
+            )
+
+        # Step 3: call LLM
+        user_prompt = f"""DRY-RUN MODE: Do not call any tools. Reply with ONLY a JSON object.
+
+Commit SHA: {sha[:12]}
+Function: {func_name} (file: {func.get('file','?')})
+
+Commit message:
+{func.get('diff_text','')[:100].split(chr(10))[0] if func.get('diff_text') else 'No message'}
+
+Diff:
+{func.get('diff_text','')[:2000]}
+
+Prior memory history (most recent first):
+{prior_context if prior_context else '(none — first annotation)'}
+
+Reply with ONLY this JSON (no other text):
+{{"skip": false, "edge_type": "REDESIGNED|FIXED|EXTENDED|REFACTORED", "memory": "1-2 sentences: what changed and why"}}
+OR if trivial:
+{{"skip": true, "skip_reason": "brief reason"}}"""
+
+        try:
+            import json as _json
+            import urllib.request as _req
+
+            payload = _json.dumps({
+                "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+                "messages": [
+                    {"role": "system", "content": system_prompt[:3000]},
+                    {"role": "user", "content": user_prompt},
+                ],
+                "max_tokens": 200,
+                "temperature": 0,
+            }).encode()
+
+            request = _req.Request(
+                "https://openrouter.ai/api/v1/chat/completions",
+                data=payload,
+                headers={"Authorization": f"Bearer {_API_KEY}", "Content-Type": "application/json"},
+            )
+            response = _json.loads(_req.urlopen(request, timeout=30).read())
+            raw = response["choices"][0]["message"]["content"].strip()
+
+            # Parse JSON from response
+            import re as _re
+            json_match = _re.search(r'\{[^{}]+\}', raw, _re.DOTALL)
+            if not json_match:
+                result["errors"].append({"func_id": func_id, "error": f"No JSON in response: {raw[:100]}"})
+                continue
+
+            decision = _json.loads(json_match.group())
+
+            if decision.get("skip"):
+                result["skipped"].append({"func_id": func_id, "reason": decision.get("skip_reason", "trivial")})
+                continue
+
+            edge_type = decision.get("edge_type", "")
+            memory_text = decision.get("memory", "")
+
+            if edge_type not in _ALLOWED_EDGE_TYPES:
+                result["errors"].append({"func_id": func_id, "error": f"Invalid edge_type from LLM: {edge_type}"})
+                continue
+
+            if not memory_text.strip():
+                result["errors"].append({"func_id": func_id, "error": "Empty memory from LLM"})
+                continue
+
+            # Step 4: write to HelixDB
+            write_result = write_function_memory(func_id, sha, edge_type, memory_text)
+            if write_result.get("ok"):
+                result["annotated"].append({
+                    "func_id": func_id,
+                    "edge_type": edge_type,
+                    "memory": memory_text,
+                })
+                annotated_ids.append(func_id)
+            else:
+                result["errors"].append({"func_id": func_id, "error": write_result.get("error", "write failed")})
+
+        except Exception as e:
+            result["errors"].append({"func_id": func_id, "error": str(e)})
+
+    # Step 5: log unknown co-occurring pairs
+    for i, id_a in enumerate(annotated_ids):
+        for id_b in annotated_ids[i+1:]:
+            pair = (id_a, id_b)
+            if pair not in known_cochange_ids and (id_b, id_a) not in known_cochange_ids:
+                log_new_cooccurrence(id_a, id_b, sha)
+                result["cooccurrence_candidates"] += 1
+
+    # Step 6: debug log
+    if debug:
+        import json as _json
+        out_dir = ROOT / "sandbox" / "out"
+        out_dir.mkdir(parents=True, exist_ok=True)
+        out_path = out_dir / f"annotate_commit_{sha[:12]}.json"
+        out_path.write_text(_json.dumps({
+            "sha": sha,
+            "changed_functions": changed,
+            "result": result,
+        }, indent=2), encoding="utf-8")
+
+    return result
+
+
+def query_function_history(func_id: str, topic: str) -> list[dict]:
+    """
+    Search a function's semantic memory history by topic.
+
+    Vector search on memory_vec across ALL FunctionState nodes for this function
+    (not just active — includes superseded states).
+
+    Returns memories ranked by relevance to topic, newest-first within top results.
+    Each entry: {state_id, commit_sha, memory, edge_type, score}
+
+    Use before modifying a function to understand its design history.
+    """
+    memories = read_function_memory_history(func_id)
+    if not memories or (memories and "error" in memories[0]):
+        return memories
+
+    if not topic or not topic.strip():
+        return memories  # return all if no topic
+
+    # Embed the topic
+    topic_vec = _embed(topic)
+    topic_norm = float(np.linalg.norm(topic_vec))
+    if topic_norm < 1e-8:
+        return memories
+
+    # Score each memory by cosine similarity
+    scored = []
+    for m in memories:
+        memory_text = m.get("memory", "")
+        if not memory_text:
+            continue
+        mem_vec = _embed(memory_text)
+        mem_norm = float(np.linalg.norm(mem_vec))
+        if mem_norm < 1e-8:
+            score = 0.0
+        else:
+            score = float(np.dot(topic_vec, mem_vec) / (topic_norm * mem_norm))
+        scored.append({**m, "score": round(score, 4)})
+
+    scored.sort(key=lambda x: x["score"], reverse=True)
+    return scored

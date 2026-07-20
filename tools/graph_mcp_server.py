@@ -19,6 +19,8 @@ from tools.graph_tools import (
     find_structural_siblings,
     commit_review,
     select_tests,
+    annotate_commit,
+    query_function_history,
     get_code_time_travel_diff,
     trace_blast_radius,
     get_temporal_vulnerability_trace,
@@ -158,6 +160,30 @@ MANIFEST = {
             },
         },
         {
+            "name":        "annotate_commit",
+            "description": "Annotate semantic memory for functions changed in a commit. Reads diffs, classifies change type (REDESIGNED/FIXED/EXTENDED/REFACTORED), writes memory notes. Triggered by /annotate-commit slash command.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "sha":   {"type": "string",  "description": "Commit hash (full or short, defaults to HEAD)"},
+                    "debug": {"type": "boolean", "description": "Write JSON log to sandbox/out/ (default false)", "default": False},
+                },
+                "required": ["sha"],
+            },
+        },
+        {
+            "name":        "query_function_history",
+            "description": "Search a function's semantic memory history by topic. Vector search on memory_vec across ALL historical states. Use before modifying a function to understand design decisions.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "func_id": {"type": "string", "description": "Full node ID e.g. 'src/.../ingest.py::ingest_hook_payload'"},
+                    "topic":   {"type": "string", "description": "Natural language query e.g. 'session handling'"},
+                },
+                "required": ["func_id", "topic"],
+            },
+        },
+        {
             "name":        "pipeline_status",
             "description": (
                 "Check which search mode is active. "
@@ -203,6 +229,9 @@ TOOL_MAP = {
     "trace_blast_radius":               lambda p: trace_blast_radius(p["function_identity_id"], p.get("depth", 3)),
     "get_temporal_vulnerability_trace": lambda p: get_temporal_vulnerability_trace(p["target_func"], p["timestamp_iso"]),
     "edit_code":                        lambda p: edit_code(p["file"], p["function_name"], p["new_code"]),
+    "annotate_commit":                  lambda p: annotate_commit(p["sha"], p.get("debug", False)),
+    "query_function_history":           lambda p: query_function_history(p["func_id"], p.get("topic", "")),
+
 }
 
 
