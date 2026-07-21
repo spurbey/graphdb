@@ -753,10 +753,10 @@ def list_functions_changed_in_commit(sha: str) -> list[dict]:
 
 def read_function_memory_history(func_id: str) -> list[dict]:
     """
-    Return all annotated memories for a function, newest first.
+    Return all annotated memories for a function.
 
-    Queries HelixDB for FunctionState nodes for this function,
-    returns only those with non-empty memory fields.
+    Only returns states where memory is non-empty (annotation has been written).
+    Fetches edge_type by querying incoming edges on each state.
 
     Returns list of:
     {
@@ -770,12 +770,13 @@ def read_function_memory_history(func_id: str) -> list[dict]:
     try:
         from helixdb import Client as _Client, g as _g, read_batch as _rb, Predicate as _Pred, Projection as _Proj, define_params as _dp, param as _p
         c = _Client("http://127.0.0.1:6969")
+
+        # Fetch all FunctionState nodes for this function
         batch = (
             _rb()
             .var_as("states",
                 _g().n_with_label("FunctionState")
                    .where(_Pred.eq("function_id", func_id))
-                   .where(_Pred.is_not_null("memory"))
                    .project([
                        _Proj.property("node_id"),
                        _Proj.property("commit"),
@@ -786,8 +787,59 @@ def read_function_memory_history(func_id: str) -> list[dict]:
         )
         result = c.query().dynamic(batch.to_dynamic_request()).send()
         states = result.get("states", {}).get("properties", [])
-        memories = [s for s in states if s.get("memory")]
-        return memories
+
+        # Bug 1 fix: filter in Python — HelixDB treats "" as non-null,
+        # so is_not_null() would pass every unannotated state (memory="").
+        # Only keep states where memory is actually populated.
+        annotated = [s for s in states if s.get("memory") and s.get("memory").strip()]
+
+        if not annotated:
+            return []
+
+        # Bug 2 fix: fetch edge_type per state via incoming edge traversal.
+        # edge_type lives on the Commit->FunctionState edge, not on the node.
+        _SEMANTIC_EDGES = {"REDESIGNED", "FIXED", "EXTENDED", "REFACTORED", "INTRODUCED"}
+        _PARAMS_ET = _dp({"nid": _p.string()})
+        results = []
+        for s in annotated:
+            state_id = s.get("node_id", "")
+            edge_type = "GENERATED"  # default if no semantic edge found
+
+            try:
+                et_batch = (
+                    _rb()
+                    .var_as("incoming",
+                        _g().n_with_label("FunctionState")
+                           .where(_Pred.eq_param("node_id", "nid"))
+                           .in_e()
+                           .project([_Proj.property("label")])
+                    )
+                    .returning(["incoming"])
+                )
+                et_result = c.query().dynamic(
+                    et_batch.to_dynamic_request(_PARAMS_ET, {"nid": state_id})
+                ).send()
+                edge_labels = [
+                    e.get("label", "")
+                    for e in et_result.get("incoming", {}).get("properties", [])
+                ]
+                # Prefer semantic edge over GENERATED
+                for preferred in ("REDESIGNED", "FIXED", "EXTENDED", "REFACTORED", "INTRODUCED"):
+                    if preferred in edge_labels:
+                        edge_type = preferred
+                        break
+            except Exception:
+                pass  # edge_type stays as "GENERATED"
+
+            results.append({
+                "state_id": state_id,
+                "commit_sha": s.get("commit", ""),
+                "memory": s.get("memory", ""),
+                "edge_type": edge_type,
+            })
+
+        return results
+
     except Exception as e:
         return [{"error": str(e)}]
 
