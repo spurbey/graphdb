@@ -243,13 +243,38 @@ def explain_coupling(func_id_a: str, func_id_b: str) -> dict | None:
         eid = p.G.get_eid(src, tgt, directed=True, error=False)
         if eid != -1 and p.G.es[eid]["type"] == "CO_CHANGE":
             e = p.G.es[eid]
-            return {
+            result = {
                 "source": func_id_a,
                 "target": func_id_b,
                 "category": e["category"],
                 "co_change_count": e["co_change_count"],
                 "theme_proportions": e["theme_proportions"],
             }
+            
+            # Phase 7 enhancement: Find recent co-annotation
+            try:
+                mem_a = read_function_memory_history(func_id_a)
+                mem_b = read_function_memory_history(func_id_b)
+                if mem_a and mem_b and "error" not in mem_a[0] and "error" not in mem_b[0]:
+                    commits_a = {m["commit_sha"]: m for m in mem_a}
+                    commits_b = {m["commit_sha"]: m for m in mem_b}
+                    common_shas = set(commits_a.keys()) & set(commits_b.keys())
+                    if common_shas:
+                        def get_ts(sha):
+                            c_idx = p.id_to_idx.get(f"commit_{sha[:7]}")
+                            return p.G.vs[c_idx].get("timestamp", "") if c_idx is not None else ""
+                        newest_sha = max(common_shas, key=get_ts)
+                        result["recent_co_annotation"] = {
+                            "commit": newest_sha,
+                            "memory_a": commits_a[newest_sha]["memory"],
+                            "memory_b": commits_b[newest_sha]["memory"],
+                            "edge_type_a": commits_a[newest_sha]["edge_type"],
+                            "edge_type_b": commits_b[newest_sha]["edge_type"],
+                        }
+            except Exception:
+                pass
+            
+            return result
     return None
 
 
@@ -528,6 +553,40 @@ def commit_review(changed_function_ids: list[str]) -> list[dict]:
         if warnings:
             reason += f" | {len(warnings)} co-change warning(s)"
 
+        # Phase 7 enhancement: prior_memory
+        prior_memory = None
+        try:
+            mems = read_function_memory_history(func_id)
+            if mems and "error" not in mems[0]:
+                def get_ts(m):
+                    c_idx = p.id_to_idx.get(f"commit_{m['commit_sha'][:7]}")
+                    return p.G.vs[c_idx].get("timestamp", "") if c_idx is not None else ""
+                newest = max(mems, key=get_ts)
+                
+                days_ago = 0
+                ts = get_ts(newest)
+                if ts:
+                    from datetime import datetime, timezone
+                    try:
+                        # Handle potential Z suffix for UTC
+                        dt = datetime.fromisoformat(ts.replace("Z", "+00:00"))
+                        # Calculate days ago relative to now
+                        now = datetime.now(dt.tzinfo or timezone.utc)
+                        if dt.tzinfo is None:
+                            dt = dt.replace(tzinfo=timezone.utc)
+                        days_ago = (now - dt).days
+                    except Exception:
+                        pass
+
+                prior_memory = {
+                    "memory": newest["memory"],
+                    "edge_type": newest["edge_type"],
+                    "commit": newest["commit_sha"][:7],
+                    "days_ago": days_ago
+                }
+        except Exception:
+            pass
+
         results.append({
             "function_id": func_id,
             "name": name,
@@ -540,6 +599,7 @@ def commit_review(changed_function_ids: list[str]) -> list[dict]:
             "co_change_warnings": warnings,
             "test_scope": test_scope,
             "reason": reason,
+            "prior_memory": prior_memory,
         })
 
     results.sort(key=lambda x: x["severity"], reverse=True)
