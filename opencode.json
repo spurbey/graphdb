@@ -1,0 +1,11 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "graphdb": {
+      "type": "local",
+      "command": ["python", "mcp_stdio_bridge.py"],
+      "enabled": true,
+      "timeout": 120000
+    }
+  }
+}

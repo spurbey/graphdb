@@ -19,7 +19,9 @@ import hashlib
 import json
 import os
 import re
+import time
 import git
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import tree_sitter_python as tspython
 from tree_sitter import Language, Parser
 from helixdb import (
@@ -233,12 +235,14 @@ def _nid(template: str, *args) -> str:
     return f"{REPO_NAME}:{template.format(*args)}"
 
 
-def extract_graph(file_path: str, source: str, commit_hash: str,
-                  state_tracker: dict, func_registry: dict,
-                  edge_seen: set):
+def _parse_file(file_path: str, source: str, commit_hash: str,
+                prev_state_tracker: dict, prev_func_registry: dict,
+                prev_edge_seen: set):
     """
-    Return (nodes, edges) for one file at one commit.
-    edge_seen: global set of (from_id, label, to_id) to deduplicate CONTAINS edges.
+    Parse one file at one commit. Does NOT mutate the passed-in dicts/sets.
+    Returns (nodes, edges, local_state_updates, local_registry_updates, local_edge_keys).
+    local_state_updates: dict func_id -> state_id for functions defined in this file.
+    local_edge_keys: set of (from, label, to) for edges created in this file.
     """
     src  = source.encode("utf-8")
     tree = _parser.parse(src)
@@ -250,10 +254,20 @@ def extract_graph(file_path: str, source: str, commit_hash: str,
 
     nodes.append({"kind": K_FILE, "node_id": file_id, "props": {"file": file_path}})
 
+    # Local mutable state for this file
+    local_state_tracker = {}
+    local_func_registry = {}
+    local_edge_seen = set()
+
+    def _eff_func_registry():
+        r = dict(prev_func_registry)
+        r.update(local_func_registry)
+        return r
+
     def _edge(frm, frm_kind, lbl, to, to_kind):
         key = (frm, lbl, to)
-        if key not in edge_seen:
-            edge_seen.add(key)
+        if key not in prev_edge_seen and key not in local_edge_seen:
+            local_edge_seen.add(key)
             edges.append({"from": frm, "from_kind": frm_kind,
                           "label": lbl, "to": to, "to_kind": to_kind})
 
@@ -285,8 +299,10 @@ def extract_graph(file_path: str, source: str, commit_hash: str,
                 return
             cls_name = _text(name_node, src)
             cls_id   = _nid("class_{}_{}", safe, cls_name)
+            cls_code = _text(node, src)
             nodes.append({"kind": K_CLASS, "node_id": cls_id,
-                          "props": {"name": cls_name, "file": file_path}})
+                          "props": {"name": cls_name, "file": file_path,
+                                    "_embed_text": cls_code[:2000]}})
             _edge(scope_id, scope_kind, "CONTAINS", cls_id, K_CLASS)
 
             bases = node.child_by_field_name("superclasses")
@@ -314,9 +330,10 @@ def extract_graph(file_path: str, source: str, commit_hash: str,
             code      = _text(fn_node, src)
 
             nodes.append({"kind": K_FUNC, "node_id": func_id,
-                          "props": {"name": func_name, "file": file_path}})
+                          "props": {"name": func_name, "file": file_path,
+                                    "_embed_text": code[:2000]}})
             _summary = _summarise(code)
-            is_new = func_id not in state_tracker  # True = first time this function appears
+            is_new = func_id not in prev_state_tracker and func_id not in local_state_tracker
             nodes.append({"kind": K_STATE, "node_id": state_id,
                           "props": {
                               "code":            code[:4000],
@@ -324,13 +341,12 @@ def extract_graph(file_path: str, source: str, commit_hash: str,
                               "commit":          commit_hash,
                               "function_id":     func_id,
                               "ai_summary":      _summary,
-                              "ai_summary_vec":  _embed(_summary),
-                              "memory":          "",        # populated by /annotate-commit
-                              "memory_vec":      [0.0] * _EMBED_DIMS,  # zero until annotated
+                              "memory":          "",
+                              "memory_vec":      [0.0] * _EMBED_DIMS,
                               "status":          "active",
                           }})
 
-            func_registry[func_name] = func_id
+            local_func_registry[func_name] = func_id
 
             _edge(scope_id,              scope_kind, "CONTAINS",        func_id,  K_FUNC)
             _edge(func_id,               K_FUNC,     "HAS_STATE",       state_id, K_STATE)
@@ -338,20 +354,23 @@ def extract_graph(file_path: str, source: str, commit_hash: str,
             if is_new:
                 _edge(_nid("commit_{}", commit_hash), K_COMMIT, "INTRODUCED",  state_id, K_STATE)
 
-            if func_id in state_tracker:
+            # PREVIOUS_VERSION: check both prev and local state_tracker
+            if func_id in prev_state_tracker:
                 _edge(state_id, K_STATE, "PREVIOUS_VERSION",
-                      state_tracker[func_id], K_STATE)
-            state_tracker[func_id] = state_id
-            _latest_state[func_id] = state_id  # track HEAD state per function
+                      prev_state_tracker[func_id], K_STATE)
+            elif func_id in local_state_tracker:
+                _edge(state_id, K_STATE, "PREVIOUS_VERSION",
+                      local_state_tracker[func_id], K_STATE)
+            local_state_tracker[func_id] = state_id
 
             def collect_calls(n):
                 if n.type == "call":
                     fn_field = n.child_by_field_name("function")
                     if fn_field:
                         callee    = _text(fn_field, src).split("(")[0].split(".")[-1]
-                        if callee in func_registry:
-                            _edge(func_id, K_FUNC, "CALLS",
-                                  func_registry[callee], K_FUNC)
+                        resolved = local_func_registry.get(callee) or prev_func_registry.get(callee)
+                        if resolved:
+                            _edge(func_id, K_FUNC, "CALLS", resolved, K_FUNC)
                 for child in n.children:
                     collect_calls(child)
 
@@ -363,7 +382,7 @@ def extract_graph(file_path: str, source: str, commit_hash: str,
                 walk(child, scope_id=scope_id, scope_kind=scope_kind)
 
     walk(root)
-    return nodes, edges
+    return nodes, edges, local_state_tracker, local_func_registry, local_edge_seen
 
 
 # ── main ingestion loop ───────────────────────────────────────────────────────
@@ -422,20 +441,44 @@ def run_ingestion():
                                      "label": "NEXT_COMMIT", "to": commit_id, "to_kind": K_COMMIT})
         prev_commit_id = commit_id
 
-        for file_path in py_files:
-            print(f"  -> {file_path}")
-            try:
-                blob   = commit.tree / file_path
-                source = blob.data_stream.read().decode("utf-8")
-                nodes, edges = extract_graph(
-                    file_path, source, h,
-                    state_tracker, func_registry, edge_seen
-                )
-                master_nodes.extend(nodes)
-                master_edges.extend(edges)
+        # Snapshot global state for this commit's parallel parse
+        state_snapshot = dict(state_tracker)
+        reg_snapshot   = dict(func_registry)
+        edge_snapshot  = set(edge_seen)
+        file_count     = len(py_files)
 
-            except (KeyError, SyntaxError) as ex:
-                print(f"  -> skip ({ex})")
+        if file_count == 0:
+            continue
+
+        with ThreadPoolExecutor(max_workers=min(8, file_count)) as executor:
+            futures = {}
+            for file_path in py_files:
+                try:
+                    blob   = commit.tree / file_path
+                    source = blob.data_stream.read().decode("utf-8")
+                    fut = executor.submit(
+                        _parse_file, file_path, source, h,
+                        state_snapshot, reg_snapshot, edge_snapshot
+                    )
+                    futures[fut] = file_path
+                except (KeyError, SyntaxError) as ex:
+                    print(f"  -> skip ({ex})")
+
+            for future in as_completed(futures):
+                file_path = futures[future]
+                try:
+                    n_nodes, n_edges, loc_tracker, loc_registry, loc_edges = future.result()
+                    master_nodes.extend(n_nodes)
+                    for e in n_edges:
+                        key = (e["from"], e["label"], e["to"])
+                        if key not in edge_seen:
+                            edge_seen.add(key)
+                            master_edges.append(e)
+                    state_tracker.update(loc_tracker)
+                    _latest_state.update(loc_tracker)
+                    func_registry.update(loc_registry)
+                except Exception as ex:
+                    print(f"  -> skip ({ex})")
 
     # ── Mark superseded states ────────────────────────────────────────────────
     head_ids = set(_latest_state.values())
