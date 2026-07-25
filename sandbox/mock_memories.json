@@ -1,0 +1,147 @@
+[
+  {
+    "function_id": "src/agent_memory_orchestrator/cleaning.py::clean_event_text",
+    "history": [
+      {
+        "commit_sha": "eca9f17",
+        "edge_type": "EXTENDED",
+        "memory": "Added _normalize_structured_tool_text call to extract readable text from structured MCP tool JSON payloads before IDE context stripping, preventing raw invocation/result JSON from leaking into cleaned event text."
+      }
+    ]
+  },
+  {
+    "function_id": "src/agent_memory_orchestrator/cleaning.py::should_promote_to_memory",
+    "history": [
+      {
+        "commit_sha": "eca9f17",
+        "edge_type": "EXTENDED",
+        "memory": "Added _looks_like_user_question heuristic to suppress non-durable user questions; structured tool results from reference tools (fetch_openai_doc, web.run, search_query) now promoted while empty structured results are skipped. Part of retrieval quality hardening alongside changes in classify_memory_type and _noise_penalty."
+      }
+    ]
+  },
+  {
+    "function_id": "src/agent_memory_orchestrator/context_pack.py::_pack_sort_key",
+    "history": [
+      {
+        "commit_sha": "eca9f17",
+        "edge_type": "FIXED",
+        "memory": "Changed sort tuple from (type_order, -score, -confidence) to (-score, type_order, -confidence) so context packs are ordered by retrieval score first, not by memory type. Fixed bug where high-scoring fix/summary results were buried under less relevant decision-type memories."
+      }
+    ]
+  },
+  {
+    "function_id": "src/agent_memory_orchestrator/context_pack.py::_pre_budget_exclusion",
+    "history": [
+      {
+        "commit_sha": "eca9f17",
+        "edge_type": "EXTENDED",
+        "memory": "Added exclusion for IDE context noise markers ('Context from my IDE setup', 'Open tabs:', 'Active file:') and raw tool JSON patterns (call_id + invocation + result) to prevent low-quality noise from consuming context budget. Also added _looks_like_raw_tool_json helper."
+      }
+    ]
+  },
+  {
+    "function_id": "src/agent_memory_orchestrator/extraction.py::classify_memory_type",
+    "history": [
+      {
+        "commit_sha": "eca9f17",
+        "edge_type": "EXTENDED",
+        "memory": "Added _is_reference_tool_text detection for structured MCP tool results classified as 'reference' type, user question suppression returning ('none', 'vague') for non-durable questions, and IDE context noise suppression to prevent IDE setup pastes from becoming durable decisions. Extended alongside CONFIDENCE_BY_SIGNAL, _predicate_for, and _importance."
+      }
+    ]
+  },
+  {
+    "function_id": "src/agent_memory_orchestrator/memory/retrieval.py::_noise_penalty",
+    "history": [
+      {
+        "commit_sha": "eca9f17",
+        "edge_type": "EXTENDED",
+        "memory": "Increased IDE context noise penalty from 0.12 to 0.18, added raw tool JSON penalty of 0.18 when summary contains call_id+invocation+result, and added untitled9.md/temp_result.txt penalty of 0.08 for decision/observation types. Further suppresses low-quality candidates during ranking."
+      },
+      {
+        "commit_sha": "da80013",
+        "edge_type": "REFACTORED",
+        "memory": "Extracted from memory_service.py module-level scope into memory/retrieval.py as a standalone function. Logic unchanged."
+      }
+    ]
+  },
+  {
+    "function_id": "src/agent_memory_orchestrator/memory/service.py::MemoryService.ingest_hook_payload",
+    "history": [
+      {
+        "commit_sha": "8351639",
+        "edge_type": "EXTENDED",
+        "memory": "Added process parameter (default True) decoupling hook capture from hot-path chunking/extraction/consolidation; when process=False the event is stored without chunking or memory generation, enabling the capture-only hook flow that stays under Codex timeout."
+      },
+      {
+        "commit_sha": "6f9d6c6",
+        "edge_type": "REFACTORED",
+        "memory": "Moved from memory_service.py to memory/service.py as part of packaging MemoryService into the memory sub-package. Import paths updated. Logic unchanged."
+      }
+    ]
+  },
+  {
+    "function_id": "src/agent_memory_orchestrator/memory/service.py::MemoryService.codex_hook_response",
+    "history": [
+      {
+        "commit_sha": "8351639",
+        "edge_type": "REDESIGNED",
+        "memory": "Changed from synchronous ingest+respond to capture-only flow: ingest_hook_payload now called with process=False wrapped in try/except fail-open. Previously called ingest_hook_payload synchronously before building the response; now stores raw evidence immediately and defers chunking/extraction/embeddings/consolidation to background daemon. Hooks must stay under Codex's prompt-submission timeout."
+      },
+      {
+        "commit_sha": "6f9d6c6",
+        "edge_type": "REFACTORED",
+        "memory": "Moved from memory_service.py to memory/service.py as part of MemoryService package restructuring. No behavioral change."
+      }
+    ]
+  },
+  {
+    "function_id": "src/agent_memory_orchestrator/memory/retrieval.py::MemoryRetrievalMixin._vector_candidates",
+    "history": [
+      {
+        "commit_sha": "8351639",
+        "edge_type": "EXTENDED",
+        "memory": "Added early return [] when self.settings.vector_backend == 'disabled' to support Kuzu GraphRAG deployments that disable legacy SQLite vector search, preventing unnecessary embedding computation and FAISS cache lookup."
+      },
+      {
+        "commit_sha": "da80013",
+        "edge_type": "REFACTORED",
+        "memory": "Extracted from MemoryService into MemoryRetrievalMixin in memory/retrieval.py alongside search_memories, _bm25_candidates, _filter_vector_candidates, _kg_candidates, _materialize_results, _update_retrieval_run_config, and build_context_pack. Observable behavior unchanged."
+      }
+    ]
+  },
+  {
+    "function_id": "src/agent_memory_orchestrator/memory/retrieval.py::MemoryRetrievalMixin.search_memories",
+    "history": [
+      {
+        "commit_sha": "6f9d6c6",
+        "edge_type": "REFACTORED",
+        "memory": "Moved from memory_service.py to memory/service.py as part of MemoryService package restructuring."
+      },
+      {
+        "commit_sha": "da80013",
+        "edge_type": "REFACTORED",
+        "memory": "Extracted from MemoryService into MemoryRetrievalMixin in memory/retrieval.py. Retrieval orchestration logic (query understanding, pool-based candidate retrieval from bm25/vector/kg sources, RRF fusion, reranking, materialization) now lives in a dedicated mixin class. No behavioral change."
+      }
+    ]
+  },
+  {
+    "function_id": "src/agent_memory_orchestrator/memory/common.py::utc_now",
+    "history": [
+      {
+        "commit_sha": "da80013",
+        "edge_type": "REFACTORED",
+        "memory": "Extracted from memory_service.py local scope into memory/common.py alongside new_id, stable_json, elapsed_ms, and preview. Shared utility functions centralized to avoid duplication between MemoryService and MemoryRetrievalMixin."
+      }
+    ]
+  },
+  {
+    "function_id": "src/agent_memory_orchestrator/memory/retrieval.py::_ranking_policy",
+    "history": [
+      {
+        "commit_sha": "da80013",
+        "edge_type": "REFACTORED",
+        "memory": "Extracted from memory_service.py module-level scope into memory/retrieval.py alongside _ranking_terms, _memory_type_boost, _quality_boost, _exact_match_boost, _noise_penalty, _clamp, _looks_like_retrieval_meta_noise, _looks_like_test_artifact_noise, and _fts_query. Retrieved ranking heuristics consolidated with the mixin that calls them."
+      }
+    ]
+  }
+]

@@ -1,0 +1,159 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700;800&display=swap');
+
+:root {
+  --color-bg: #ffffff; 
+  --color-fg: #112432; /* Deep Navy from o-scs */
+  --color-muted: rgba(17, 36, 50, 0.6);
+  --color-accent-orange: #f05f43; 
+  --color-accent-teal: #277793; 
+  --font-heading: 'Inter', sans-serif;
+  --font-body: 'Inter', sans-serif;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-body);
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+/* Webflow-style Structure */
+.main-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.section-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.section-sticky {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background-color: var(--color-bg);
+}
+
+.spacer-150vh { height: 150vh; }
+.spacer-200vh { height: 200vh; }
+
+/* Typography */
+.heading-massive {
+  font-family: var(--font-heading);
+  font-size: clamp(4rem, 10vw, 9rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-align: center;
+  line-height: 0.95;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+.heading-h2 {
+  font-family: var(--font-heading);
+  font-size: clamp(3rem, 6vw, 5rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  margin-bottom: 1rem;
+}
+
+.subtitle-center {
+  font-size: clamp(1.2rem, 2vw, 1.8rem);
+  color: var(--color-muted);
+  max-width: 600px;
+  text-align: center;
+  margin-top: 2rem;
+  line-height: 1.5;
+}
+
+/* Stat Grid */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4rem;
+  width: 80%;
+  max-width: 1200px;
+}
+
+.stat-item {
+  text-align: left;
+}
+
+.stat-num {
+  font-size: clamp(4rem, 8vw, 7rem);
+  font-weight: 800;
+  color: var(--color-accent-orange);
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 1rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--color-fg);
+  margin-top: 1rem;
+  letter-spacing: 0.1em;
+}
+
+/* Feature List */
+.feature-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6rem;
+  width: 80%;
+  max-width: 900px;
+}
+
+.feature-item {
+  border-left: 2px solid var(--color-accent-teal);
+  padding-left: 2rem;
+}
+
+.feature-title {
+  font-size: 2.5rem;
+  font-weight: 800;
+  margin-bottom: 1rem;
+  text-transform: uppercase;
+}
+
+.feature-desc {
+  font-size: 1.25rem;
+  color: var(--color-muted);
+  line-height: 1.6;
+}
+
+/* GSAP Animation Classes */
+.clip-text {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
+}
+.clip-text-inner {
+  transform: translateY(100%);
+}
+
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  padding: 2rem 5%;
+  display: flex;
+  justify-content: space-between;
+  z-index: 100;
+  mix-blend-mode: multiply;
+}
+
+.logo {
+  font-weight: 800;
+  font-size: 1.5rem;
+  letter-spacing: 0.05em;
+  color: var(--color-fg);
+}
