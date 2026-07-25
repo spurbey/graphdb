@@ -21,8 +21,8 @@ import os
 import re
 import time
 import git
-from concurrent.futures import ThreadPoolExecutor, as_completed
 import tree_sitter_python as tspython
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from tree_sitter import Language, Parser
 from helixdb import (
     Client, g, write_batch, read_batch,
@@ -85,6 +85,8 @@ ALL_NODE_KINDS = (K_COMMIT, K_FILE, K_FUNC, K_CLASS, K_STATE)
 
 # tracks func_id -> latest state_id so we can flip status at end
 _latest_state: dict[str, str] = {}
+
+_EDGE_PARAMS = define_params({"src_id": param.string(), "tgt_id": param.string()})
 
 _SKIP_FILES = {"scalable_ingest.py", "semantic_pass.py", "dump_viz.py",
                "level_1_parser.py", "ingestion_process.txt",
@@ -384,8 +386,22 @@ def _parse_file(file_path: str, source: str, commit_hash: str,
     walk(root)
     return nodes, edges, local_state_tracker, local_func_registry, local_edge_seen
 
-
 # ── main ingestion loop ───────────────────────────────────────────────────────
+
+def _resolve_embeddings(nodes: list[dict]):
+    embed_list = []
+    for n in nodes:
+        p = n["props"]
+        if "_embed_text" in p:
+            embed_list.append((n, "code_vec", p.pop("_embed_text")))
+    if not embed_list:
+        return
+    texts = [t for _, _, t in embed_list]
+    print(f"  Embedding {len(texts)} texts...")
+    vecs = _embed_batch(texts)
+    for (n, field, _), vec in zip(embed_list, vecs):
+        n["props"][field] = vec
+
 
 def run_ingestion():
     repo = git.Repo(REPO_PATH)
@@ -406,6 +422,7 @@ def run_ingestion():
     prev_commit_id = None
 
     print(f"Starting ingestion ({len(commits)} commits)...\n")
+    t_start = time.time()
 
     for commit in commits:
         h      = commit.hexsha[:7]
@@ -480,14 +497,24 @@ def run_ingestion():
                 except Exception as ex:
                     print(f"  -> skip ({ex})")
 
+    t_parse = time.time()
+    print(f"\nParsed {len(master_nodes)} nodes, {len(master_edges)} edges in {t_parse - t_start:.1f}s.")
+
+    # ── Resolve embeddings in batch ──────────────────────────────────────────
+    _resolve_embeddings(master_nodes)
+    print("  Embeddings done.")
+
     # ── Mark superseded states ────────────────────────────────────────────────
     head_ids = set(_latest_state.values())
+    func_state_count = 0
     for n in master_nodes:
         if n["kind"] != K_STATE:
             continue
-        n["props"]["status"] = "active" if n["node_id"] in head_ids else "superseded"
+        func_state_count += 1
+        sid = n["node_id"]
+        n["props"]["status"] = "active" if sid in head_ids else "superseded"
 
-    print(f"\nParsed {len(master_nodes)} nodes, {len(master_edges)} edges.")
+    print(f"  Status: {len(head_ids)} active, {func_state_count - len(head_ids)} superseded.")
 
     # ── Batch-write to HelixDB ──────────────────────────────────────────────
     print("Writing to HelixDB...")
@@ -500,10 +527,16 @@ def run_ingestion():
     bw.flush_edges()
     bw._flush_turbovec()
 
-    func_state_count = sum(1 for n in master_nodes if n["kind"] == K_STATE)
-    print(f"  Status: {len(head_ids)} active, {func_state_count - len(head_ids)} superseded.")
+    t_write = time.time()
+    print(f"  HelixDB write done in {t_write - t_parse:.1f}s.")
 
     # ── JSON artefacts ────────────────────────────────────────────────────────
+    for n in master_nodes:
+        n["props"].pop("_embed_text", None)
+        for k in list(n["props"].keys()):
+            if isinstance(n["props"][k], list) and k.endswith("_vec"):
+                n["props"][k] = f"[{len(n['props'][k])} floats]"
+
     with open("graph_payload.json", "w") as f:
         json.dump(
             {"nodes": [{"type": n["kind"], "id": n["node_id"], **n["props"]}
@@ -521,8 +554,8 @@ def run_ingestion():
             "id":       n["node_id"],
             "kind":     n["kind"],
             "label":    label[:60],
-            "summary":  p.get("ai_summary") or p.get("ai_rationale") or p.get("code", "")[:200],
-            "status":   "active",
+            "summary":  p.get("ai_summary") or p.get("ai_rationale") or str(p.get("code", ""))[:200],
+            "status":   p.get("status", "active"),
             "metadata": p,
         })
     viz_edges = [{"source": e["from"], "target": e["to"], "kind": e["label"]}
@@ -530,7 +563,7 @@ def run_ingestion():
     with open("graph_viz.json", "w") as f:
         json.dump({"nodes": viz_nodes, "edges": viz_edges}, f, indent=2)
 
-    print("Written graph_payload.json + graph_viz.json")
+    print(f"Written graph_payload.json + graph_viz.json ({time.time() - t_start:.1f}s total).")
 
 
 if __name__ == "__main__":
