@@ -17,6 +17,7 @@ Schema (flattened):
 
 import hashlib
 import json
+import os
 import re
 import git
 import tree_sitter_python as tspython
@@ -28,6 +29,9 @@ from helixdb import (
 )
 
 REPO_PATH = "."
+REPO_BRANCH = os.environ.get("REPO_BRANCH", "master")
+REPO_NAME = os.environ.get("REPO_NAME", os.path.basename(os.path.abspath(REPO_PATH)))
+MAX_COMMITS = int(os.environ.get("MAX_COMMITS", "0"))
 HELIX_URL = "http://127.0.0.1:6969"
 
 # ── Local embedding (sentence-transformers) ───────────────────────────────────
@@ -159,6 +163,10 @@ def _text(node, src: bytes) -> str:
 def _code_hash(code: str) -> str:
     return hashlib.sha1(code.encode()).hexdigest()[:12]
 
+def _nid(template: str, *args) -> str:
+    """Create a node ID prefixed with repo name to avoid cross-repo collisions."""
+    return f"{REPO_NAME}:{template.format(*args)}"
+
 
 def extract_graph(file_path: str, source: str, commit_hash: str,
                   state_tracker: dict, func_registry: dict,
@@ -173,7 +181,7 @@ def extract_graph(file_path: str, source: str, commit_hash: str,
     safe = file_path.replace("/", "_").replace("\\", "_").replace(".py", "")
 
     nodes, edges = [], []
-    file_id = f"file_{safe}"
+    file_id = _nid("file_{}", safe)
 
     nodes.append({"kind": K_FILE, "node_id": file_id, "props": {"file": file_path}})
 
@@ -184,14 +192,14 @@ def extract_graph(file_path: str, source: str, commit_hash: str,
             edges.append({"from": frm, "from_kind": frm_kind,
                           "label": lbl, "to": to, "to_kind": to_kind})
 
-    _edge(f"commit_{commit_hash}", K_COMMIT, "CONTAINS", file_id, K_FILE)
+    _edge(_nid("commit_{}", commit_hash), K_COMMIT, "CONTAINS", file_id, K_FILE)
 
     # ── imports ──────────────────────────────────────────────────────────────
     for node in root.children:
         if node.type == "import_statement":
             for name_node in node.children_by_field_name("name"):
                 mod    = _text(name_node, src).split(".")[0]
-                mod_id = f"file_{mod}"
+                mod_id = _nid("file_{}", mod)
                 nodes.append({"kind": K_FILE, "node_id": mod_id,
                                "props": {"file": mod, "external": "true"}})
                 _edge(file_id, K_FILE, "IMPORTS", mod_id, K_FILE)
@@ -199,7 +207,7 @@ def extract_graph(file_path: str, source: str, commit_hash: str,
             mod_node = node.child_by_field_name("module_name")
             if mod_node:
                 mod    = _text(mod_node, src).split(".")[0]
-                mod_id = f"file_{mod}"
+                mod_id = _nid("file_{}", mod)
                 nodes.append({"kind": K_FILE, "node_id": mod_id,
                                "props": {"file": mod, "external": "true"}})
                 _edge(file_id, K_FILE, "IMPORTS", mod_id, K_FILE)
@@ -211,7 +219,7 @@ def extract_graph(file_path: str, source: str, commit_hash: str,
             if not name_node:
                 return
             cls_name = _text(name_node, src)
-            cls_id   = f"class_{safe}_{cls_name}"
+            cls_id   = _nid("class_{}_{}", safe, cls_name)
             nodes.append({"kind": K_CLASS, "node_id": cls_id,
                           "props": {"name": cls_name, "file": file_path}})
             _edge(scope_id, scope_kind, "CONTAINS", cls_id, K_CLASS)
@@ -221,7 +229,7 @@ def extract_graph(file_path: str, source: str, commit_hash: str,
                 for base in bases.children:
                     if base.type == "identifier":
                         base_name = _text(base, src)
-                        base_id   = f"class_{safe}_{base_name}"
+                        base_id   = _nid("class_{}_{}", safe, base_name)
                         _edge(cls_id, K_CLASS, "INHERITS", base_id, K_CLASS)
 
             for child in node.children:
@@ -236,8 +244,8 @@ def extract_graph(file_path: str, source: str, commit_hash: str,
             if not name_node:
                 return
             func_name = _text(name_node, src)
-            func_id   = f"func_{safe}_{func_name}"
-            state_id  = f"state_{safe}_{func_name}_{commit_hash}"
+            func_id   = _nid("func_{}_{}", safe, func_name)
+            state_id  = _nid("state_{}_{}_{}", safe, func_name, commit_hash)
             code      = _text(fn_node, src)
 
             nodes.append({"kind": K_FUNC, "node_id": func_id,
@@ -261,10 +269,9 @@ def extract_graph(file_path: str, source: str, commit_hash: str,
 
             _edge(scope_id,              scope_kind, "CONTAINS",        func_id,  K_FUNC)
             _edge(func_id,               K_FUNC,     "HAS_STATE",       state_id, K_STATE)
-            _edge(f"commit_{commit_hash}", K_COMMIT, "GENERATED",       state_id, K_STATE)
+            _edge(_nid("commit_{}", commit_hash), K_COMMIT, "GENERATED",       state_id, K_STATE)
             if is_new:
-                # INTRODUCED: first time this function appears in the repo
-                _edge(f"commit_{commit_hash}", K_COMMIT, "INTRODUCED",  state_id, K_STATE)
+                _edge(_nid("commit_{}", commit_hash), K_COMMIT, "INTRODUCED",  state_id, K_STATE)
 
             if func_id in state_tracker:
                 _edge(state_id, K_STATE, "PREVIOUS_VERSION",
@@ -303,8 +310,10 @@ def run_ingestion():
     print("Ensuring HelixDB indexes...")
     _ensure_indexes(c)
 
-    commits = list(repo.iter_commits("master"))
+    commits = list(repo.iter_commits(REPO_BRANCH))
     commits.reverse()
+    if MAX_COMMITS > 0:
+        commits = commits[:MAX_COMMITS]
 
     master_nodes, master_edges = [], []
     state_tracker  = {}
@@ -312,7 +321,7 @@ def run_ingestion():
     edge_seen      = set()   # global dedup for CONTAINS + structural edges
     prev_commit_id = None
 
-    print("Starting ingestion...\n")
+    print(f"Starting ingestion ({len(commits)} commits)...\n")
 
     for commit in commits:
         h      = commit.hexsha[:7]
@@ -326,7 +335,7 @@ def run_ingestion():
         py_files = [f for f in changed_files
                     if f.endswith(".py") and f.split("/")[-1] not in _SKIP_FILES]
 
-        commit_id   = f"commit_{h}"
+        commit_id   = _nid("commit_{}", h)
         commit_node = {
             "kind":    K_COMMIT,
             "node_id": commit_id,
