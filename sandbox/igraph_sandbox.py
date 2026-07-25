@@ -34,6 +34,14 @@ ROOT = Path(__file__).resolve().parents[1]
 QUERY_FEATURE_MEAN: np.ndarray | None = None
 EMBEDDING_SPACE = "raw_openrouter"
 
+# ── Graph state (set by load_graph below) ─────────────────────────────────────
+G = None
+id_to_idx: dict[str, int] = {}
+nodes_data: list[dict] = []
+edges_data: list[dict] = []
+_calls_degrees: list[int] = []
+_calls_max: int = 1
+
 
 def has_nonzero_embedding(values) -> bool:
     return bool(values) and any(abs(float(value)) > 1e-12 for value in values)
@@ -60,123 +68,275 @@ def load_graphsage_feature_fallback(nodes: list[dict]) -> tuple[dict[str, np.nda
     feature_mean = data["feature_mean"].astype(np.float32)
     return {node_id: x[idx] for idx, node_id in enumerate(meta_ids)}, feature_mean, "graphsage_centered"
 
-# ── Load data ─────────────────────────────────────────────────────────────────
-print("Loading graph data...")
-with open("sandbox/amo_nodes.json", encoding="utf-8") as f:
-    nodes_data = json.load(f)
-with open("sandbox/amo_edges.json", encoding="utf-8") as f:
-    edges_data = json.load(f)
 
-print(f"  {len(nodes_data)} nodes, {len(edges_data)} edges")
+def load_graph(source: str = "files", data_root: str | Path | None = None,
+               helix_url: str = "http://127.0.0.1:6969",
+               payload_path: str | Path | None = None) -> bool:
+    """
+    Load graph data and run Infomap. Call once at server startup.
+    
+    source:
+      "files"    — read sandbox/amo_nodes.json + sandbox/amo_edges.json
+      "helixdb"  — query HelixDB for FunctionIdentity+FunctionState,
+                   read graph_payload.json for edges
+    
+    Returns True on success, False on failure.
+    """
+    global G, id_to_idx, nodes_data, edges_data
+    global QUERY_FEATURE_MEAN, EMBEDDING_SPACE
 
-# Only keep edges where both endpoints exist (sanity check)
-node_id_set = {n["id"] for n in nodes_data}
-edges_data = [e for e in edges_data if e["source"] in node_id_set and e["target"] in node_id_set]
-print(f"  {len(edges_data)} edges after endpoint validation")
-
-# ── Build igraph ──────────────────────────────────────────────────────────────
-print("Building igraph instance...")
-G = ig.Graph(directed=True)
-
-node_ids = [n["id"] for n in nodes_data]
-G.add_vertices(len(node_ids))
-id_to_idx = {nid: i for i, nid in enumerate(node_ids)}
-reused_features, QUERY_FEATURE_MEAN, EMBEDDING_SPACE = load_graphsage_feature_fallback(nodes_data)
-if EMBEDDING_SPACE == "graphsage_centered":
-    print(f"  Reusing GraphSAGE feature matrix for {len(reused_features)} active embeddings")
-elif EMBEDDING_SPACE != "raw_openrouter":
-    print(f"  No reusable GraphSAGE feature fallback: {EMBEDDING_SPACE}")
-
-for i, n in enumerate(nodes_data):
-    G.vs[i]["id"]           = n["id"]
-    G.vs[i]["file"]         = n["file"]
-    G.vs[i]["name"]         = n["name"]
-    G.vs[i]["text_summary"] = n.get("text_summary", "")
-    G.vs[i]["status"]       = n.get("status", "superseded")
-    emb = n.get("embedding", [])
-    if has_nonzero_embedding(emb):
-        G.vs[i]["embedding"] = np.array(emb, dtype=np.float32)
-    elif n["id"] in reused_features:
-        G.vs[i]["embedding"] = reused_features[n["id"]]
+    if source == "helixdb":
+        ok = _load_from_helixdb(helix_url, payload_path or (Path.cwd() / "graph_payload.json"))
     else:
-        G.vs[i]["embedding"] = None
+        ok = _load_from_files(data_root or ROOT)
 
-edge_tuples = [(id_to_idx[e["source"]], id_to_idx[e["target"]]) for e in edges_data]
-G.add_edges(edge_tuples)
-for i, e in enumerate(edges_data):
-    G.es[i]["type"]             = e["type"]
-    G.es[i]["co_change_count"]  = e.get("co_change_count", 0)
-    G.es[i]["category"]         = e.get("category", "")
-    G.es[i]["ast_relation_type"] = e.get("ast_relation_type", "unknown")
-    G.es[i]["theme_proportions"] = e.get("theme_proportions", {})
+    if not ok:
+        return False
 
-print(f"  Graph: {G.vcount()} vertices, {G.ecount()} edges")
-
-# ── Phase 0a: Infomap — run once at startup with fixed seed ──────────────────
-# community_infomap() is non-deterministic. Fix randomness before the call so
-# community assignments are stable across runs. Hoist out of per-query loop.
-print("Running Infomap community detection (fixed seed=42)...")
-_random.seed(42)
-np.random.seed(42)
-calls_edge_ids = [e.index for e in G.es if e["type"] == "CALLS"]
-calls_only = G.subgraph_edges(calls_edge_ids, delete_vertices=False)
-_communities = calls_only.community_infomap()
-for _i, _c in enumerate(_communities.membership):
-    G.vs[_i]["cluster_id"] = _c
-INFOMAP_N_COMMUNITIES = len(set(_communities.membership))
-print(f"  Infomap: {INFOMAP_N_COMMUNITIES} communities over {G.vcount()} nodes")
-
-# ── Phase 2: Query-time weight computation ────────────────────────────────────
-print("Computing query-time edge weights...")
-
-degrees = np.array(G.degree())
-max_deg = max(degrees) if len(degrees) > 0 else 1
-_calls_degrees = calls_only.degree()
-_calls_max = max(_calls_degrees) or 1
-
-# Phase 0c: hub penalty exponent — raised from 1.5 to 2.0 after measuring
-# god-node contamination on clean (test-filtered) pool.
-# Revert to 1.5 if legitimate high-degree nodes get suppressed.
-HUB_PENALTY_EXPONENT = 2.0
+    _build_igraph()
+    _run_infomap()
+    _compute_weights()
+    return True
 
 
-def compute_weights(alpha=0.4, beta=0.6, co_change_floor=1, cochange_mode=MODE_RISK):
-    weights = []
-    for edge in G.es:
-        etype = edge["type"]
-        cochange_policy = None
+def _load_from_files(data_root: str | Path) -> bool:
+    global nodes_data, edges_data
+    sandbox_dir = Path(data_root) / "sandbox"
+    nodes_path = sandbox_dir / "amo_nodes.json"
+    edges_path = sandbox_dir / "amo_edges.json"
 
-        # A. AST structural cost
-        if etype == "CALLS":
-            ast_cost = 1.0
-        elif etype == "IMPORTS":
-            ast_cost = 1.5
-        else:  # CO_CHANGE
-            cochange_policy = cochange_consumer_policy(edge["category"], cochange_mode)
-            if not cochange_policy["include"]:
-                weights.append(9999.0)
+    if not nodes_path.exists() or not edges_path.exists():
+        print(f"  [igraph_sandbox] Data files not found in {sandbox_dir}")
+        return False
+
+    print("Loading graph data from files...")
+    with open(nodes_path, encoding="utf-8") as f:
+        nodes_data = json.load(f)
+    with open(edges_path, encoding="utf-8") as f:
+        edges_data = json.load(f)
+    print(f"  {len(nodes_data)} nodes, {len(edges_data)} edges")
+    return True
+
+
+def _load_from_helixdb(helix_url: str, payload_path: str | Path) -> bool:
+    global nodes_data, edges_data
+
+    from helixdb import Client, g, read_batch, Predicate, Projection
+
+    pp = Path(payload_path)
+    if not pp.exists():
+        print(f"  Error: {payload_path} not found.")
+        print("  Run scalable_ingest.py first to generate graph_payload.json.")
+        return False
+
+    with open(pp, encoding="utf-8") as f:
+        payload = json.load(f)
+
+    all_nodes = payload.get("nodes", [])
+    all_edges = payload.get("edges", [])
+    print(f"  {len(all_nodes)} nodes, {len(all_edges)} edges in {payload_path}")
+
+    # ── Parse function identities from payload ────────────────────────────
+    func_identities = [n for n in all_nodes if n.get("type") == "FunctionIdentity"]
+    func_states     = [n for n in all_nodes if n.get("type") == "FunctionState"]
+
+    # Latest active state per function from payload
+    state_by_func: dict[str, dict] = {}
+    for s in func_states:
+        fid = s.get("function_id", "")
+        if not fid:
+            continue
+        cur = state_by_func.get(fid)
+        if not cur or s.get("status") == "active":
+            state_by_func[fid] = s
+
+    # ── Try to get fresh vectors from HelixDB ─────────────────────────────
+    try:
+        c = Client(helix_url)
+        helix_state_batch = (
+            read_batch()
+            .var_as("states",
+                g().n_with_label("FunctionState")
+                   .limit(2000)
+                   .project([
+                       Projection.property("function_id"),
+                       Projection.property("ai_summary_vec"),
+                       Projection.property("status"),
+                   ])
+            )
+            .returning(["states"])
+        )
+        helix_result = c.query().dynamic(helix_state_batch.to_dynamic_request()).send()
+        helix_rows = helix_result.get("states", {}).get("properties", [])
+        for s in helix_rows:
+            fid = s.get("function_id", "")
+            if s.get("status") != "active":
                 continue
-            ast_cost = 2.0
+            vec = s.get("ai_summary_vec")
+            if fid and vec and isinstance(vec, list) and any(abs(v) > 1e-12 for v in vec):
+                if fid in state_by_func:
+                    state_by_func[fid]["ai_summary_vec"] = vec
+        print(f"  HelixDB: {len([s for s in helix_rows if s.get('status')=='active'])} active states (vectors merged)")
+    except Exception as e:
+        print(f"  HelixDB query failed ({e}), using payload vectors only")
 
-        # B. Temporal closeness (inverse co-change frequency)
-        cc = edge["co_change_count"]
-        temporal_cost = 1.0 / (1.0 + cc) if cc >= co_change_floor else 1.0
+    # ── Build igraph nodes_data ───────────────────────────────────────────
+    nodes_data = []
+    for fi in func_identities:
+        fid = fi.get("id", "")
+        state = state_by_func.get(fid, {})
+        code = (state.get("code") or "")[:3000]
+        ai_summary = state.get("ai_summary", "")
+        embedding = state.get("ai_summary_vec", [])
+        if isinstance(embedding, str):
+            try:
+                import json as _j
+                embedding = _j.loads(embedding)
+            except Exception:
+                embedding = []
 
-        base_cost = (alpha * ast_cost) + (beta * temporal_cost)
-        if cochange_policy is not None:
-            base_cost *= cochange_policy["cost_multiplier"]
+        nodes_data.append({
+            "id": fid,
+            "file": fi.get("file", ""),
+            "name": fi.get("name", ""),
+            "code": code,
+            "text_summary": ai_summary,
+            "embedding": embedding,
+            "status": state.get("status", "active"),
+        })
 
-        # C. Hub penalty on target node (top 5% by CALLS degree)
-        calls_deg = _calls_degrees[edge.target]
-        if calls_deg > _calls_max * 0.05:
-            base_cost *= math.log(calls_deg + 1) ** HUB_PENALTY_EXPONENT
+    # ── Build igraph edges_data from payload ──────────────────────────────
+    node_id_set = {n["id"] for n in nodes_data}
 
-        weights.append(base_cost)
-    return weights
+    def _to_igraph_edge(raw: dict) -> dict | None:
+        label = raw.get("label", "")
+        if label not in ("CALLS", "IMPORTS", "INHERITS"):
+            return None
+        src = raw.get("from", "")
+        tgt = raw.get("to", "")
+        if src not in node_id_set or tgt not in node_id_set:
+            return None
+        return {
+            "source": src,
+            "target": tgt,
+            "type": label,
+            "co_change_count": 0,
+            "category": "",
+            "ast_relation_type": "unknown",
+            "theme_proportions": {},
+        }
+
+    edges_data = [_to_igraph_edge(e) for e in all_edges]
+    edges_data = [e for e in edges_data if e is not None]
+
+    n_active = sum(1 for n in nodes_data if n["status"] == "active")
+    has_vec = sum(1 for n in nodes_data if has_nonzero_embedding(n.get("embedding", [])))
+    print(f"  Nodes: {len(nodes_data)} ({n_active} active, {has_vec} with vectors)")
+    print(f"  Edges: {len(edges_data)}")
+    return True
 
 
-G.es["weight"] = compute_weights()
-print(f"  Weights computed. Range: [{min(G.es['weight']):.3f}, {max(G.es['weight']):.3f}]")
+def _build_igraph():
+    global G, id_to_idx, nodes_data, edges_data
+    global QUERY_FEATURE_MEAN, EMBEDDING_SPACE
+
+    node_id_set = {n["id"] for n in nodes_data}
+    edges_data[:] = [e for e in edges_data if e["source"] in node_id_set and e["target"] in node_id_set]
+
+    print("Building igraph instance...")
+    G = ig.Graph(directed=True)
+    node_ids = [n["id"] for n in nodes_data]
+    G.add_vertices(len(node_ids))
+    id_to_idx = {nid: i for i, nid in enumerate(node_ids)}
+
+    reused_features, QUERY_FEATURE_MEAN, EMBEDDING_SPACE = load_graphsage_feature_fallback(nodes_data)
+    if EMBEDDING_SPACE == "graphsage_centered":
+        print(f"  Reusing GraphSAGE feature matrix for {len(reused_features)} active embeddings")
+    elif EMBEDDING_SPACE != "raw_openrouter":
+        print(f"  No reusable GraphSAGE feature fallback: {EMBEDDING_SPACE}")
+
+    for i, n in enumerate(nodes_data):
+        G.vs[i]["id"]           = n["id"]
+        G.vs[i]["file"]         = n["file"]
+        G.vs[i]["name"]         = n["name"]
+        G.vs[i]["text_summary"] = n.get("text_summary", "")
+        G.vs[i]["status"]       = n.get("status", "superseded")
+        emb = n.get("embedding", [])
+        if has_nonzero_embedding(emb):
+            G.vs[i]["embedding"] = np.array(emb, dtype=np.float32)
+        elif n["id"] in reused_features:
+            G.vs[i]["embedding"] = reused_features[n["id"]]
+        else:
+            G.vs[i]["embedding"] = None
+
+    edge_tuples = [(id_to_idx[e["source"]], id_to_idx[e["target"]]) for e in edges_data]
+    G.add_edges(edge_tuples)
+    for i, e in enumerate(edges_data):
+        G.es[i]["type"]             = e["type"]
+        G.es[i]["co_change_count"]  = e.get("co_change_count", 0)
+        G.es[i]["category"]         = e.get("category", "")
+        G.es[i]["ast_relation_type"] = e.get("ast_relation_type", "unknown")
+        G.es[i]["theme_proportions"] = e.get("theme_proportions", {})
+
+    print(f"  Graph: {G.vcount()} vertices, {G.ecount()} edges")
+
+
+def _run_infomap():
+    print("Running Infomap community detection (fixed seed=42)...")
+    _random.seed(42)
+    np.random.seed(42)
+    calls_edge_ids = [e.index for e in G.es if e["type"] == "CALLS"]
+    calls_only = G.subgraph_edges(calls_edge_ids, delete_vertices=False)
+    _communities = calls_only.community_infomap()
+    for _i, _c in enumerate(_communities.membership):
+        G.vs[_i]["cluster_id"] = _c
+    INFOMAP_N_COMMUNITIES = len(set(_communities.membership))
+    print(f"  Infomap: {INFOMAP_N_COMMUNITIES} communities over {G.vcount()} nodes")
+
+
+def _compute_weights():
+    global _calls_degrees, _calls_max
+    print("Computing query-time edge weights...")
+    degrees = np.array(G.degree())
+    calls_edge_ids = [e.index for e in G.es if e["type"] == "CALLS"]
+    calls_only = G.subgraph_edges(calls_edge_ids, delete_vertices=False)
+    _calls_degrees = calls_only.degree()
+    _calls_max = max(_calls_degrees) or 1
+    _HUB_PENALTY = 2.0
+
+    def compute_weights(alpha=0.4, beta=0.6, co_change_floor=1, cochange_mode=MODE_RISK):
+        weights = []
+        for edge in G.es:
+            etype = edge["type"]
+            cochange_policy = None
+
+            if etype == "CALLS":
+                ast_cost = 1.0
+            elif etype == "IMPORTS":
+                ast_cost = 1.5
+            else:
+                cochange_policy = cochange_consumer_policy(edge["category"], cochange_mode)
+                if not cochange_policy["include"]:
+                    weights.append(9999.0)
+                    continue
+                ast_cost = 2.0
+
+            cc = edge["co_change_count"]
+            temporal_cost = 1.0 / (1.0 + cc) if cc >= co_change_floor else 1.0
+            base_cost = (alpha * ast_cost) + (beta * temporal_cost)
+            if cochange_policy is not None:
+                base_cost *= cochange_policy["cost_multiplier"]
+
+            calls_deg = _calls_degrees[edge.target]
+            if calls_deg > _calls_max * 0.05:
+                base_cost *= math.log(calls_deg + 1) **_HUB_PENALTY
+            weights.append(base_cost)
+        return weights
+
+    G.es["weight"] = compute_weights()
+    print(f"  Weights computed. Range: [{min(G.es['weight']):.3f}, {max(G.es['weight']):.3f}]")
+
+
 
 # ── Theme overlay setup ───────────────────────────────────────────────────────
 # Load co-change themes. Build label text per theme for query-time cosine scoring.
@@ -267,7 +427,7 @@ def _ensure_theme_vecs() -> None:
     _themes_embedded = True
 
 def _theme_boosted_weights(query_vec: np.ndarray) -> list[float]:
-    """Compute per-query theme-boosted edge weights for CO_CHANGE edges."""
+    global _calls_degrees, _calls_max
     _ensure_theme_vecs()
     theme_scores: dict[str, float] = {
         tid: max(0.0, cosine_sim(query_vec, tvec))
@@ -283,7 +443,7 @@ def _theme_boosted_weights(query_vec: np.ndarray) -> list[float]:
             cost = 0.4 * 1.0 + 0.6 * (1.0 / (1.0 + cc) if cc >= 1 else 1.0)
         elif etype == "IMPORTS":
             cost = 0.4 * 1.5 + 0.6 * (1.0 / (1.0 + cc) if cc >= 1 else 1.0)
-        else:  # CO_CHANGE
+        else:
             policy = cochange_consumer_policy(edge["category"], MODE_RISK)
             if not policy["include"]:
                 weights.append(9999.0)
@@ -299,7 +459,7 @@ def _theme_boosted_weights(query_vec: np.ndarray) -> list[float]:
                 cost *= max(0.4, 1.0 - 0.6 * boost)
 
         if deg > _calls_max * 0.05:
-            cost *= math.log(deg + 1) ** HUB_PENALTY_EXPONENT
+            cost *= math.log(deg + 1) ** 2.0
         weights.append(cost)
     return weights
 
