@@ -90,9 +90,6 @@ _SKIP_FILES = {"scalable_ingest.py", "semantic_pass.py", "dump_viz.py",
                "_test_loop.py", "_test_queries.py", "_test_vector.py",
                "_test_3hop.py", "_test_bench.py"}
 
-_EDGE_PARAMS = define_params({"src_id": param.string(), "tgt_id": param.string()})
-
-
 # ── HelixDB helpers ───────────────────────────────────────────────────────────
 
 def _helix():
@@ -108,50 +105,118 @@ def _ensure_indexes(c):
             IndexSpec.node_unique_equality(kind, "node_id")
         ))
         names.append(name)
-    # vector index on FunctionState.ai_summary_vec for semantic search
-    batch = batch.var_as("vec_idx", g().create_index_if_not_exists(
-        IndexSpec.node_vector(K_STATE, "ai_summary_vec")
-    ))
-    names.append("vec_idx")
-    # vector index on FunctionState.memory_vec for semantic history search
-    batch = batch.var_as("mem_vec_idx", g().create_index_if_not_exists(
-        IndexSpec.node_vector(K_STATE, "memory_vec")
-    ))
-    names.append("mem_vec_idx")
+    # Vector indexing is now handled by turbovec (TurboQuant) instead of HelixDB HNSW
     c.query().dynamic(batch.returning(names).to_dynamic_request()).send()
 
 
-def _upsert_node(c, kind: str, node_id: str, props: dict):
-    """Insert node; silently skips if node_id already exists."""
+def _build_node_props(kind: str, node_id: str, props: dict) -> dict:
+    """Convert props dict into HelixDB PropertyInput format."""
     all_props = {"node_id": PropertyInput.value(node_id)}
     for k, v in props.items():
         if isinstance(v, list) and v and isinstance(v[0], float):
             all_props[k] = PropertyInput.value(PropertyValue.f32_array(v))
         else:
             all_props[k] = PropertyInput.value(str(v)[:4000])
-    try:
-        c.query().dynamic(
-            write_batch().var_as("n", g().add_n(kind, all_props)).returning(["n"]).to_dynamic_request()
-        ).send()
-    except Exception:
-        pass
+    return all_props
 
 
-def _insert_edge(c, from_id: str, to_id: str, label: str, src_kind: str, tgt_kind: str):
-    """Insert a directed edge; silently skips duplicates or missing endpoints."""
-    batch = (
-        write_batch()
-        .var_as("src", g().n_with_label(src_kind).where(Predicate.eq_param("node_id", "src_id")))
-        .var_as("tgt", g().n_with_label(tgt_kind).where(Predicate.eq_param("node_id", "tgt_id")))
-        .var_as("e",   g().n(NodeRef.var("src")).add_e(label, NodeRef.var("tgt"), {}))
-        .returning(["e"])
-    )
-    try:
-        c.query().dynamic(
-            batch.to_dynamic_request(_EDGE_PARAMS, {"src_id": from_id, "tgt_id": to_id})
-        ).send()
-    except Exception:
-        pass
+class BatchWriter:
+    """Accumulate nodes/edges and flush to HelixDB in large batches."""
+
+    def __init__(self, c, batch_size=100):
+        self.c = c
+        self.batch_size = batch_size
+        self._nodes = []
+        self._node_seen = set()
+        self._edges = []
+        self._turbovec_ops = []
+
+    def add_node(self, kind: str, node_id: str, props: dict):
+        if node_id in self._node_seen:
+            return
+        self._node_seen.add(node_id)
+        self._nodes.append((kind, node_id, props.copy()))
+        if "code_vec" in props and props["code_vec"]:
+            self._turbovec_ops.append(("code", node_id, props["code_vec"]))
+        if kind == "FunctionState":
+            if "ai_summary_vec" in props and props["ai_summary_vec"]:
+                self._turbovec_ops.append(("ai_summary", node_id, props["ai_summary_vec"]))
+            if "memory_vec" in props and props["memory_vec"]:
+                self._turbovec_ops.append(("memory", node_id, props["memory_vec"]))
+        if len(self._nodes) >= self.batch_size:
+            self.flush_nodes()
+
+    def add_edge(self, from_id: str, to_id: str, label: str, src_kind: str, tgt_kind: str):
+        self._edges.append((from_id, to_id, label, src_kind, tgt_kind))
+        if len(self._edges) >= self.batch_size:
+            self.flush_edges()
+
+    def flush_nodes(self):
+        if not self._nodes:
+            return
+        batch = write_batch()
+        names = []
+        for i, (kind, node_id, props) in enumerate(self._nodes):
+            hp = _build_node_props(kind, node_id, props)
+            name = f"n{i}"
+            batch = batch.var_as(name, g().add_n(kind, hp))
+            names.append(name)
+        try:
+            self.c.query().dynamic(batch.returning(names).to_dynamic_request()).send()
+        except Exception as e:
+            print(f"    [node batch error] {e}")
+        self._nodes = []
+
+    def flush_edges(self):
+        if not self._edges:
+            return
+        batch = write_batch()
+        edge_names = []
+        all_params = {}
+        for i, (from_id, to_id, label, src_kind, tgt_kind) in enumerate(self._edges):
+            p_src = f"src_{i}"
+            p_tgt = f"tgt_{i}"
+            v_src = f"vsrc_{i}"
+            v_tgt = f"vtgt_{i}"
+            v_e   = f"ve_{i}"
+            batch = (
+                batch
+                .var_as(v_src, g().n_with_label(src_kind).where(Predicate.eq_param("node_id", p_src)))
+                .var_as(v_tgt, g().n_with_label(tgt_kind).where(Predicate.eq_param("node_id", p_tgt)))
+                .var_as(v_e,   g().n(NodeRef.var(v_src)).add_e(label, NodeRef.var(v_tgt), {}))
+            )
+            edge_names.append(v_e)
+            all_params[p_src] = from_id
+            all_params[p_tgt] = to_id
+        edge_params_def = define_params({k: param.string() for k in all_params})
+        try:
+            self.c.query().dynamic(
+                batch.returning(edge_names).to_dynamic_request(edge_params_def, all_params)
+            ).send()
+        except Exception:
+            pass
+        self._edges = []
+
+    def flush(self):
+        self.flush_nodes()
+        self.flush_edges()
+        self._flush_turbovec()
+
+    def _flush_turbovec(self):
+        if not self._turbovec_ops:
+            return
+        import turbovec_adapter
+        for idx, doc_id, vec in self._turbovec_ops:
+            try:
+                if idx == "code":
+                    turbovec_adapter.code_index.insert(doc_id, vec)
+                elif idx == "memory":
+                    turbovec_adapter.memory_index.insert(doc_id, vec)
+            except Exception:
+                pass
+        turbovec_adapter.code_index.save()
+        turbovec_adapter.memory_index.save()
+        self._turbovec_ops = []
 
 
 # ── tree-sitter extraction ────────────────────────────────────────────────────
@@ -348,7 +413,6 @@ def run_ingestion():
             },
         }
         master_nodes.append(commit_node)
-        _upsert_node(c, K_COMMIT, commit_id, commit_node["props"])
 
         if prev_commit_id:
             key = (prev_commit_id, "NEXT_COMMIT", commit_id)
@@ -356,7 +420,6 @@ def run_ingestion():
                 edge_seen.add(key)
                 master_edges.append({"from": prev_commit_id, "from_kind": K_COMMIT,
                                      "label": "NEXT_COMMIT", "to": commit_id, "to_kind": K_COMMIT})
-                _insert_edge(c, prev_commit_id, commit_id, "NEXT_COMMIT", K_COMMIT, K_COMMIT)
         prev_commit_id = commit_id
 
         for file_path in py_files:
@@ -371,43 +434,31 @@ def run_ingestion():
                 master_nodes.extend(nodes)
                 master_edges.extend(edges)
 
-                for n in nodes:
-                    _upsert_node(c, n["kind"], n["node_id"], n["props"])
-                for e in edges:
-                    _insert_edge(c, e["from"], e["to"], e["label"],
-                                 e["from_kind"], e["to_kind"])
-
             except (KeyError, SyntaxError) as ex:
                 print(f"  -> skip ({ex})")
 
-    print(f"\nDone. {len(master_nodes)} nodes, {len(master_edges)} edges.")
-
     # ── Mark superseded states ────────────────────────────────────────────────
-    # All FunctionState nodes are written with status="active". Now demote any
-    # state that is NOT the HEAD (latest) for its function to "superseded".
     head_ids = set(_latest_state.values())
-    _PARAMS_STATUS = define_params({"nid": param.string(), "val": param.string()})
     for n in master_nodes:
         if n["kind"] != K_STATE:
             continue
-        sid = n["node_id"]
-        status = "active" if sid in head_ids else "superseded"
-        n["props"]["status"] = status
-        # patch in HelixDB: set_property is the lightweight way
-        try:
-            c.query().dynamic(
-                write_batch()
-                .var_as("n", g().n_with_label(K_STATE)
-                         .where(Predicate.eq_param("node_id", "nid"))
-                         .set_property("status", PropertyInput.param("val")))
-                .returning(["n"])
-                .to_dynamic_request(_PARAMS_STATUS, {"nid": sid, "val": status})
-            ).send()
-        except Exception:
-            pass
+        n["props"]["status"] = "active" if n["node_id"] in head_ids else "superseded"
 
-    print(f"Status patched: {len(head_ids)} active, "
-          f"{sum(1 for n in master_nodes if n['kind']==K_STATE) - len(head_ids)} superseded.")
+    print(f"\nParsed {len(master_nodes)} nodes, {len(master_edges)} edges.")
+
+    # ── Batch-write to HelixDB ──────────────────────────────────────────────
+    print("Writing to HelixDB...")
+    bw = BatchWriter(c)
+    for n in master_nodes:
+        bw.add_node(n["kind"], n["node_id"], n["props"])
+    bw.flush_nodes()
+    for e in master_edges:
+        bw.add_edge(e["from"], e["to"], e["label"], e["from_kind"], e["to_kind"])
+    bw.flush_edges()
+    bw._flush_turbovec()
+
+    func_state_count = sum(1 for n in master_nodes if n["kind"] == K_STATE)
+    print(f"  Status: {len(head_ids)} active, {func_state_count - len(head_ids)} superseded.")
 
     # ── JSON artefacts ────────────────────────────────────────────────────────
     with open("graph_payload.json", "w") as f:
