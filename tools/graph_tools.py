@@ -1,13 +1,6 @@
 """
-Agent toolset for the graph knowledge base.
-
-Six tools:
-  search_code_semantics(prompt)            — igraph PPR pipeline (primary, recommended)
-  search_code_semantics_helix(prompt)      — raw HelixDB vector search (fallback if igraph unavailable)
-  get_code_time_travel_diff(state_node_id) — PREVIOUS_VERSION traversal
-  trace_blast_radius(function_identity_id) — reverse CALLS traversal
-  get_temporal_vulnerability_trace(target_func, timestamp_iso) — multi-hop commit filter
-  edit_code(file, function_name, new_code) — patch a function in the working tree + re-ingest
+Agent toolset for the graph knowledge base. Works with any ingested repo.
+All node IDs are prefixed with the repo name (e.g. dograh:func_..., amo:func_...).
 """
 
 from __future__ import annotations
@@ -76,7 +69,7 @@ def search_code_semantics(prompt: str, k: int = 10, mode: str = "general_retriev
       In this case, also returns HelixDB flat-list fallback under "helix_fallback".
 
     If you see pipeline_mode == "unavailable", check that:
-    1. sandbox/amo_nodes.json exists (run sandbox/amo_ingest.py if missing)
+    1. igraph pipeline data files exist for the target repo
     2. igraph and numpy are installed
     3. The MCP server was started from the graphdb repo root
     """
@@ -99,7 +92,7 @@ def search_code_semantics(prompt: str, k: int = 10, mode: str = "general_retriev
 
 def search_code_semantics_helix(prompt: str, k: int = 5) -> list[dict]:
     """
-    Raw HelixDB vector search fallback. Returns flat list without graph structure.
+    Raw turbovec vector search fallback. Returns flat list without graph structure.
     Use search_code_semantics() for the full pipeline with subgraph output.
     """
     c = _c()
@@ -107,27 +100,45 @@ def search_code_semantics_helix(prompt: str, k: int = 5) -> list[dict]:
     if not vecs:
         return []
     vec = vecs[0]
-    batch = (
-        read_batch()
-        .var_as("states",
-            g().vector_search_nodes("FunctionState", "ai_summary_vec", vec, k * 3)
-               .where(Predicate.eq("status", "active"))
-               .where(Predicate.is_not_null("ai_summary"))
-               .limit(k)
-               .project([
-                   Projection.property("node_id"),
-                   Projection.property("function_id"),
-                   Projection.property("ai_summary"),
-                   Projection.property("code"),
-               ])
+
+    import turbovec_adapter
+    top_k = turbovec_adapter.code_index.search(vec, k * 3)
+    if not top_k:
+        return []
+
+    node_ids = [res["id"] for res in top_k]
+    results = []
+    for node_id in node_ids:
+        batch = (
+            read_batch()
+            .var_as("fn",
+                g().n_with_label("FunctionIdentity")
+                   .where(Predicate.eq("node_id", node_id))
+                   .limit(1)
+                   .project([
+                       Projection.property("node_id"),
+                       Projection.property("name"),
+                       Projection.property("file"),
+                   ])
+            )
+            .returning(["fn"])
         )
-        .returning(["states"])
-    )
-    try:
-        result = c.query().dynamic(batch.to_dynamic_request()).send()
-        return _rows(result, "states")
-    except Exception as e:
-        return [{"error": str(e)}]
+        try:
+            res = c.query().dynamic(batch.to_dynamic_request()).send()
+            rows = _rows(res, "fn")
+            if rows:
+                results.append({
+                    "function_id": rows[0].get("node_id", ""),
+                    "name": rows[0].get("name", ""),
+                    "file": rows[0].get("file", ""),
+                    "score": next((r["score"] for r in top_k if r["id"] == node_id), 0),
+                })
+                if len(results) >= k:
+                    break
+        except Exception:
+            continue
+
+    return results
 
 
 # ── Tool: explain_coupling ─────────────────────────────────────────────────────
@@ -136,8 +147,7 @@ def explain_coupling(func_id_a: str, func_id_b: str) -> dict:
     """
     Return the CO_CHANGE relationship between two functions if it exists.
 
-    func_id_a / func_id_b: full node IDs, e.g.
-        "src/agent_memory_orchestrator/memory/ingest.py::ingest_hook_payload"
+    func_id_a / func_id_b: full node IDs (e.g. repo_name:func_path_file_funcName)
 
     Returns the co-change edge data (category, jaccard-implied count,
     theme proportions) or {"coupled": false} if no relationship exists.
@@ -153,6 +163,61 @@ def explain_coupling(func_id_a: str, func_id_b: str) -> dict:
         except Exception as e:
             return {"error": str(e)}
     return {"error": "igraph pipeline unavailable"}
+
+
+# ── Tool: trace_semantic_evolution ─────────────────────────────────────────────
+
+def trace_semantic_evolution(func_id: str) -> dict:
+    if not _ensure_pipeline():
+        return {"error": "igraph pipeline unavailable"}
+    try:
+        from pipeline_api import read_function_memory_history
+        import json
+        mock_file = os.path.join(REPO_ROOT, "sandbox", "mock_memories_embedded.json")
+        if not os.path.exists(mock_file):
+            return {"error": "No mock memory file found for traversal test."}
+
+        with open(mock_file, "r", encoding="utf-8") as f:
+            all_mock = json.load(f)
+
+        history = read_function_memory_history(func_id)
+        if not history:
+            return {"error": f"No memory history found for {func_id}"}
+
+        evolution = {
+            "target_function": func_id,
+            "timeline": []
+        }
+
+        for h in history:
+            commit = h["commit_sha"]
+            coupled_changes = []
+
+            for other in all_mock:
+                other_id = other["function_id"]
+                if other_id == func_id:
+                    continue
+
+                for other_h in other["history"]:
+                    if other_h["commit_sha"] == commit:
+                        coupling = explain_coupling(func_id, other_id)
+                        coupled_changes.append({
+                            "function_id": other_id,
+                            "edge_type": other_h["edge_type"],
+                            "memory": other_h["memory"],
+                            "historically_coupled": coupling.get("coupled", False)
+                        })
+
+            evolution["timeline"].append({
+                "commit_sha": commit,
+                "target_edge": h["edge_type"],
+                "target_memory": h["memory"],
+                "coupled_changes_in_commit": coupled_changes
+            })
+
+        return evolution
+    except Exception as e:
+        return {"error": str(e)}
 
 
 # ── Tool: pipeline_status ──────────────────────────────────────────────────────
@@ -189,8 +254,7 @@ def find_structural_siblings(func_id: str, k: int = 8) -> list[dict]:
     Use this when you want to know: "what other functions do the same job
     as this one, possibly in a different module?"
 
-    func_id: full node ID like
-        "src/agent_memory_orchestrator/memory/ingest.py::ingest_hook_payload"
+    func_id: full node ID (e.g. repo_name:func_path_file_funcName)
     """
     if _ensure_pipeline():
         try:
@@ -285,8 +349,7 @@ def query_function_history(func_id: str, topic: str) -> list[dict]:
 
     Use before modifying a function to understand its design decisions.
 
-    func_id: full node ID e.g.
-      'src/agent_memory_orchestrator/memory/ingest.py::ingest_hook_payload'
+    func_id: full node ID (e.g. repo_name:func_path_file_funcName)
     topic: natural language query e.g.
       'session handling and agent normalization'
     """
