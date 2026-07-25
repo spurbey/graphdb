@@ -18,7 +18,6 @@ Schema (flattened):
 import hashlib
 import json
 import re
-import urllib.request
 import git
 import tree_sitter_python as tspython
 from tree_sitter import Language, Parser
@@ -31,59 +30,38 @@ from helixdb import (
 REPO_PATH = "."
 HELIX_URL = "http://127.0.0.1:6969"
 
-# ── OpenRouter embedding ──────────────────────────────────────────────────────
-_EMBED_MODEL = "nvidia/llama-nemotron-embed-vl-1b-v2:free"
-_EMBED_DIMS  = 2048
+# ── Local embedding (sentence-transformers) ───────────────────────────────────
+_EMBED_DIMS  = 384
+_EMBED_MODEL = None
 
-def _load_api_key() -> str:
+def _get_embedder():
+    global _EMBED_MODEL
+    if _EMBED_MODEL is None:
+        from sentence_transformers import SentenceTransformer
+        _EMBED_MODEL = SentenceTransformer("all-MiniLM-L6-v2")
+    return _EMBED_MODEL
+
+def _embed_batch(texts: list[str]) -> list[list[float]]:
+    model = _get_embedder()
+    if not texts:
+        return []
     try:
-        for line in open(".env"):
-            if "=" in line:
-                return line.split("=", 1)[1].strip()
-    except FileNotFoundError:
-        pass
-    return ""
-
-_API_KEY = _load_api_key()
-
-def _embed(text: str) -> list[float]:
-    """Return a 2048-dim embedding vector from OpenRouter. Returns zeros on failure."""
-    if not _API_KEY or not text.strip():
-        return [0.0] * _EMBED_DIMS
-    try:
-        payload = json.dumps({"model": _EMBED_MODEL, "input": text[:2000]}).encode()
-        req = urllib.request.Request(
-            "https://openrouter.ai/api/v1/embeddings",
-            data=payload,
-            headers={"Authorization": f"Bearer {_API_KEY}", "Content-Type": "application/json"},
-        )
-        resp = json.loads(urllib.request.urlopen(req, timeout=15).read())
-        return resp["data"][0]["embedding"]
+        vecs = model.encode(texts, show_progress_bar=False, batch_size=256, normalize_embeddings=True)
+        return [v.tolist() for v in vecs]
     except Exception as e:
-        print(f"  [embed warn] {e}")
-        return [0.0] * _EMBED_DIMS
-
-# Inline summaries — same source of truth as semantic_pass._SUMMARIES.
-# Populated at insert time so the text index picks them up immediately.
-_SUMMARIES = {
-    "create_user":       "Stores a username-password pair in the in-memory users dict; validates non-empty inputs and enforces minimum password length.",
-    "get_user":          "Looks up and returns the stored password for a username from the in-memory dict, or None if absent.",
-    "delete_user":       "Removes a user entry from the in-memory dict and returns True, or False if the username was not present.",
-    "list_users":        "Returns a list of all currently registered usernames from the in-memory store.",
-    "user_exists":       "Returns True if the given username exists in the in-memory store, False otherwise.",
-    "signup":            "Registers a new user after validating username format and enforcing minimum password length; returns a structured JSON response.",
-    "login":             "Authenticates a user by verifying their password against the stored credential; returns a structured JSON success or failure response.",
-    "validate_username": "Validates that a username is non-empty, at least 3 characters, and alphanumeric; raises ValidationError otherwise.",
-    "logout":            "Ends a user session by confirming the user exists; returns a structured response. Does not verify password.",
-    "delete_account":    "Permanently removes a user account after verifying credentials; calls login internally then drops the record from the store.",
-}
+        print(f"  [embed error] {e}")
+        results = []
+        for i, t in enumerate(texts):
+            try:
+                v = model.encode([t], show_progress_bar=False, normalize_embeddings=True)[0]
+                results.append(v.tolist())
+            except Exception as e2:
+                print(f"  [embed error] text[{i}] ({len(t)} chars): {e2}")
+                results.append([0.0] * _EMBED_DIMS)
+        return results
 
 def _summarise(code: str) -> str:
-    """Return a summary for a function — lookup by name, fallback to first docstring line."""
-    m = re.match(r'\s*(?:async\s+)?def\s+(\w+)', code)
-    if m and m.group(1) in _SUMMARIES:
-        return _SUMMARIES[m.group(1)]
-    # fallback: first docstring line
+    """Return a summary for a function — first docstring line, empty if none."""
     ds = re.search(r'"""(.+?)"""', code, re.DOTALL)
     return ds.group(1).strip().splitlines()[0] if ds else ""
 
