@@ -25,14 +25,22 @@ from tools.graph_tools import (
     trace_blast_radius,
     get_temporal_vulnerability_trace,
     edit_code,
+    trace_semantic_evolution,
 )
+
+# ── Optional --data-dir flag ────────────────────────────────────────────────
+import argparse as _argparse
+_MCP_PARSER = _argparse.ArgumentParser()
+_MCP_PARSER.add_argument("--data-dir", type=str, default=None)
+_MCP_ARGS, _ = _MCP_PARSER.parse_known_args()
 
 # Initialize igraph pipeline at startup (loads graph, runs Infomap once)
 try:
     from pipeline_api import initialize as _init_pipeline
     _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    _init_pipeline(data_root=_REPO_ROOT)
-    print("[graph_mcp_server] igraph pipeline ready")
+    _DATA_ROOT = _MCP_ARGS.data_dir or _REPO_ROOT
+    _init_pipeline(data_root=_DATA_ROOT)
+    print(f"[graph_mcp_server] igraph pipeline ready (data={_DATA_ROOT})")
 except Exception as _e:
     print(f"[graph_mcp_server] igraph pipeline unavailable, will use HelixDB fallback: {_e}")
 
@@ -46,7 +54,7 @@ MANIFEST = {
         {
             "name":        "search_code_semantics",
             "description": (
-                "Semantic search over the AMO codebase using PPR graph traversal. "
+                "Semantic search over the ingested codebase using PPR graph traversal. "
                 "Returns a subgraph: ranked nodes (id, name, file, summary, code, ppr_score) "
                 "plus edges between them. Better than raw vector search — finds structurally "
                 "adjacent functions even when their names don't match the query."
@@ -79,7 +87,7 @@ MANIFEST = {
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "state_node_id": {"type": "string", "description": "FunctionState node_id (e.g. state_auth_service_login_a1b2c3d)"},
+                    "state_node_id": {"type": "string", "description": "FunctionState node_id (e.g. repo_name:state_path_to_file_functionName_commitHash)"},
                 },
                 "required": ["state_node_id"],
             },
@@ -90,7 +98,7 @@ MANIFEST = {
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "function_identity_id": {"type": "string",  "description": "FunctionIdentity node_id (e.g. func_auth_models_get_user)"},
+                    "function_identity_id": {"type": "string",  "description": "FunctionIdentity node_id (e.g. repo_name:func_path_to_file_functionName)"},
                     "depth":                {"type": "integer", "description": "How many CALLS hops to traverse (default 3)", "default": 3},
                 },
                 "required": ["function_identity_id"],
@@ -102,8 +110,8 @@ MANIFEST = {
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "target_func":     {"type": "string",  "description": "Function name to trace (e.g. 'create_user')"},
-                    "timestamp_iso":   {"type": "string",  "description": "ISO 8601 cutoff timestamp (e.g. '2026-06-25T00:00:00+00:00')"},
+                    "target_func":     {"type": "string",  "description": "Function name to trace"},
+                    "timestamp_iso":   {"type": "string",  "description": "ISO 8601 cutoff timestamp"},
                 },
                 "required": ["target_func", "timestamp_iso"],
             },
@@ -114,7 +122,7 @@ MANIFEST = {
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "file":          {"type": "string", "description": "Repo-relative file path (e.g. 'auth/service.py')"},
+                    "file":          {"type": "string", "description": "Repo-relative file path (e.g. 'src/auth/service.py')"},
                     "function_name": {"type": "string", "description": "Name of the function to replace"},
                     "new_code":      {"type": "string", "description": "Complete new function definition (def ... including body)"},
                 },
@@ -131,7 +139,7 @@ MANIFEST = {
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "func_id_a": {"type": "string", "description": "First function node ID (e.g. 'src/memory/ingest.py::ingest_hook_payload')"},
+                    "func_id_a": {"type": "string", "description": "First function node ID"},
                     "func_id_b": {"type": "string", "description": "Second function node ID"},
                 },
                 "required": ["func_id_a", "func_id_b"],
@@ -177,7 +185,7 @@ MANIFEST = {
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "func_id": {"type": "string", "description": "Full node ID e.g. 'src/.../ingest.py::ingest_hook_payload'"},
+                    "func_id": {"type": "string", "description": "Full function node ID"},
                     "topic":   {"type": "string", "description": "Natural language query e.g. 'session handling'"},
                 },
                 "required": ["func_id", "topic"],
@@ -198,20 +206,28 @@ MANIFEST = {
         },
         {
             "name":        "find_structural_siblings",
-    "commit_review":                    lambda p: commit_review(p["changed_function_ids"]),
-    "select_tests":                     lambda p: select_tests(p["changed_function_ids"]),
             "description": (
                 "Find functions that play the same architectural role as a given function. "
                 "Uses GraphSAGE structural embeddings — finds functions at the same call depth "
                 "with similar fan-out patterns, regardless of semantic similarity. "
-                "Example: memory_write [server.py] -> finds memory_write [tools.py], add_memory_unit "
-                "(the full MCP->tool->storage chain). Use this when refactoring a pattern across modules."
+                "Use this when refactoring a pattern across modules."
             ),
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "func_id": {"type": "string", "description": "Full node ID e.g. 'src/agent_memory_orchestrator/memory/ingest.py::ingest_hook_payload'"},
+                    "func_id": {"type": "string", "description": "Full function node ID"},
                     "k":       {"type": "integer", "description": "Number of siblings to return (default 8)", "default": 8},
+                },
+                "required": ["func_id"],
+            },
+        },
+        {
+            "name":        "trace_semantic_evolution",
+            "description": "Recursively trace the semantic evolution of a function. Finds its memory history, the commits that changed it, and what other functions changed in those same commits (coupled changes), along with their specific semantic edge types. Use this to reason about why a function evolved and what else was forced to change with it.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "func_id": {"type": "string", "description": "Full node ID of the function"},
                 },
                 "required": ["func_id"],
             },
@@ -231,7 +247,9 @@ TOOL_MAP = {
     "edit_code":                        lambda p: edit_code(p["file"], p["function_name"], p["new_code"]),
     "annotate_commit":                  lambda p: annotate_commit(p["sha"], p.get("debug", False)),
     "query_function_history":           lambda p: query_function_history(p["func_id"], p.get("topic", "")),
-
+    "commit_review":                    lambda p: commit_review(p["changed_function_ids"]),
+    "select_tests":                     lambda p: select_tests(p["changed_function_ids"]),
+    "trace_semantic_evolution":         lambda p: trace_semantic_evolution(p["func_id"]),
 }
 
 
