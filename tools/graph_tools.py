@@ -11,10 +11,10 @@ Six tools:
 """
 
 from __future__ import annotations
-import sys, os, ast, re, importlib, json, urllib.request
+import sys, os, ast, re, importlib
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
-from helixdb import Client, g, read_batch, define_params, param, Predicate, Projection, PropertyValue
+from helixdb import Client, g, read_batch, define_params, param, Predicate, Projection
 
 HELIX_URL  = "http://127.0.0.1:6969"
 REPO_ROOT  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -37,34 +37,23 @@ def _ensure_pipeline() -> bool:
         return False
 
 # ── Embedding helper (same model as scalable_ingest) ──────────────────────────
-_EMBED_MODEL = "nvidia/llama-nemotron-embed-vl-1b-v2:free"
-_EMBED_DIMS  = 2048
+_EMBED_DIMS = 384
+_EMBED_MODEL = None
 
-def _load_key() -> str:
-    try:
-        env = os.path.join(REPO_ROOT, ".env")
-        for line in open(env):
-            if "=" in line:
-                return line.split("=", 1)[1].strip()
-    except FileNotFoundError:
-        pass
-    return ""
+def _get_embedder():
+    global _EMBED_MODEL
+    if _EMBED_MODEL is None:
+        from sentence_transformers import SentenceTransformer
+        _EMBED_MODEL = SentenceTransformer("all-MiniLM-L6-v2")
+    return _EMBED_MODEL
 
-_API_KEY = _load_key()
-
-def _embed(text: str) -> list[float]:
-    if not _API_KEY or not text.strip():
-        return [0.0] * _EMBED_DIMS
-    try:
-        payload = json.dumps({"model": _EMBED_MODEL, "input": text[:2000]}).encode()
-        req = urllib.request.Request(
-            "https://openrouter.ai/api/v1/embeddings",
-            data=payload,
-            headers={"Authorization": f"Bearer {_API_KEY}", "Content-Type": "application/json"},
-        )
-        return json.loads(urllib.request.urlopen(req, timeout=15).read())["data"][0]["embedding"]
-    except Exception:
-        return [0.0] * _EMBED_DIMS
+def _embed(texts: str | list[str]) -> list[float] | list[list[float]]:
+    single = isinstance(texts, str)
+    if single:
+        texts = [texts]
+    model = _get_embedder()
+    vecs = model.encode(texts, show_progress_bar=False, normalize_embeddings=True)
+    return [v.tolist() for v in vecs]
 
 
 def _c() -> Client:
@@ -114,7 +103,10 @@ def search_code_semantics_helix(prompt: str, k: int = 5) -> list[dict]:
     Use search_code_semantics() for the full pipeline with subgraph output.
     """
     c = _c()
-    vec = _embed(prompt)
+    vecs = _embed(prompt)
+    if not vecs:
+        return []
+    vec = vecs[0]
     batch = (
         read_batch()
         .var_as("states",
