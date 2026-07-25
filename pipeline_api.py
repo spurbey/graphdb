@@ -827,6 +827,29 @@ def read_function_memory_history(func_id: str) -> list[dict]:
     }
     Returns empty list if no memories exist yet.
     """
+    import os, json
+    mock_file = os.path.join(os.path.dirname(__file__), "sandbox", "mock_memories_embedded.json")
+    if os.path.exists(mock_file):
+        try:
+            with open(mock_file, "r", encoding="utf-8") as f:
+                mock_data = json.load(f)
+            for entry in mock_data:
+                if entry["function_id"] == func_id:
+                    history = []
+                    for h in entry["history"]:
+                        state = {
+                            "state_id": f"state_{func_id}_{h['commit_sha']}",
+                            "commit_sha": h['commit_sha'],
+                            "memory": h['memory'],
+                            "edge_type": h['edge_type']
+                        }
+                        if "memory_vec" in h:
+                            state["memory_vec"] = h["memory_vec"]
+                        history.append(state)
+                    return history
+        except Exception as e:
+            pass
+
     try:
         from helixdb import Client as _Client, g as _g, read_batch as _rb, Predicate as _Pred, Projection as _Proj, define_params as _dp, param as _p
         c = _Client("http://127.0.0.1:6969")
@@ -1165,17 +1188,24 @@ OR if trivial:
                 "temperature": 0,
             }).encode()
 
+            import time
+            time.sleep(1)
+
             request = _req.Request(
                 "https://openrouter.ai/api/v1/chat/completions",
                 data=payload,
                 headers={"Authorization": f"Bearer {_API_KEY}", "Content-Type": "application/json"},
             )
             response = _json.loads(_req.urlopen(request, timeout=30).read())
+            if "choices" not in response:
+                result["errors"].append({"func_id": func_id, "error": f"OpenRouter API error: {response}"})
+                continue
+
             raw = response["choices"][0]["message"]["content"].strip()
 
             # Parse JSON from response
             import re as _re
-            json_match = _re.search(r'\{[^{}]+\}', raw, _re.DOTALL)
+            json_match = _re.search(r'\{.*\}', raw, _re.DOTALL)
             if not json_match:
                 result["errors"].append({"func_id": func_id, "error": f"No JSON in response: {raw[:100]}"})
                 continue
