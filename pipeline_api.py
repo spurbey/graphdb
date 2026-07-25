@@ -79,13 +79,17 @@ def _embed(text: str) -> np.ndarray:
 
 # ── Initialization ─────────────────────────────────────────────────────────────
 
-def initialize(data_root: str | Path | None = None) -> None:
+def initialize(data_root: str | Path | None = None,
+               source: str = "helixdb",
+               helix_url: str = "http://127.0.0.1:6969") -> None:
     """
     Load graph data and run Infomap. Call once at server startup.
     Safe to call multiple times — idempotent.
 
     data_root: directory containing sandbox/amo_nodes.json etc.
                Defaults to the graphdb repo root.
+    source: "helixdb" (default) — query HelixDB + graph_payload.json
+            "files" — read sandbox/amo_*.json
     """
     global _initialized, _pipeline
 
@@ -97,27 +101,26 @@ def initialize(data_root: str | Path | None = None) -> None:
     if sandbox_str not in sys.path:
         sys.path.insert(0, sandbox_str)
 
-    # Change cwd to repo root so igraph_sandbox.py's relative open() calls work
-    target_root = Path(data_root) if data_root else ROOT
-    original_cwd = os.getcwd()
-    os.chdir(target_root)
+    from sandbox import igraph_sandbox
+    _pipeline = igraph_sandbox
 
-    try:
-        import importlib
-        if "igraph_sandbox" in sys.modules:
-            # Already imported — use existing module
-            _pipeline = sys.modules["igraph_sandbox"]
-        else:
-            import igraph_sandbox as _p
-            _pipeline = _p
-    finally:
-        os.chdir(original_cwd)
+    if source == "helixdb":
+        payload_path = Path(data_root or ROOT) / "graph_payload.json"
+        ok = _pipeline.load_graph("helixdb", helix_url=helix_url, payload_path=payload_path)
+        if not ok:
+            print("[pipeline_api] HelixDB source failed, trying files fallback...")
+            ok = _pipeline.load_graph("files", data_root=data_root or ROOT)
+    else:
+        ok = _pipeline.load_graph("files", data_root=data_root or ROOT)
+
+    if not ok:
+        print("[pipeline_api] WARNING: no graph data loaded. igraph tools unavailable.")
 
     _initialized = True
-    print("[pipeline_api] initialized")
+    print(f"[pipeline_api] initialized (source={source})")
 
     # Compute betweenness centrality on CALLS graph (once at startup)
-    if not _betweenness:
+    if not _betweenness and _pipeline.G is not None:
         _compute_betweenness()
 
 
@@ -134,7 +137,7 @@ def _compute_betweenness() -> None:
     Stores results in _betweenness dict: node_id -> normalized score [0,1].
     """
     global _betweenness
-    if not _pipeline:
+    if not _pipeline or _pipeline.G is None:
         return
 
     p = _pipeline
