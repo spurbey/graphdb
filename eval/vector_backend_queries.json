@@ -1,0 +1,58 @@
+[
+  {
+    "id": "voice-audio-pipeline",
+    "prompt": "voice call handling and audio processing pipeline",
+    "ground_truth": {
+      "expected_substrings": ["voice", "audio", "pipecat", "telephony"]
+    }
+  },
+  {
+    "id": "telephony-providers",
+    "prompt": "telephony service provider implementations for call routing",
+    "ground_truth": {
+      "expected_substrings": ["twilio", "vonage", "vobiz", "telephony", "provider"]
+    }
+  },
+  {
+    "id": "elevenlabs-tts",
+    "prompt": "ElevenLabs text to speech audio service no output debugging",
+    "ground_truth": {
+      "expected_substrings": ["elevenlabs", "tts", "audio"]
+    }
+  },
+  {
+    "id": "mcp-tools",
+    "prompt": "MCP server tool registration schema and docs search",
+    "ground_truth": {
+      "expected_substrings": ["mcp", "tool", "docs"]
+    }
+  },
+  {
+    "id": "campaign-dispatch",
+    "prompt": "campaign outbound call dispatcher resume start workflow",
+    "ground_truth": {
+      "expected_substrings": ["campaign", "dispatcher", "resume", "start"]
+    }
+  },
+  {
+    "id": "masked-api-key",
+    "prompt": "masked API key rejection provider configuration update validation",
+    "ground_truth": {
+      "expected_substrings": ["masked", "api_key", "provider", "configuration"]
+    }
+  },
+  {
+    "id": "workflow-save",
+    "prompt": "save workflow draft parser generated sdk client",
+    "ground_truth": {
+      "expected_substrings": ["workflow", "save", "sdk", "parser"]
+    }
+  },
+  {
+    "id": "langfuse-tracing",
+    "prompt": "load organization langfuse credentials tracing configuration",
+    "ground_truth": {
+      "expected_substrings": ["langfuse", "tracing", "credential"]
+    }
+  }
+]
