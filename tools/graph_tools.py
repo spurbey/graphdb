@@ -102,7 +102,6 @@ def search_code_semantics_helix(prompt: str, k: int = 5) -> list[dict]:
     Raw turbovec vector search fallback. Returns flat list without graph structure.
     Use search_code_semantics() for the full pipeline with subgraph output.
     """
-    c = _c()
     vecs = _embed(prompt)
     if not vecs:
         return []
@@ -113,37 +112,17 @@ def search_code_semantics_helix(prompt: str, k: int = 5) -> list[dict]:
     if not top_k:
         return []
 
-    node_ids = [res["id"] for res in top_k]
+    score_by_id = {res["id"]: res.get("score", 0) for res in top_k}
     results = []
-    for node_id in node_ids:
-        batch = (
-            read_batch()
-            .var_as("fn",
-                g().n_with_label("FunctionIdentity")
-                   .where(Predicate.eq("node_id", node_id))
-                   .limit(1)
-                   .project([
-                       Projection.property("node_id"),
-                       Projection.property("name"),
-                       Projection.property("file"),
-                   ])
-            )
-            .returning(["fn"])
-        )
-        try:
-            res = c.query().dynamic(batch.to_dynamic_request()).send()
-            rows = _rows(res, "fn")
-            if rows:
-                results.append({
-                    "function_id": rows[0].get("node_id", ""),
-                    "name": rows[0].get("name", ""),
-                    "file": rows[0].get("file", ""),
-                    "score": next((r["score"] for r in top_k if r["id"] == node_id), 0),
-                })
-                if len(results) >= k:
-                    break
-        except Exception:
-            continue
+    for node_id, score in score_by_id.items():
+        results.append({
+            "function_id": node_id,
+            "name": node_id.rsplit("_", 1)[-1],
+            "file": "",
+            "score": score,
+        })
+        if len(results) >= k:
+            break
 
     return results
 

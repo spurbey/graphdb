@@ -17,6 +17,7 @@ from __future__ import annotations
 import json
 import os
 import sys
+import threading
 import urllib.request
 from pathlib import Path
 
@@ -30,51 +31,81 @@ _initialized = False
 _pipeline = None   # the igraph_sandbox module, loaded lazily
 _betweenness: dict[str, float] = {}   # node_id -> betweenness score (computed once)
 _GENERIC_DEGREE_THRESHOLD = 200       # exclude high-degree generic utilities (get, append, close)
+_EMBED_LOCK = threading.Lock()
 
 
-# ── Embedding helper (same model as scalable_ingest) ──────────────────────────
-_EMBED_MODEL = "nvidia/llama-nemotron-embed-vl-1b-v2:free"
-_EMBED_DIMS  = 2048
-
-
-def _load_api_key() -> str:
-    preferred = ("llm_api_key_2", "llm_api_key2", "llm_api_key")
-    for p in [ROOT / ".env", Path.cwd() / ".env"]:
-        if not p.exists():
-            continue
-        vals: dict[str, str] = {}
-        for line in p.read_text(encoding="utf-8").splitlines():
-            if "=" not in line:
-                continue
-            k, v = line.split("=", 1)
-            vals[k.strip().lower()] = v.strip()
-        for name in preferred:
-            if vals.get(name):
-                return vals[name]
-    return ""
-
-
-_API_KEY = _load_api_key()
+# ── Embedding helper (same model as scalable_ingest — local 384-dim) ──────────
+_EMBED_DIMS = 384
+_EMBED_MODEL = None
 
 
 def _embed(text: str) -> np.ndarray:
-    if not _API_KEY or not text.strip():
+    global _EMBED_MODEL
+    if not text.strip():
         return np.zeros(_EMBED_DIMS, dtype=np.float32)
+    if _EMBED_MODEL is None:
+        with _EMBED_LOCK:
+            if _EMBED_MODEL is None:
+                from sentence_transformers import SentenceTransformer
+                _EMBED_MODEL = SentenceTransformer("all-MiniLM-L6-v2")
+    vecs = _EMBED_MODEL.encode([text], show_progress_bar=False, normalize_embeddings=True)
+    return np.array(vecs[0], dtype=np.float32)
+
+
+def _ensure_turbovec():
+    """Populate turbovec code_index from HelixDB if incomplete."""
+    import turbovec_adapter
+    expected = _pipeline.G.vcount() if _pipeline and _pipeline.G is not None else 0
+    if expected == 0:
+        return
+    actual = turbovec_adapter.code_index.count()
+    if actual >= expected * 0.9:
+        return
+    print(f"[pipeline_api] Syncing turbovec index: {actual} -> {expected} entries...")
+    from helixdb import Client as _Client, g as _g, read_batch as _rb, Predicate as _Pred, Projection as _Proj
     try:
-        payload = json.dumps({"model": _EMBED_MODEL, "input": text[:2000]}).encode()
-        req = urllib.request.Request(
-            "https://openrouter.ai/api/v1/embeddings",
-            data=payload,
-            headers={
-                "Authorization": f"Bearer {_API_KEY}",
-                "Content-Type": "application/json",
-            },
+        c = _Client("http://127.0.0.1:6969")
+        batch = (
+            _rb()
+            .var_as("fns",
+                _g().n_with_label("FunctionIdentity")
+                   .limit(10000)
+                   .project([
+                       _Proj.property("node_id"),
+                       _Proj.property("code_vec"),
+                   ])
+            )
+            .returning(["fns"])
         )
-        resp = json.loads(urllib.request.urlopen(req, timeout=20).read())
-        return np.array(resp["data"][0]["embedding"], dtype=np.float32)
+        result = c.query().dynamic(batch.to_dynamic_request()).send()
+        rows = result.get("fns", {}).get("properties", [])
+        inserted = 0
+        for row in rows:
+            nid = row.get("node_id", "")
+            vec = row.get("code_vec", [])
+            if isinstance(vec, str):
+                try:
+                    import json
+                    vec = json.loads(vec)
+                except Exception:
+                    vec = []
+            if isinstance(vec, list) and len(vec) == 384:
+                turbovec_adapter.code_index.insert(nid, vec)
+                inserted += 1
+        turbovec_adapter.code_index.save()
+        print(f"  Synced {inserted} embeddings into turbovec code_index")
     except Exception as e:
-        print(f"[pipeline_api] embed error: {e}")
-        return np.zeros(_EMBED_DIMS, dtype=np.float32)
+        print(f"  Turbovec sync failed (will use fallback): {e}")
+
+
+def _repo_cochange_path():
+    """Return the cochange_pairs.json path for the loaded repo, or None."""
+    if _pipeline is None or _pipeline.G is None or _pipeline.G.vcount() == 0:
+        return None
+    nid = _pipeline.G.vs[0]["name"]
+    repo = nid.split(":")[0] if ":" in nid else "unknown"
+    path = ROOT / "sandbox" / f"{repo}_cochange_pairs.json"
+    return path if path.exists() else None
 
 
 # ── Initialization ─────────────────────────────────────────────────────────────
@@ -122,6 +153,9 @@ def initialize(data_root: str | Path | None = None,
     # Compute betweenness centrality on CALLS graph (once at startup)
     if not _betweenness and _pipeline.G is not None:
         _compute_betweenness()
+
+    # Ensure turbovec index is populated from HelixDB
+    _ensure_turbovec()
 
 
 def _require_init() -> None:
@@ -176,13 +210,18 @@ def search(
     mode: str = "general_retrieval",
 ) -> dict:
     """
-    Natural language search over AMO codebase using the igraph pipeline.
+    Natural language search over the codebase.
 
-    Default: pure vector top-k (cosine similarity, no diversity penalty).
-    Every function is a distinct entity — MMR is wrong here (revert from
-    Exp 6 which showed 11/13 was a eval-set artifact, not a real improvement).
+    Algorithm: Pure cosine top-k on embeddings. No PPR, no MMR, no community
+    filtering. Returns subgraph with CALLS/IMPORTS edges between results
+    so the agent sees structural context without extra tool calls.
 
-    use_theme_overlay=True: PPR with theme-conditioned CO_CHANGE weights.
+    PPR was tested for query-time retrieval and rejected — 0/5 queries helped,
+    1/5 was hurt. Random walk accumulates mass in structural hubs regardless
+    of query semantics. Pure vector search was 10/13 HIT@13 — the best mode
+    throughout the entire experiment series.
+
+    use_theme_overlay is unused (legacy parameter, kept for API compat).
 
     Returns dict with pipeline_mode field:
     {
@@ -201,19 +240,32 @@ def search(
     try:
         query_vec = _embed(prompt)
 
-        if use_theme_overlay:
-            selected, ppr_scores, vec_scores = _pipeline.run_cold_discovery(
-                query_vec, top_k_seeds=20, final_k=k, use_theme_overlay=True,
-            )
-        else:
-            # Pure vector top-k — no diversity penalty, no random walk
-            # Functions are distinct entities; MMR penalizes them incorrectly
-            selected, ppr_scores, vec_scores = _pipeline.run_vector_mmr(
-                query_vec, final_k=k, lam=1.0,  # lam=1.0 = pure score, no diversity
+        # Query HelixDB turbovec index (same 384-dim code_vec as igraph vertices)
+        import turbovec_adapter
+        top_k = turbovec_adapter.code_index.search(query_vec.tolist(), k * 3)
+
+        # Map results to igraph vertex indices, filter candidates
+        selected = []
+        vec_score_map = {}
+        for res in top_k:
+            idx = _pipeline.id_to_idx.get(res["id"])
+            if idx is None:
+                continue
+            v = _pipeline.G.vs[idx]
+            if _pipeline._is_candidate(v):
+                selected.append(idx)
+                vec_score_map[idx] = res["score"]
+            if len(selected) >= k:
+                break
+
+        # If turbovec returned nothing, fall back to in-memory
+        if not selected:
+            selected, _, vec_score_map = _pipeline.run_vector_mmr(
+                query_vec, final_k=k, lam=1.0,
             )
 
         result = _pipeline.build_subgraph_output(
-            selected, prompt, ppr_scores, vec_scores, mode=mode
+            selected, prompt, None, vec_score_map, mode=mode
         )
         result["pipeline_mode"] = "igraph"
         return result
@@ -439,9 +491,9 @@ def commit_review(changed_function_ids: list[str]) -> list[dict]:
         sage_meta_by_id = {m["id"]: m for m in meta}
 
     # Load CO_CHANGE pairs
-    cochange_path = ROOT / "sandbox" / "amo_cochange_pairs.json"
+    cochange_path = _repo_cochange_path()
     cochange_pairs = []
-    if cochange_path.exists():
+    if cochange_path is not None:
         import json as _json
         cochange_pairs = _json.loads(cochange_path.read_text(encoding="utf-8"))
 
@@ -1126,8 +1178,8 @@ def annotate_commit(sha: str, debug: bool = False) -> dict:
     known_cochange_ids = set()
     try:
         import json as _json
-        pairs_path = ROOT / "sandbox" / "amo_cochange_pairs.json"
-        if pairs_path.exists():
+        pairs_path = _repo_cochange_path()
+        if pairs_path is not None:
             pairs = _json.loads(pairs_path.read_text(encoding="utf-8"))
             for p in pairs:
                 known_cochange_ids.add((p.get("source",""), p.get("target","")))
