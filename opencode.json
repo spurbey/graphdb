@@ -4,6 +4,7 @@
     "graphdb": {
       "type": "local",
       "command": ["python", "mcp_stdio_bridge.py"],
+      "cwd": "C:/Users/sumit/Downloads/Dora/graphdb",
       "enabled": true,
       "timeout": 120000
     }

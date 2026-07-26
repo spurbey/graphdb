@@ -198,8 +198,6 @@ def search(
             "error": "igraph pipeline not initialized — call initialize() first or use search_code_semantics_helix",
         }
 
-    original_cwd = os.getcwd()
-    os.chdir(ROOT)
     try:
         query_vec = _embed(prompt)
 
@@ -221,8 +219,6 @@ def search(
         return result
     except Exception as e:
         return {"pipeline_mode": "unavailable", "error": str(e)}
-    finally:
-        os.chdir(original_cwd)
 
 
 def explain_coupling(func_id_a: str, func_id_b: str) -> dict | None:
