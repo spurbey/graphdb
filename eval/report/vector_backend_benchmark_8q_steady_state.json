@@ -1,0 +1,551 @@
+{
+  "corpus": {
+    "vector_json": "C:\\Users\\sumit\\Downloads\\Dora\\graphdb\\.turbovec_code.json",
+    "vector_count": 4821,
+    "dim": 384
+  },
+  "query_count": 8,
+  "k": 10,
+  "backends": [
+    {
+      "backend": "turbovec_2bit",
+      "available": true,
+      "query_count": 8,
+      "hit_at_5": 8,
+      "hit_at_10": 8,
+      "mean_first_expected_rank": 1,
+      "latency_ms": {
+        "p50": 0.308,
+        "p95": 1.237,
+        "all": [
+          1.237,
+          0.372,
+          0.303,
+          0.35,
+          0.289,
+          0.313,
+          0.186,
+          0.142
+        ]
+      },
+      "results": [
+        {
+          "query_id": "voice-audio-pipeline",
+          "prompt": "voice call handling and audio processing pipeline",
+          "first_expected_rank": 1,
+          "hit_at_5": true,
+          "hit_at_10": true,
+          "top_ids": [
+            "dograh:func_api_services_pipecat_pipeline_builder_create_pipeline_components",
+            "dograh:func_api_tests_test_user_idle_handler_create_pipeline_with_speech_injection",
+            "dograh:func_api_services_pipecat_audio_config_AudioConfig",
+            "dograh:func_api_services_workflow_pipecat_engine_voicemail_detector_handle_audio_data",
+            "dograh:func_api_services_pipecat_pipeline_builder_build_realtime_pipeline",
+            "dograh:func_api_services_pipecat_event_handlers_register_task_event_handler",
+            "dograh:func_api_services_pipecat_recording_playback_queue_recording_audio",
+            "dograh:func_api_tests_test_pipecat_engine_node_switch_with_user_speech_test_node_switch_with_concurrent_user_speech",
+            "dograh:func_api_services_pipecat_event_handlers_register_event_handlers",
+            "dograh:func_api_services_pipecat_pipeline_builder_create_pipeline_task"
+          ]
+        },
+        {
+          "query_id": "telephony-providers",
+          "prompt": "telephony service provider implementations for call routing",
+          "first_expected_rank": 1,
+          "hit_at_5": true,
+          "hit_at_10": true,
+          "top_ids": [
+            "dograh:func_api_routes_telephony__mount_provider_routers",
+            "dograh:func_api_db_telephony_phone_number_client_find_inbound_route_by_account",
+            "dograh:func_api_db_telephony_phone_number_client_find_inbound_routing_conflict",
+            "dograh:func_api_routes_telephony_initiate_call_transfer",
+            "dograh:func_api_routes_telephony_initiate_call",
+            "dograh:func_api_tests_test_telephony_factory_test_get_telephony_provider_for_run_casts_numeric_string_config_id",
+            "dograh:func_api_services_telephony_registry_ProviderSpec",
+            "dograh:func_api_services_campaign_call_dispatcher_get_telephony_provider",
+            "dograh:func_api_services_campaign_campaign_call_dispatcher_get_telephony_provider",
+            "dograh:func_api_services_telephony_factory_get_telephony_provider_for_run"
+          ]
+        },
+        {
+          "query_id": "elevenlabs-tts",
+          "prompt": "ElevenLabs text to speech audio service no output debugging",
+          "first_expected_rank": 1,
+          "hit_at_5": true,
+          "hit_at_10": true,
+          "top_ids": [
+            "dograh:func_api_tests_test_elevenlabs_stt_service_factory_test_elevenlabs_stt_auto_language_passes_none",
+            "dograh:func_tests_test_stasis_audio_handling_test_elevenlabs_ulaw_metadata",
+            "dograh:func_api_tests_test_elevenlabs_stt_service_factory_test_elevenlabs_stt_custom_language_passes_through",
+            "dograh:func_api_services_configuration_registry_ElevenlabsTTSConfiguration",
+            "dograh:func_api_tests_test_elevenlabs_stt_service_factory__elevenlabs_tts_config",
+            "dograh:func_api_tests_test_grok_realtime_wrapper_test_grok_audio_config_preserves_transcription_when_filling_sample_rates",
+            "dograh:func_api_tests_test_elevenlabs_stt_service_factory_test_elevenlabs_tts_uses_normalized_websocket_url",
+            "dograh:func_api_tests_test_elevenlabs_stt_service_factory_test_elevenlabs_stt_listed_custom_language_maps_to_pipecat_enum",
+            "dograh:func_api_services_configuration_registry_AzureSpeechSTTConfiguration",
+            "dograh:func_api_services_configuration_registry_RimeTTSConfiguration"
+          ]
+        },
+        {
+          "query_id": "mcp-tools",
+          "prompt": "MCP server tool registration schema and docs search",
+          "first_expected_rank": 1,
+          "hit_at_5": true,
+          "hit_at_10": true,
+          "top_ids": [
+            "dograh:func_api_tests_test_mcp_tool_route_test_mcp_config_accepts_discovered_tools",
+            "dograh:func_api_tests_test_mcp_tool_route__mcp_tool_model",
+            "dograh:func_api_services_workflow_mcp_tool_session_discovered_tools",
+            "dograh:func_api_routes_tool_refresh_mcp_tools",
+            "dograh:func_api_tests_test_mcp_tool_session_test_discover_mcp_tools_success",
+            "dograh:func_api_services_tool_management_populate_discovered_tools",
+            "dograh:func_api_tests_test_mcp_custom_tool_manager__mcp_tool",
+            "dograh:func_api_tests_test_mcp_integration__mcp_tool",
+            "dograh:func_api_tests_test_mcp_tool_route_test_update_tool_request_accepts_mcp_definition",
+            "dograh:func_api_tests_test_mcp_tool_route_test_create_tool_request_accepts_mcp_definition"
+          ]
+        },
+        {
+          "query_id": "campaign-dispatch",
+          "prompt": "campaign outbound call dispatcher resume start workflow",
+          "first_expected_rank": 1,
+          "hit_at_5": true,
+          "hit_at_10": true,
+          "top_ids": [
+            "dograh:func_api_services_campaign_runner_resume_campaign",
+            "dograh:func_api_services_campaign_campaign_call_dispatcher_dispatch_call",
+            "dograh:func_api_routes_campaign_resume_campaign",
+            "dograh:func_api_tests_test_from_number_pool_isolation_test_dispatch_call_acquires_from_number_for_campaign_config",
+            "dograh:func_api_services_campaign_campaign_event_protocol_CampaignResumedEvent",
+            "dograh:func_api_routes_campaign_pause_campaign",
+            "dograh:func_api_tasks_campaign_tasks_process_campaign_batch",
+            "dograh:func_api_services_campaign_campaign_event_protocol_CampaignPausedEvent",
+            "dograh:func_api_routes_campaign_redial_campaign",
+            "dograh:func_api_routes_campaign__build_campaign_response"
+          ]
+        },
+        {
+          "query_id": "masked-api-key",
+          "prompt": "masked API key rejection provider configuration update validation",
+          "first_expected_rank": 1,
+          "hit_at_5": true,
+          "hit_at_10": true,
+          "top_ids": [
+            "dograh:func_api_tests_test_masked_key_rejection_test_rejects_masked_api_key_on_provider_change",
+            "dograh:func_api_tests_test_masked_key_rejection_test_rejects_masked_api_key_in_list",
+            "dograh:func_api_services_configuration_masking_check_for_masked_keys",
+            "dograh:func_api_tests_test_masked_key_rejection_test_allows_same_provider_with_masked_key",
+            "dograh:func_api_tests_test_configuration_masking_merge_test_mask_user_config_masks_api_keys",
+            "dograh:func_api_tests_test_ai_model_configuration_v2_test_masked_v2_configuration_masks_nested_service_keys",
+            "dograh:func_api_tests_test_resolve_effective_config_test_single_masked_key_preserves_existing_multi_key_override",
+            "dograh:func_api_tests_test_workflow_qa_masking_test_qa_node_without_api_key",
+            "dograh:func_api_tests_test_resolve_effective_config_test_masks_model_override_secrets",
+            "dograh:func_api_services_configuration_masking_mask_user_config"
+          ]
+        },
+        {
+          "query_id": "workflow-save",
+          "prompt": "save workflow draft parser generated sdk client",
+          "first_expected_rank": 1,
+          "hit_at_5": true,
+          "hit_at_10": true,
+          "top_ids": [
+            "dograh:func_api_mcp_server_tools__workflow_projection_select_workflow_projection_source",
+            "dograh:func_api_mcp_server_tools_save_workflow_save_workflow",
+            "dograh:func_api_routes_workflow_create_workflow_draft",
+            "dograh:func_api_tests_test_mcp_get_workflow_test_get_workflow_falls_back_to_published_sdk_view",
+            "dograh:func_api_tests_test_mcp_get_workflow_test_get_workflow_returns_draft_sdk_view",
+            "dograh:func_sdk_python_src_dograh_sdk_client_save_workflow",
+            "dograh:func_examples_python_build_workflow_with_sdk_main",
+            "dograh:func_api_services_workflow_run_creation_prepare_workflow_run_inputs",
+            "dograh:func_api_mcp_server_tools_create_workflow_create_workflow",
+            "dograh:func_api_mcp_server_tools_get_workflow_code_get_workflow_code"
+          ]
+        },
+        {
+          "query_id": "langfuse-tracing",
+          "prompt": "load organization langfuse credentials tracing configuration",
+          "first_expected_rank": 1,
+          "hit_at_5": true,
+          "hit_at_10": true,
+          "top_ids": [
+            "dograh:func_api_services_pipecat_tracing_config_load_all_org_langfuse_credentials",
+            "dograh:func_api_services_pipecat_tracing_config_ensure_tracing",
+            "dograh:func_api_services_pipecat_tracing_config_setup_pipeline_tracing",
+            "dograh:func_api_services_pipecat_tracing_config_setup_tracing_exporter",
+            "dograh:func_api_services_pipecat_tracing_config_register_org_langfuse_credentials",
+            "dograh:func_api_routes_organization_delete_langfuse_credentials",
+            "dograh:func_api_routes_organization_get_langfuse_credentials",
+            "dograh:func_api_services_pipecat_tracing_config_unregister_org_langfuse_credentials",
+            "dograh:func_api_mcp_server_auth_authenticate_mcp_request",
+            "dograh:func_api_routes_organization_save_langfuse_credentials"
+          ]
+        }
+      ],
+      "bit_width": 2,
+      "build_ms": 364.338,
+      "write_ms": 4.583,
+      "index_file": "C:\\Users\\sumit\\Downloads\\Dora\\graphdb\\eval\\report\\dograh_turbovec_2bit.tv",
+      "index_file_bytes": 523758
+    },
+    {
+      "backend": "turbovec_4bit",
+      "available": true,
+      "query_count": 8,
+      "hit_at_5": 8,
+      "hit_at_10": 8,
+      "mean_first_expected_rank": 1,
+      "latency_ms": {
+        "p50": 0.602,
+        "p95": 0.767,
+        "all": [
+          0.76,
+          0.655,
+          0.613,
+          0.767,
+          0.59,
+          0.46,
+          0.49,
+          0.459
+        ]
+      },
+      "results": [
+        {
+          "query_id": "voice-audio-pipeline",
+          "prompt": "voice call handling and audio processing pipeline",
+          "first_expected_rank": 1,
+          "hit_at_5": true,
+          "hit_at_10": true,
+          "top_ids": [
+            "dograh:func_api_services_pipecat_audio_config_AudioConfig",
+            "dograh:func_api_services_pipecat_pipeline_builder_build_realtime_pipeline",
+            "dograh:func_api_tests_test_user_idle_handler_create_pipeline_with_speech_injection",
+            "dograh:func_api_services_pipecat_pipeline_builder_create_pipeline_components",
+            "dograh:func_api_tests_test_pipecat_engine_node_switch_with_user_speech_test_node_switch_with_concurrent_user_speech",
+            "dograh:func_api_services_pipecat_recording_playback_queue_recording_audio",
+            "dograh:func_api_services_workflow_pipecat_engine_voicemail_detector_handle_audio_data",
+            "dograh:func_api_services_pipecat_event_handlers_register_task_event_handler",
+            "dograh:func_api_services_pipecat_pipeline_builder_build_pipeline",
+            "dograh:func_api_services_workflow_pipecat_engine__handle_start_node"
+          ]
+        },
+        {
+          "query_id": "telephony-providers",
+          "prompt": "telephony service provider implementations for call routing",
+          "first_expected_rank": 1,
+          "hit_at_5": true,
+          "hit_at_10": true,
+          "top_ids": [
+            "dograh:func_api_db_telephony_phone_number_client_find_inbound_route_by_account",
+            "dograh:func_api_db_telephony_phone_number_client_find_inbound_routing_conflict",
+            "dograh:func_api_routes_telephony__mount_provider_routers",
+            "dograh:func_api_services_campaign_call_dispatcher_get_telephony_provider",
+            "dograh:func_api_services_campaign_campaign_call_dispatcher_get_telephony_provider",
+            "dograh:func_api_routes_telephony_initiate_call_transfer",
+            "dograh:func_api_tests_test_telephony_factory_test_get_telephony_provider_for_run_casts_numeric_string_config_id",
+            "dograh:func_api_services_telephony_factory_get_telephony_provider_by_id",
+            "dograh:func_api_services_telephony_factory_get_telephony_provider",
+            "dograh:func_api_routes_organization_get_telephony_providers_metadata"
+          ]
+        },
+        {
+          "query_id": "elevenlabs-tts",
+          "prompt": "ElevenLabs text to speech audio service no output debugging",
+          "first_expected_rank": 1,
+          "hit_at_5": true,
+          "hit_at_10": true,
+          "top_ids": [
+            "dograh:func_api_tests_test_elevenlabs_stt_service_factory_test_elevenlabs_stt_auto_language_passes_none",
+            "dograh:func_tests_test_stasis_audio_handling_test_elevenlabs_ulaw_metadata",
+            "dograh:func_api_tests_test_elevenlabs_stt_service_factory_test_elevenlabs_stt_custom_language_passes_through",
+            "dograh:func_api_tests_test_elevenlabs_stt_service_factory__elevenlabs_tts_config",
+            "dograh:func_api_tests_test_grok_realtime_wrapper_test_grok_audio_config_preserves_transcription_when_filling_sample_rates",
+            "dograh:func_api_tests_test_elevenlabs_stt_service_factory_test_elevenlabs_stt_listed_custom_language_maps_to_pipecat_enum",
+            "dograh:func_evals_stt_benchmark_main",
+            "dograh:func_api_services_configuration_registry_RimeTTSConfiguration",
+            "dograh:func_api_services_configuration_registry_ElevenlabsTTSConfiguration",
+            "dograh:func_api_tests_test_elevenlabs_stt_service_factory_test_elevenlabs_tts_uses_normalized_websocket_url"
+          ]
+        },
+        {
+          "query_id": "mcp-tools",
+          "prompt": "MCP server tool registration schema and docs search",
+          "first_expected_rank": 1,
+          "hit_at_5": true,
+          "hit_at_10": true,
+          "top_ids": [
+            "dograh:func_api_tests_test_mcp_tool_route_test_mcp_config_accepts_discovered_tools",
+            "dograh:func_api_tests_test_mcp_tool_route__mcp_tool_model",
+            "dograh:func_api_services_workflow_mcp_tool_session_discovered_tools",
+            "dograh:func_api_tests_test_mcp_integration__mcp_tool",
+            "dograh:func_api_tests_test_mcp_custom_tool_manager__mcp_tool",
+            "dograh:func_api_tests_test_mcp_tool_session_test_discover_mcp_tools_success",
+            "dograh:func_api_routes_tool_refresh_mcp_tools",
+            "dograh:func_api_services_tool_management_populate_discovered_tools",
+            "dograh:func_api_mcp_server_tools_tool_creation_create_tool",
+            "dograh:func_api_services_tool_management_refresh_mcp_tool_for_user"
+          ]
+        },
+        {
+          "query_id": "campaign-dispatch",
+          "prompt": "campaign outbound call dispatcher resume start workflow",
+          "first_expected_rank": 1,
+          "hit_at_5": true,
+          "hit_at_10": true,
+          "top_ids": [
+            "dograh:func_api_services_campaign_runner_resume_campaign",
+            "dograh:func_api_services_campaign_campaign_call_dispatcher_dispatch_call",
+            "dograh:func_api_services_campaign_campaign_event_protocol_CampaignResumedEvent",
+            "dograh:func_api_routes_campaign_resume_campaign",
+            "dograh:func_api_tests_test_from_number_pool_isolation_test_dispatch_call_acquires_from_number_for_campaign_config",
+            "dograh:func_api_tasks_campaign_tasks_process_campaign_batch",
+            "dograh:func_api_routes_campaign_pause_campaign",
+            "dograh:func_api_routes_campaign_redial_campaign",
+            "dograh:func_api_routes_campaign__build_campaign_response",
+            "dograh:func_api_services_campaign_campaign_event_protocol_CampaignPausedEvent"
+          ]
+        },
+        {
+          "query_id": "masked-api-key",
+          "prompt": "masked API key rejection provider configuration update validation",
+          "first_expected_rank": 1,
+          "hit_at_5": true,
+          "hit_at_10": true,
+          "top_ids": [
+            "dograh:func_api_tests_test_masked_key_rejection_test_rejects_masked_api_key_in_list",
+            "dograh:func_api_tests_test_masked_key_rejection_test_rejects_masked_api_key_on_provider_change",
+            "dograh:func_api_services_configuration_masking_check_for_masked_keys",
+            "dograh:func_api_tests_test_masked_key_rejection_test_allows_same_provider_with_masked_key",
+            "dograh:func_api_tests_test_configuration_masking_merge_test_mask_user_config_masks_api_keys",
+            "dograh:func_api_tests_test_ai_model_configuration_v2_test_masked_v2_configuration_masks_nested_service_keys",
+            "dograh:func_api_tests_test_resolve_effective_config_test_single_masked_key_preserves_existing_multi_key_override",
+            "dograh:func_api_services_configuration_masking_mask_user_config",
+            "dograh:func_api_tests_test_resolve_effective_config_test_masks_model_override_secrets",
+            "dograh:func_api_tests_test_google_vertex_llm_service_factory_test_validator_accepts_vertex_llm_without_api_key"
+          ]
+        },
+        {
+          "query_id": "workflow-save",
+          "prompt": "save workflow draft parser generated sdk client",
+          "first_expected_rank": 1,
+          "hit_at_5": true,
+          "hit_at_10": true,
+          "top_ids": [
+            "dograh:func_api_mcp_server_tools__workflow_projection_select_workflow_projection_source",
+            "dograh:func_api_mcp_server_tools_save_workflow_save_workflow",
+            "dograh:func_api_tests_test_mcp_get_workflow_test_get_workflow_returns_draft_sdk_view",
+            "dograh:func_api_tests_test_mcp_get_workflow_test_get_workflow_falls_back_to_published_sdk_view",
+            "dograh:func_api_routes_workflow_create_workflow_draft",
+            "dograh:func_sdk_python_src_dograh_sdk_client_save_workflow",
+            "dograh:func_api_mcp_server_tools_get_workflow_code_get_workflow_code",
+            "dograh:func_examples_python_build_workflow_with_sdk_main",
+            "dograh:func_api_services_workflow_run_creation_prepare_workflow_run_inputs",
+            "dograh:func_api_mcp_server_tools_create_workflow_create_workflow"
+          ]
+        },
+        {
+          "query_id": "langfuse-tracing",
+          "prompt": "load organization langfuse credentials tracing configuration",
+          "first_expected_rank": 1,
+          "hit_at_5": true,
+          "hit_at_10": true,
+          "top_ids": [
+            "dograh:func_api_services_pipecat_tracing_config_load_all_org_langfuse_credentials",
+            "dograh:func_api_services_pipecat_tracing_config_setup_pipeline_tracing",
+            "dograh:func_api_services_pipecat_tracing_config_register_org_langfuse_credentials",
+            "dograh:func_api_services_pipecat_tracing_config_ensure_tracing",
+            "dograh:func_api_services_pipecat_tracing_config_setup_tracing_exporter",
+            "dograh:func_api_routes_organization_delete_langfuse_credentials",
+            "dograh:func_api_routes_organization_get_langfuse_credentials",
+            "dograh:func_api_mcp_server_auth_authenticate_mcp_request",
+            "dograh:func_api_services_pipecat_tracing_config_unregister_org_langfuse_credentials",
+            "dograh:func_api_services_pipecat_tracing_config_handle_langfuse_sync"
+          ]
+        }
+      ],
+      "bit_width": 4,
+      "build_ms": 647.581,
+      "write_ms": 11.605,
+      "index_file": "C:\\Users\\sumit\\Downloads\\Dora\\graphdb\\eval\\report\\dograh_turbovec_4bit.tv",
+      "index_file_bytes": 986574
+    },
+    {
+      "backend": "helix_native",
+      "available": true,
+      "query_count": 8,
+      "hit_at_5": 8,
+      "hit_at_10": 8,
+      "mean_first_expected_rank": 1.125,
+      "latency_ms": {
+        "p50": 17.966,
+        "p95": 114.573,
+        "all": [
+          114.573,
+          18.903,
+          19.381,
+          17.537,
+          18.394,
+          16.193,
+          14.584,
+          15.874
+        ]
+      },
+      "results": [
+        {
+          "query_id": "voice-audio-pipeline",
+          "prompt": "voice call handling and audio processing pipeline",
+          "first_expected_rank": 2,
+          "hit_at_5": true,
+          "hit_at_10": true,
+          "top_ids": [
+            "dograh:func_api_tests_test_user_idle_handler_create_pipeline_with_speech_injection",
+            "dograh:func_api_services_pipecat_pipeline_builder_build_realtime_pipeline",
+            "dograh:func_api_services_pipecat_audio_config_AudioConfig",
+            "dograh:func_api_services_pipecat_pipeline_builder_create_pipeline_components",
+            "dograh:func_api_services_workflow_pipecat_engine_voicemail_detector_handle_audio_data",
+            "dograh:func_api_services_pipecat_recording_playback_queue_recording_audio",
+            "dograh:func_api_tests_test_pipecat_engine_node_switch_with_user_speech_test_node_switch_with_concurrent_user_speech",
+            "dograh:func_api_services_pipecat_event_handlers_register_task_event_handler",
+            "dograh:func_api_services_pipecat_pipeline_builder_build_pipeline",
+            "dograh:func_api_services_pipecat_event_handlers_register_event_handlers"
+          ]
+        },
+        {
+          "query_id": "telephony-providers",
+          "prompt": "telephony service provider implementations for call routing",
+          "first_expected_rank": 1,
+          "hit_at_5": true,
+          "hit_at_10": true,
+          "top_ids": [
+            "dograh:func_api_db_telephony_phone_number_client_find_inbound_route_by_account",
+            "dograh:func_api_db_telephony_phone_number_client_find_inbound_routing_conflict",
+            "dograh:func_api_routes_telephony__mount_provider_routers",
+            "dograh:func_api_services_campaign_call_dispatcher_get_telephony_provider",
+            "dograh:func_api_services_campaign_campaign_call_dispatcher_get_telephony_provider",
+            "dograh:func_api_routes_telephony_initiate_call_transfer",
+            "dograh:func_api_services_telephony_factory_get_telephony_provider_by_id",
+            "dograh:func_api_tests_test_telephony_factory_test_get_telephony_provider_for_run_casts_numeric_string_config_id",
+            "dograh:func_api_services_telephony_factory_get_telephony_provider",
+            "dograh:func_api_services_telephony_registry_ProviderSpec"
+          ]
+        },
+        {
+          "query_id": "elevenlabs-tts",
+          "prompt": "ElevenLabs text to speech audio service no output debugging",
+          "first_expected_rank": 1,
+          "hit_at_5": true,
+          "hit_at_10": true,
+          "top_ids": [
+            "dograh:func_api_tests_test_elevenlabs_stt_service_factory_test_elevenlabs_stt_auto_language_passes_none",
+            "dograh:func_tests_test_stasis_audio_handling_test_elevenlabs_ulaw_metadata",
+            "dograh:func_api_tests_test_elevenlabs_stt_service_factory_test_elevenlabs_stt_custom_language_passes_through",
+            "dograh:func_api_tests_test_grok_realtime_wrapper_test_grok_audio_config_preserves_transcription_when_filling_sample_rates",
+            "dograh:func_api_tests_test_elevenlabs_stt_service_factory_test_elevenlabs_stt_listed_custom_language_maps_to_pipecat_enum",
+            "dograh:func_api_services_configuration_registry_ElevenlabsTTSConfiguration",
+            "dograh:func_api_tests_test_elevenlabs_stt_service_factory_test_elevenlabs_tts_uses_normalized_websocket_url",
+            "dograh:func_api_tests_test_elevenlabs_stt_service_factory__elevenlabs_tts_config",
+            "dograh:func_evals_stt_benchmark_main",
+            "dograh:func_api_services_configuration_registry_RimeTTSConfiguration"
+          ]
+        },
+        {
+          "query_id": "mcp-tools",
+          "prompt": "MCP server tool registration schema and docs search",
+          "first_expected_rank": 1,
+          "hit_at_5": true,
+          "hit_at_10": true,
+          "top_ids": [
+            "dograh:func_api_tests_test_mcp_tool_route_test_mcp_config_accepts_discovered_tools",
+            "dograh:func_api_tests_test_mcp_tool_route__mcp_tool_model",
+            "dograh:func_api_services_workflow_mcp_tool_session_discovered_tools",
+            "dograh:func_api_tests_test_mcp_integration__mcp_tool",
+            "dograh:func_api_tests_test_mcp_custom_tool_manager__mcp_tool",
+            "dograh:func_api_tests_test_mcp_tool_session_test_discover_mcp_tools_success",
+            "dograh:func_api_routes_tool_refresh_mcp_tools",
+            "dograh:func_api_services_tool_management_populate_discovered_tools",
+            "dograh:func_api_mcp_server_tools_tool_creation_create_tool",
+            "dograh:func_api_services_tool_management_refresh_mcp_tool_for_user"
+          ]
+        },
+        {
+          "query_id": "campaign-dispatch",
+          "prompt": "campaign outbound call dispatcher resume start workflow",
+          "first_expected_rank": 1,
+          "hit_at_5": true,
+          "hit_at_10": true,
+          "top_ids": [
+            "dograh:func_api_services_campaign_runner_resume_campaign",
+            "dograh:func_api_services_campaign_campaign_call_dispatcher_dispatch_call",
+            "dograh:func_api_routes_campaign_resume_campaign",
+            "dograh:func_api_services_campaign_campaign_event_protocol_CampaignResumedEvent",
+            "dograh:func_api_tests_test_from_number_pool_isolation_test_dispatch_call_acquires_from_number_for_campaign_config",
+            "dograh:func_api_routes_campaign_pause_campaign",
+            "dograh:func_api_tasks_campaign_tasks_process_campaign_batch",
+            "dograh:func_api_routes_campaign_redial_campaign",
+            "dograh:func_api_routes_campaign__build_campaign_response",
+            "dograh:func_api_services_campaign_campaign_event_protocol_CampaignPausedEvent"
+          ]
+        },
+        {
+          "query_id": "masked-api-key",
+          "prompt": "masked API key rejection provider configuration update validation",
+          "first_expected_rank": 1,
+          "hit_at_5": true,
+          "hit_at_10": true,
+          "top_ids": [
+            "dograh:func_api_tests_test_masked_key_rejection_test_rejects_masked_api_key_on_provider_change",
+            "dograh:func_api_tests_test_masked_key_rejection_test_rejects_masked_api_key_in_list",
+            "dograh:func_api_services_configuration_masking_check_for_masked_keys",
+            "dograh:func_api_tests_test_masked_key_rejection_test_allows_same_provider_with_masked_key",
+            "dograh:func_api_tests_test_configuration_masking_merge_test_mask_user_config_masks_api_keys",
+            "dograh:func_api_tests_test_ai_model_configuration_v2_test_masked_v2_configuration_masks_nested_service_keys",
+            "dograh:func_api_tests_test_resolve_effective_config_test_single_masked_key_preserves_existing_multi_key_override",
+            "dograh:func_api_tests_test_resolve_effective_config_test_masks_model_override_secrets",
+            "dograh:func_api_services_configuration_masking_mask_user_config",
+            "dograh:func_api_services_configuration_ai_model_configuration_check_for_masked_keys_in_ai_model_configuration_v2"
+          ]
+        },
+        {
+          "query_id": "workflow-save",
+          "prompt": "save workflow draft parser generated sdk client",
+          "first_expected_rank": 1,
+          "hit_at_5": true,
+          "hit_at_10": true,
+          "top_ids": [
+            "dograh:func_api_mcp_server_tools_save_workflow_save_workflow",
+            "dograh:func_api_mcp_server_tools__workflow_projection_select_workflow_projection_source",
+            "dograh:func_api_tests_test_mcp_get_workflow_test_get_workflow_returns_draft_sdk_view",
+            "dograh:func_api_tests_test_mcp_get_workflow_test_get_workflow_falls_back_to_published_sdk_view",
+            "dograh:func_api_routes_workflow_create_workflow_draft",
+            "dograh:func_sdk_python_src_dograh_sdk_client_save_workflow",
+            "dograh:func_api_mcp_server_tools_get_workflow_code_get_workflow_code",
+            "dograh:func_examples_python_build_workflow_with_sdk_main",
+            "dograh:func_api_services_workflow_run_creation_prepare_workflow_run_inputs",
+            "dograh:func_api_mcp_server_tools_create_workflow_create_workflow"
+          ]
+        },
+        {
+          "query_id": "langfuse-tracing",
+          "prompt": "load organization langfuse credentials tracing configuration",
+          "first_expected_rank": 1,
+          "hit_at_5": true,
+          "hit_at_10": true,
+          "top_ids": [
+            "dograh:func_api_services_pipecat_tracing_config_load_all_org_langfuse_credentials",
+            "dograh:func_api_services_pipecat_tracing_config_setup_pipeline_tracing",
+            "dograh:func_api_services_pipecat_tracing_config_ensure_tracing",
+            "dograh:func_api_services_pipecat_tracing_config_register_org_langfuse_credentials",
+            "dograh:func_api_services_pipecat_tracing_config_setup_tracing_exporter",
+            "dograh:func_api_routes_organization_delete_langfuse_credentials",
+            "dograh:func_api_routes_organization_get_langfuse_credentials",
+            "dograh:func_api_mcp_server_auth_authenticate_mcp_request",
+            "dograh:func_api_services_pipecat_tracing_config_unregister_org_langfuse_credentials",
+            "dograh:func_api_services_pipecat_tracing_config_handle_langfuse_sync"
+          ]
+        }
+      ],
+      "setup": {},
+      "label": "VectorBenchDograhCode"
+    }
+  ]
+}
