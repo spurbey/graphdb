@@ -139,12 +139,16 @@ class BatchWriter:
         if node_id in self._node_seen:
             return
         self._node_seen.add(node_id)
+        if "code_vec" in props and props["code_vec"]:
+            import turbovec_adapter
+            props["code_vector_id"] = str(turbovec_adapter.stable_vector_id(node_id, "code"))
+        if kind == "FunctionState" and props.get("memory_vec"):
+            import turbovec_adapter
+            props["memory_vector_id"] = str(turbovec_adapter.stable_vector_id(node_id, "memory"))
         self._nodes.append((kind, node_id, props.copy()))
         if "code_vec" in props and props["code_vec"]:
             self._turbovec_ops.append(("code", node_id, props["code_vec"]))
         if kind == "FunctionState":
-            if "ai_summary_vec" in props and props["ai_summary_vec"]:
-                self._turbovec_ops.append(("ai_summary", node_id, props["ai_summary_vec"]))
             if "memory_vec" in props and props["memory_vec"]:
                 self._turbovec_ops.append(("memory", node_id, props["memory_vec"]))
         if len(self._nodes) >= self.batch_size:
