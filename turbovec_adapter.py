@@ -5,6 +5,7 @@ Replaces HelixDB HNSW for vector indexing and search.
 import os
 import json
 import numpy as np
+from pathlib import Path
 
 # We provide a mock/shim here so the code runs even if turbovec isn't installed.
 # In production, this would import turbovec and use its bindings.
@@ -18,7 +19,7 @@ class TurbovecIndex:
     def __init__(self, name: str, dim: int = 384):
         self.name = name
         self.dim = dim
-        self.data_path = f".turbovec_{name}.json"
+        self.data_path = str(Path(__file__).resolve().parent / f".turbovec_{name}.json")
         self._mock_data = {} # id -> vector
         if os.path.exists(self.data_path):
             try:

@@ -4,7 +4,7 @@ All node IDs are prefixed with the repo name (e.g. dograh:func_..., amo:func_...
 """
 
 from __future__ import annotations
-import sys, os, ast, re, importlib
+import sys, os, ast, re, importlib, threading
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from helixdb import Client, g, read_batch, define_params, param, Predicate, Projection
@@ -14,30 +14,37 @@ REPO_ROOT  = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # ── igraph pipeline (primary search) ──────────────────────────────────────────
 _pipeline_ready = False
+_pipeline_lock = threading.Lock()
 
 def _ensure_pipeline() -> bool:
     """Initialize the igraph pipeline on first use. Returns True if available."""
     global _pipeline_ready
     if _pipeline_ready:
         return True
-    try:
-        from pipeline_api import initialize
-        initialize(data_root=REPO_ROOT)
-        _pipeline_ready = True
-        return True
-    except Exception as e:
-        print(f"[graph_tools] igraph pipeline unavailable: {e}")
-        return False
+    with _pipeline_lock:
+        if _pipeline_ready:
+            return True
+        try:
+            from pipeline_api import initialize
+            initialize(data_root=REPO_ROOT)
+            _pipeline_ready = True
+            return True
+        except Exception as e:
+            print(f"[graph_tools] igraph pipeline unavailable: {e}")
+            return False
 
 # ── Embedding helper (same model as scalable_ingest) ──────────────────────────
 _EMBED_DIMS = 384
 _EMBED_MODEL = None
+_EMBED_LOCK = threading.Lock()
 
 def _get_embedder():
     global _EMBED_MODEL
     if _EMBED_MODEL is None:
-        from sentence_transformers import SentenceTransformer
-        _EMBED_MODEL = SentenceTransformer("all-MiniLM-L6-v2")
+        with _EMBED_LOCK:
+            if _EMBED_MODEL is None:
+                from sentence_transformers import SentenceTransformer
+                _EMBED_MODEL = SentenceTransformer("all-MiniLM-L6-v2")
     return _EMBED_MODEL
 
 def _embed(texts: str | list[str]) -> list[float] | list[list[float]]:

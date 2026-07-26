@@ -20,21 +20,36 @@ import sys
 import time
 import urllib.error
 import urllib.request
+from pathlib import Path
 
 SERVER_URL = "http://127.0.0.1:7700"
 _server_proc: subprocess.Popen | None = None
+_BRIDGE_DIR = Path(__file__).resolve().parent
 
 
 def _start_server() -> subprocess.Popen:
     global _server_proc
+    if _server_proc and _server_proc.poll() is None:
+        return _server_proc
+    server_script = str(_BRIDGE_DIR / "tools" / "graph_mcp_server.py")
     proc = subprocess.Popen(
-        [sys.executable, "tools/graph_mcp_server.py"],
+        [sys.executable, server_script],
+        cwd=str(_BRIDGE_DIR),
+        stdin=subprocess.DEVNULL,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.PIPE,
     )
     _server_proc = proc
     atexit.register(lambda: proc.kill() if proc.poll() is None else None)
     return proc
+
+
+def _server_responds() -> bool:
+    try:
+        urllib.request.urlopen(f"{SERVER_URL}/manifest", timeout=2)
+        return True
+    except Exception:
+        return False
 
 
 def _wait_for_server(max_retries: int = 40, delay: float = 1.0) -> bool:
@@ -51,7 +66,16 @@ def _wait_for_server(max_retries: int = 40, delay: float = 1.0) -> bool:
     return False
 
 
+def _ensure_server() -> bool:
+    if _server_responds():
+        return True
+    _start_server()
+    return _wait_for_server()
+
+
 def _http_get(path: str) -> dict | list:
+    if not _ensure_server():
+        return {"error": "graphdb HTTP server failed to start"}
     try:
         resp = urllib.request.urlopen(f"{SERVER_URL}{path}", timeout=10)
         return json.loads(resp.read().decode())
@@ -60,6 +84,8 @@ def _http_get(path: str) -> dict | list:
 
 
 def _http_post(path: str, body: dict) -> dict | list:
+    if not _ensure_server():
+        return {"error": "graphdb HTTP server failed to start"}
     try:
         data = json.dumps(body).encode()
         req = urllib.request.Request(
@@ -67,7 +93,7 @@ def _http_post(path: str, body: dict) -> dict | list:
             data=data,
             headers={"Content-Type": "application/json"},
         )
-        resp = urllib.request.urlopen(req, timeout=60)
+        resp = urllib.request.urlopen(req, timeout=110)
         return json.loads(resp.read().decode())
     except Exception as e:
         return {"error": str(e)}
@@ -79,21 +105,6 @@ def _send(msg: dict) -> None:
 
 
 def main() -> None:
-    _start_server()
-    ready = _wait_for_server()
-    if not ready:
-        _send(
-            {
-                "jsonrpc": "2.0",
-                "id": None,
-                "error": {
-                    "code": -32000,
-                    "message": "graphdb HTTP server failed to start",
-                },
-            }
-        )
-        sys.exit(1)
-
     for line in sys.stdin:
         line = line.strip()
         if not line:
@@ -113,7 +124,7 @@ def main() -> None:
                     "id": msg_id,
                     "result": {
                         "protocolVersion": "2024-11-05",
-                        "capabilities": {},
+                        "capabilities": {"tools": {}},
                         "serverInfo": {"name": "graphdb", "version": "1.0.0"},
                     },
                 }

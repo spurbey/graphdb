@@ -8,7 +8,9 @@ Kiro picks it up via .kiro/settings/mcp.json
 import json
 import sys
 import os
-from http.server import BaseHTTPRequestHandler, HTTPServer
+import threading
+import time
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from tools.graph_tools import (
@@ -34,15 +36,24 @@ _MCP_PARSER = _argparse.ArgumentParser()
 _MCP_PARSER.add_argument("--data-dir", type=str, default=None)
 _MCP_ARGS, _ = _MCP_PARSER.parse_known_args()
 
-# Initialize igraph pipeline at startup (loads graph, runs Infomap once)
-try:
-    from pipeline_api import initialize as _init_pipeline
-    _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    _DATA_ROOT = _MCP_ARGS.data_dir or _REPO_ROOT
-    _init_pipeline(data_root=_DATA_ROOT)
-    print(f"[graph_mcp_server] igraph pipeline ready (data={_DATA_ROOT})")
-except Exception as _e:
-    print(f"[graph_mcp_server] igraph pipeline unavailable, will use HelixDB fallback: {_e}")
+def _warm_pipeline() -> None:
+    """Warm graph + query embedder after the HTTP server is already discoverable."""
+    try:
+        from tools import graph_tools as _graph_tools
+        ready = _graph_tools._ensure_pipeline()
+        if not ready:
+            print("[graph_mcp_server] igraph pipeline unavailable, will use fallback", flush=True)
+            return
+        try:
+            from pipeline_api import _embed as _query_embed
+            _query_embed("warmup")
+        except Exception as _embed_error:
+            print(f"[graph_mcp_server] query embedder warmup failed: {_embed_error}", flush=True)
+        _REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        _DATA_ROOT = _MCP_ARGS.data_dir or _REPO_ROOT
+        print(f"[graph_mcp_server] igraph pipeline ready (data={_DATA_ROOT})", flush=True)
+    except Exception as _e:
+        print(f"[graph_mcp_server] igraph pipeline unavailable, will use fallback: {_e}", flush=True)
 
 PORT = 7700
 
@@ -283,16 +294,22 @@ class MCPHandler(BaseHTTPRequestHandler):
                 self._send_json(404, {"error": f"unknown tool: {name}"})
                 return
             try:
+                started = time.perf_counter()
+                print(f"[graph_mcp_server] tool start: {name}", flush=True)
                 result = fn(params)
+                elapsed = time.perf_counter() - started
+                print(f"[graph_mcp_server] tool done: {name} ({elapsed:.2f}s)", flush=True)
                 self._send_json(200, {"result": result})
             except Exception as e:
+                print(f"[graph_mcp_server] tool error: {name}: {e}", flush=True)
                 self._send_json(500, {"error": str(e)})
         else:
             self._send_json(404, {"error": "not found"})
 
 
 if __name__ == "__main__":
-    server = HTTPServer(("127.0.0.1", PORT), MCPHandler)
+    server = ThreadingHTTPServer(("127.0.0.1", PORT), MCPHandler)
     print(f"Graph MCP server running on http://127.0.0.1:{PORT}")
     print("Tools: search_code_semantics (igraph PPR) | search_code_semantics_helix (HelixDB) | get_code_time_travel_diff | trace_blast_radius | get_temporal_vulnerability_trace | edit_code")
+    threading.Thread(target=_warm_pipeline, name="graphdb-pipeline-warmup", daemon=True).start()
     server.serve_forever()
