@@ -38,3 +38,7 @@ _read_convo2.py
 
 # tests directory (not yet wired into CI)
 tests/
+
+# vector indexes - generated from repo embeddings
+data/vectors/
+.turbovec_*.json

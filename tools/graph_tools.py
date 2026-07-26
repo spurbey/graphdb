@@ -64,6 +64,64 @@ def _rows(result: dict, key: str) -> list[dict]:
     return result.get(key, {}).get("properties", [])
 
 
+def _fallback_name(node_id: str, vector_id: object) -> str:
+    if node_id:
+        return node_id.rsplit("_", 1)[-1]
+    return f"vector_{vector_id}"
+
+
+def _resolve_code_vector_hits(hits: list[dict], k: int) -> list[dict]:
+    """Resolve TurboVec vector IDs through HelixDB FunctionIdentity metadata."""
+    client = _c()
+    results = []
+    for hit in hits:
+        vector_id = hit.get("vector_id")
+        node_id_hint = hit.get("id", "")
+        item = {
+            "function_id": node_id_hint,
+            "vector_id": vector_id,
+            "name": _fallback_name(node_id_hint, vector_id),
+            "file": "",
+            "score": hit.get("score", 0),
+            "resolved_via": "cache_hint" if node_id_hint else "unresolved",
+        }
+        if vector_id is not None:
+            batch = (
+                read_batch()
+                .var_as(
+                    "fn",
+                    g()
+                    .n_with_label("FunctionIdentity")
+                    .where(Predicate.eq("code_vector_id", str(vector_id)))
+                    .limit(1)
+                    .project([
+                        Projection.property("node_id"),
+                        Projection.property("code_vector_source_node_id"),
+                        Projection.property("name"),
+                        Projection.property("file"),
+                    ]),
+                )
+                .returning(["fn"])
+            )
+            try:
+                rows = _rows(client.query().dynamic(batch.to_dynamic_request()).send(), "fn")
+                if rows:
+                    row = rows[0]
+                    resolved_id = row.get("code_vector_source_node_id") or row.get("node_id") or node_id_hint
+                    item.update({
+                        "function_id": resolved_id,
+                        "name": row.get("name") or _fallback_name(resolved_id, vector_id),
+                        "file": row.get("file", ""),
+                        "resolved_via": "helix_code_vector_id",
+                    })
+            except Exception as e:
+                item["resolve_error"] = str(e)
+        results.append(item)
+        if len(results) >= k:
+            break
+    return results
+
+
 # ── Tool 1: Semantic search (igraph pipeline — primary) ───────────────────────
 
 def search_code_semantics(prompt: str, k: int = 10, mode: str = "general_retrieval") -> dict | list[dict]:
@@ -111,20 +169,7 @@ def search_code_semantics_helix(prompt: str, k: int = 5) -> list[dict]:
     top_k = turbovec_adapter.code_index.search(vec, k * 3)
     if not top_k:
         return []
-
-    score_by_id = {res["id"]: res.get("score", 0) for res in top_k}
-    results = []
-    for node_id, score in score_by_id.items():
-        results.append({
-            "function_id": node_id,
-            "name": node_id.rsplit("_", 1)[-1],
-            "file": "",
-            "score": score,
-        })
-        if len(results) >= k:
-            break
-
-    return results
+    return _resolve_code_vector_hits(top_k, k)
 
 
 # ── Tool: explain_coupling ─────────────────────────────────────────────────────

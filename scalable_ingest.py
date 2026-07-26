@@ -109,6 +109,14 @@ def _ensure_indexes(c):
             IndexSpec.node_unique_equality(kind, "node_id")
         ))
         names.append(name)
+    batch = batch.var_as("idx_FunctionIdentity_code_vector_id", g().create_index_if_not_exists(
+        IndexSpec.node_equality(K_FUNC, "code_vector_id")
+    ))
+    names.append("idx_FunctionIdentity_code_vector_id")
+    batch = batch.var_as("idx_FunctionState_memory_vector_id", g().create_index_if_not_exists(
+        IndexSpec.node_equality(K_STATE, "memory_vector_id")
+    ))
+    names.append("idx_FunctionState_memory_vector_id")
     # Vector indexing is now handled by turbovec (TurboQuant) instead of HelixDB HNSW
     c.query().dynamic(batch.returning(names).to_dynamic_request()).send()
 
