@@ -65,7 +65,7 @@ MANIFEST = {
         {
             "name":        "search_code_semantics",
             "description": (
-                "Semantic search over the ingested codebase using PPR graph traversal. "
+                "Semantic search over the ingested codebase using pure vector top-k (no PPR/MMR). "
                 "Returns a subgraph: ranked nodes (id, name, file, summary, code, ppr_score) "
                 "plus edges between them. Better than raw vector search — finds structurally "
                 "adjacent functions even when their names don't match the query."
@@ -310,6 +310,6 @@ class MCPHandler(BaseHTTPRequestHandler):
 if __name__ == "__main__":
     server = ThreadingHTTPServer(("127.0.0.1", PORT), MCPHandler)
     print(f"Graph MCP server running on http://127.0.0.1:{PORT}")
-    print("Tools: search_code_semantics (igraph PPR) | search_code_semantics_helix (HelixDB) | get_code_time_travel_diff | trace_blast_radius | get_temporal_vulnerability_trace | edit_code")
+    print("Tools: search_code_semantics (igraph pure vector) | search_code_semantics_helix (HelixDB) | get_code_time_travel_diff | trace_blast_radius | get_temporal_vulnerability_trace | edit_code")
     threading.Thread(target=_warm_pipeline, name="graphdb-pipeline-warmup", daemon=True).start()
     server.serve_forever()
