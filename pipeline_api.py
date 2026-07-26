@@ -62,9 +62,27 @@ def _ensure_turbovec():
     if actual >= expected * 0.9:
         return
     print(f"[pipeline_api] Syncing turbovec index: {actual} -> {expected} entries...")
-    from helixdb import Client as _Client, g as _g, read_batch as _rb, Predicate as _Pred, Projection as _Proj
+    from helixdb import (
+        Client as _Client,
+        IndexSpec as _IndexSpec,
+        Predicate as _Pred,
+        Projection as _Proj,
+        PropertyInput as _PI,
+        g as _g,
+        read_batch as _rb,
+        write_batch as _wb,
+    )
     try:
         c = _Client("http://127.0.0.1:6969")
+        c.query().dynamic(
+            _wb()
+            .var_as(
+                "idx_code_vector_id",
+                _g().create_index_if_not_exists(_IndexSpec.node_equality("FunctionIdentity", "code_vector_id")),
+            )
+            .returning(["idx_code_vector_id"])
+            .to_dynamic_request()
+        ).send()
         batch = (
             _rb()
             .var_as("fns",
@@ -72,6 +90,7 @@ def _ensure_turbovec():
                    .limit(10000)
                    .project([
                        _Proj.property("node_id"),
+                       _Proj.property("code_vector_source_node_id"),
                        _Proj.property("code_vec"),
                    ])
             )
@@ -80,8 +99,10 @@ def _ensure_turbovec():
         result = c.query().dynamic(batch.to_dynamic_request()).send()
         rows = result.get("fns", {}).get("properties", [])
         inserted = 0
+        vector_updates = []
         for row in rows:
             nid = row.get("node_id", "")
+            source_id = row.get("code_vector_source_node_id") or nid
             vec = row.get("code_vec", [])
             if isinstance(vec, str):
                 try:
@@ -90,10 +111,26 @@ def _ensure_turbovec():
                 except Exception:
                     vec = []
             if isinstance(vec, list) and len(vec) == 384:
-                turbovec_adapter.code_index.insert(nid, vec)
+                vector_id = turbovec_adapter.code_index.insert(source_id, vec)
+                vector_updates.append((nid, source_id, vector_id))
                 inserted += 1
         turbovec_adapter.code_index.save()
-        print(f"  Synced {inserted} embeddings into turbovec code_index")
+        for offset in range(0, len(vector_updates), 100):
+            update_batch = _wb()
+            names = []
+            for i, (nid, source_id, vector_id) in enumerate(vector_updates[offset:offset + 100]):
+                name = f"fn{i}"
+                update_batch = update_batch.var_as(
+                    name,
+                    _g()
+                    .n_with_label("FunctionIdentity")
+                    .where(_Pred.eq("node_id", nid))
+                    .set_property("code_vector_id", _PI.value(str(vector_id)))
+                    .set_property("code_vector_source_node_id", _PI.value(source_id)),
+                )
+                names.append(name)
+            c.query().dynamic(update_batch.returning(names).to_dynamic_request()).send()
+        print(f"  Synced {inserted} embeddings into turbovec code_index and Helix code_vector_id")
     except Exception as e:
         print(f"  Turbovec sync failed (will use fallback): {e}")
 
@@ -106,6 +143,42 @@ def _repo_cochange_path():
     repo = nid.split(":")[0] if ":" in nid else "unknown"
     path = ROOT / "sandbox" / f"{repo}_cochange_pairs.json"
     return path if path.exists() else None
+
+
+def _resolve_code_vector_hit_ids(hits: list[dict]) -> list[tuple[str, float]]:
+    """Resolve TurboVec vector IDs to canonical graph node IDs via HelixDB."""
+    from helixdb import Client as _Client, g as _g, read_batch as _rb, Predicate as _Pred, Projection as _Proj
+
+    client = _Client("http://127.0.0.1:6969")
+    resolved: list[tuple[str, float]] = []
+    for hit in hits:
+        node_id = hit.get("id", "")
+        vector_id = hit.get("vector_id")
+        if vector_id is not None:
+            batch = (
+                _rb()
+                .var_as(
+                    "fn",
+                    _g()
+                    .n_with_label("FunctionIdentity")
+                    .where(_Pred.eq("code_vector_id", str(vector_id)))
+                    .limit(1)
+                    .project([
+                        _Proj.property("node_id"),
+                        _Proj.property("code_vector_source_node_id"),
+                    ]),
+                )
+                .returning(["fn"])
+            )
+            try:
+                rows = client.query().dynamic(batch.to_dynamic_request()).send().get("fn", {}).get("properties", [])
+                if rows:
+                    node_id = rows[0].get("code_vector_source_node_id") or rows[0].get("node_id") or node_id
+            except Exception:
+                pass
+        if node_id:
+            resolved.append((node_id, float(hit.get("score", 0))))
+    return resolved
 
 
 # ── Initialization ─────────────────────────────────────────────────────────────
@@ -240,21 +313,22 @@ def search(
     try:
         query_vec = _embed(prompt)
 
-        # Query HelixDB turbovec index (same 384-dim code_vec as igraph vertices)
+        # Query TurboVec 4-bit index; resolve vector IDs through HelixDB metadata.
         import turbovec_adapter
         top_k = turbovec_adapter.code_index.search(query_vec.tolist(), k * 3)
+        resolved_hits = _resolve_code_vector_hit_ids(top_k)
 
         # Map results to igraph vertex indices, filter candidates
         selected = []
         vec_score_map = {}
-        for res in top_k:
-            idx = _pipeline.id_to_idx.get(res["id"])
+        for node_id, score in resolved_hits:
+            idx = _pipeline.id_to_idx.get(node_id)
             if idx is None:
                 continue
             v = _pipeline.G.vs[idx]
             if _pipeline._is_candidate(v):
                 selected.append(idx)
-                vec_score_map[idx] = res["score"]
+                vec_score_map[idx] = score
             if len(selected) >= k:
                 break
 
