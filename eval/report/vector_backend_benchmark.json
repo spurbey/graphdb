@@ -1,0 +1,195 @@
+{
+  "corpus": {
+    "vector_json": "C:\\Users\\sumit\\Downloads\\Dora\\graphdb\\.turbovec_code.json",
+    "vector_count": 4821,
+    "dim": 384
+  },
+  "query_count": 2,
+  "k": 10,
+  "backends": [
+    {
+      "backend": "turbovec_2bit",
+      "available": true,
+      "query_count": 2,
+      "hit_at_5": 2,
+      "hit_at_10": 2,
+      "mean_first_expected_rank": 2,
+      "latency_ms": {
+        "p50": 0.466,
+        "p95": 0.754,
+        "all": [
+          0.754,
+          0.179
+        ]
+      },
+      "results": [
+        {
+          "query_id": "semantic-search-voice",
+          "prompt": "voice call handling and audio processing pipeline",
+          "first_expected_rank": 3,
+          "hit_at_5": true,
+          "hit_at_10": true,
+          "top_ids": [
+            "dograh:func_api_services_pipecat_pipeline_builder_create_pipeline_components",
+            "dograh:func_api_tests_test_user_idle_handler_create_pipeline_with_speech_injection",
+            "dograh:func_api_services_pipecat_audio_config_AudioConfig",
+            "dograh:func_api_services_workflow_pipecat_engine_voicemail_detector_handle_audio_data",
+            "dograh:func_api_services_pipecat_pipeline_builder_build_realtime_pipeline",
+            "dograh:func_api_services_pipecat_event_handlers_register_task_event_handler",
+            "dograh:func_api_services_pipecat_recording_playback_queue_recording_audio",
+            "dograh:func_api_tests_test_pipecat_engine_node_switch_with_user_speech_test_node_switch_with_concurrent_user_speech",
+            "dograh:func_api_services_pipecat_event_handlers_register_event_handlers",
+            "dograh:func_api_services_pipecat_pipeline_builder_create_pipeline_task"
+          ]
+        },
+        {
+          "query_id": "semantic-search-telephony-providers",
+          "prompt": "telephony service provider implementations for call routing",
+          "first_expected_rank": 1,
+          "hit_at_5": true,
+          "hit_at_10": true,
+          "top_ids": [
+            "dograh:func_api_routes_telephony__mount_provider_routers",
+            "dograh:func_api_db_telephony_phone_number_client_find_inbound_route_by_account",
+            "dograh:func_api_db_telephony_phone_number_client_find_inbound_routing_conflict",
+            "dograh:func_api_routes_telephony_initiate_call_transfer",
+            "dograh:func_api_routes_telephony_initiate_call",
+            "dograh:func_api_tests_test_telephony_factory_test_get_telephony_provider_for_run_casts_numeric_string_config_id",
+            "dograh:func_api_services_telephony_registry_ProviderSpec",
+            "dograh:func_api_services_campaign_call_dispatcher_get_telephony_provider",
+            "dograh:func_api_services_campaign_campaign_call_dispatcher_get_telephony_provider",
+            "dograh:func_api_services_telephony_factory_get_telephony_provider_for_run"
+          ]
+        }
+      ],
+      "bit_width": 2,
+      "build_ms": 303.142,
+      "write_ms": 5.814,
+      "index_file": "C:\\Users\\sumit\\Downloads\\Dora\\graphdb\\eval\\report\\dograh_turbovec_2bit.tv",
+      "index_file_bytes": 523758
+    },
+    {
+      "backend": "turbovec_4bit",
+      "available": true,
+      "query_count": 2,
+      "hit_at_5": 2,
+      "hit_at_10": 2,
+      "mean_first_expected_rank": 1,
+      "latency_ms": {
+        "p50": 0.797,
+        "p95": 0.887,
+        "all": [
+          0.707,
+          0.887
+        ]
+      },
+      "results": [
+        {
+          "query_id": "semantic-search-voice",
+          "prompt": "voice call handling and audio processing pipeline",
+          "first_expected_rank": 1,
+          "hit_at_5": true,
+          "hit_at_10": true,
+          "top_ids": [
+            "dograh:func_api_services_pipecat_audio_config_AudioConfig",
+            "dograh:func_api_services_pipecat_pipeline_builder_build_realtime_pipeline",
+            "dograh:func_api_tests_test_user_idle_handler_create_pipeline_with_speech_injection",
+            "dograh:func_api_services_pipecat_pipeline_builder_create_pipeline_components",
+            "dograh:func_api_tests_test_pipecat_engine_node_switch_with_user_speech_test_node_switch_with_concurrent_user_speech",
+            "dograh:func_api_services_pipecat_recording_playback_queue_recording_audio",
+            "dograh:func_api_services_workflow_pipecat_engine_voicemail_detector_handle_audio_data",
+            "dograh:func_api_services_pipecat_event_handlers_register_task_event_handler",
+            "dograh:func_api_services_pipecat_pipeline_builder_build_pipeline",
+            "dograh:func_api_services_workflow_pipecat_engine__handle_start_node"
+          ]
+        },
+        {
+          "query_id": "semantic-search-telephony-providers",
+          "prompt": "telephony service provider implementations for call routing",
+          "first_expected_rank": 1,
+          "hit_at_5": true,
+          "hit_at_10": true,
+          "top_ids": [
+            "dograh:func_api_db_telephony_phone_number_client_find_inbound_route_by_account",
+            "dograh:func_api_db_telephony_phone_number_client_find_inbound_routing_conflict",
+            "dograh:func_api_routes_telephony__mount_provider_routers",
+            "dograh:func_api_services_campaign_call_dispatcher_get_telephony_provider",
+            "dograh:func_api_services_campaign_campaign_call_dispatcher_get_telephony_provider",
+            "dograh:func_api_routes_telephony_initiate_call_transfer",
+            "dograh:func_api_tests_test_telephony_factory_test_get_telephony_provider_for_run_casts_numeric_string_config_id",
+            "dograh:func_api_services_telephony_factory_get_telephony_provider_by_id",
+            "dograh:func_api_services_telephony_factory_get_telephony_provider",
+            "dograh:func_api_routes_organization_get_telephony_providers_metadata"
+          ]
+        }
+      ],
+      "bit_width": 4,
+      "build_ms": 568.405,
+      "write_ms": 4.837,
+      "index_file": "C:\\Users\\sumit\\Downloads\\Dora\\graphdb\\eval\\report\\dograh_turbovec_4bit.tv",
+      "index_file_bytes": 986574
+    },
+    {
+      "backend": "helix_native",
+      "available": true,
+      "query_count": 2,
+      "hit_at_5": 2,
+      "hit_at_10": 2,
+      "mean_first_expected_rank": 2,
+      "latency_ms": {
+        "p50": 35.062,
+        "p95": 53.098,
+        "all": [
+          53.098,
+          17.025
+        ]
+      },
+      "results": [
+        {
+          "query_id": "semantic-search-voice",
+          "prompt": "voice call handling and audio processing pipeline",
+          "first_expected_rank": 3,
+          "hit_at_5": true,
+          "hit_at_10": true,
+          "top_ids": [
+            "dograh:func_api_tests_test_user_idle_handler_create_pipeline_with_speech_injection",
+            "dograh:func_api_services_pipecat_pipeline_builder_build_realtime_pipeline",
+            "dograh:func_api_services_pipecat_audio_config_AudioConfig",
+            "dograh:func_api_services_pipecat_pipeline_builder_create_pipeline_components",
+            "dograh:func_api_services_workflow_pipecat_engine_voicemail_detector_handle_audio_data",
+            "dograh:func_api_services_pipecat_recording_playback_queue_recording_audio",
+            "dograh:func_api_tests_test_pipecat_engine_node_switch_with_user_speech_test_node_switch_with_concurrent_user_speech",
+            "dograh:func_api_services_pipecat_event_handlers_register_task_event_handler",
+            "dograh:func_api_services_pipecat_pipeline_builder_build_pipeline",
+            "dograh:func_api_services_pipecat_event_handlers_register_event_handlers"
+          ]
+        },
+        {
+          "query_id": "semantic-search-telephony-providers",
+          "prompt": "telephony service provider implementations for call routing",
+          "first_expected_rank": 1,
+          "hit_at_5": true,
+          "hit_at_10": true,
+          "top_ids": [
+            "dograh:func_api_db_telephony_phone_number_client_find_inbound_route_by_account",
+            "dograh:func_api_db_telephony_phone_number_client_find_inbound_routing_conflict",
+            "dograh:func_api_routes_telephony__mount_provider_routers",
+            "dograh:func_api_services_campaign_call_dispatcher_get_telephony_provider",
+            "dograh:func_api_services_campaign_campaign_call_dispatcher_get_telephony_provider",
+            "dograh:func_api_routes_telephony_initiate_call_transfer",
+            "dograh:func_api_services_telephony_factory_get_telephony_provider_by_id",
+            "dograh:func_api_tests_test_telephony_factory_test_get_telephony_provider_for_run_casts_numeric_string_config_id",
+            "dograh:func_api_services_telephony_factory_get_telephony_provider",
+            "dograh:func_api_services_telephony_registry_ProviderSpec"
+          ]
+        }
+      ],
+      "setup": {
+        "index_setup_ms": 354.806,
+        "insert_attempts": 4821,
+        "insert_ms": 70389.337
+      },
+      "label": "VectorBenchDograhCode"
+    }
+  ]
+}
