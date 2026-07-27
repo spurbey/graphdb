@@ -1,0 +1,2763 @@
+[
+  {
+    "theme_id": "cochange_theme_0001",
+    "category": "shared_dependency",
+    "dependency_id": "file:api/db/workflow_recording_client.py",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_pipecat_recording_router_processor__handle_llm_text",
+      "dograh:func_api_services_pipecat_service_factory_create_llm_service"
+    ],
+    "source_commit_shas": [
+      "494c60d",
+      "7c24505",
+      "ac0731a"
+    ],
+    "commit_messages": [
+      "feat: add hybrid text + recording functionality in agents (#191)",
+      "feat: add recording audio option in tool and node transitions (#232)",
+      "feat: add support for self hosted llm models"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0001\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_pipecat_recording_router_processor__handle_llm_text <-> dograh:func_api_services_pipecat_service_factory_create_llm_service\nSupporting commits:\n- 494c60d: feat: add hybrid text + recording functionality in agents (#191)\n- 7c24505: feat: add recording audio option in tool and node transitions (#232)\n- ac0731a: feat: add support for self hosted llm models\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0002",
+    "category": "shared_dependency",
+    "dependency_id": "file:api/routes/campaign.py",
+    "pair_count": 2,
+    "function_ids": [
+      "dograh:func_api_db_campaign_client_create_campaign",
+      "dograh:func_api_db_campaign_client_get_completed_runs_for_report",
+      "dograh:func_api_routes_workflow_update_workflow",
+      "dograh:func_api_services_campaign_report_generate_campaign_report_csv"
+    ],
+    "source_commit_shas": [
+      "0b5fd10",
+      "4f2a629",
+      "5fe1c8c",
+      "7fab959",
+      "affb39e"
+    ],
+    "commit_messages": [
+      "feat: date range in download report",
+      "Initial Commit \ud83d\ude80 \ud83d\ude80",
+      "chore: UI enhancements for workflow runs view (#142)",
+      "feat: add redial option in campaigns",
+      "feat: custom telemetry configuration"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0002\nCategory: shared_dependency\nPairs:\n- dograh:func_api_db_campaign_client_create_campaign <-> dograh:func_api_routes_workflow_update_workflow\n- dograh:func_api_db_campaign_client_get_completed_runs_for_report <-> dograh:func_api_services_campaign_report_generate_campaign_report_csv\nSupporting commits:\n- 0b5fd10: feat: date range in download report\n- 4f2a629: Initial Commit \ud83d\ude80 \ud83d\ude80\n- 5fe1c8c: chore: UI enhancements for workflow runs view (#142)\n- 7fab959: feat: add redial option in campaigns\n- affb39e: feat: custom telemetry configuration\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0003",
+    "category": "shared_dependency",
+    "dependency_id": "file:api/routes/telephony.py",
+    "pair_count": 2,
+    "function_ids": [
+      "dograh:func_api_services_pipecat_audio_config_create_audio_config",
+      "dograh:func_api_services_telephony_factory_get_telephony_provider",
+      "dograh:func_api_services_telephony_factory_load_telephony_config"
+    ],
+    "source_commit_shas": [
+      "09897cb",
+      "4cfdc3d",
+      "5b820cb",
+      "7552b6c",
+      "99a768f",
+      "d58f37f",
+      "e2fa4bb"
+    ],
+    "commit_messages": [
+      "feat: added vobiz telephony (#65)",
+      "feat: add vonage telephony (#35)",
+      "feat: integrate Telnyx telephony for outbound and inbound calling (#206)",
+      "feat: add asterisk ARI websocket interface (#159)",
+      "feat: enable workflows to be embedded in websites as a script tag (#47)",
+      "fix: telephony bugs and improve code structure (#38)",
+      "feat: handle cloudonix incoming calls (#121)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0003\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_pipecat_audio_config_create_audio_config <-> dograh:func_api_services_telephony_factory_load_telephony_config\n- dograh:func_api_services_telephony_factory_get_telephony_provider <-> dograh:func_api_services_telephony_factory_load_telephony_config\nSupporting commits:\n- 09897cb: feat: added vobiz telephony (#65)\n- 4cfdc3d: feat: add vonage telephony (#35)\n- 5b820cb: feat: integrate Telnyx telephony for outbound and inbound calling (#206)\n- 7552b6c: feat: add asterisk ARI websocket interface (#159)\n- 99a768f: feat: enable workflows to be embedded in websites as a script tag (#47)\n- d58f37f: fix: telephony bugs and improve code structure (#38)\n- e2fa4bb: feat: handle cloudonix incoming calls (#121)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0004",
+    "category": "shared_dependency",
+    "dependency_id": "file:api/routes/tool.py",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_workflow_pipecat_engine_custom_tools__create_handler",
+      "dograh:func_api_services_workflow_pipecat_engine_custom_tools_register_handlers"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "033fde8",
+      "3e55af9",
+      "bd07b75"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "chore: refactor and add tests (#130)",
+      "feat: user defined custom tools as part of workflow execution (#94)",
+      "feat: tansfer calls with aasterisk (#171)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0004\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_workflow_pipecat_engine_custom_tools__create_handler <-> dograh:func_api_services_workflow_pipecat_engine_custom_tools_register_handlers\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 033fde8: chore: refactor and add tests (#130)\n- 3e55af9: feat: user defined custom tools as part of workflow execution (#94)\n- bd07b75: feat: tansfer calls with aasterisk (#171)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0005",
+    "category": "shared_dependency",
+    "dependency_id": "file:api/services/telephony/providers/cloudonix_provider.py",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_telephony_providers_twilio_provider_initiate_call",
+      "dograh:func_api_services_telephony_providers_vobiz_provider_initiate_call"
+    ],
+    "source_commit_shas": [
+      "3cdede0",
+      "4a8e4fe",
+      "8c42866",
+      "c711920",
+      "e7adbc7"
+    ],
+    "commit_messages": [
+      "feat: limit campaign concurrency to number of CLIs",
+      "fix: BACKEND_API_ENDPOINT resolution from env and cloudflared tunnel (#135)",
+      "fix: better error handling for telephony",
+      "feat: telephony call transfer (#155)",
+      "feat: add default telephony variables"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0005\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_telephony_providers_twilio_provider_initiate_call <-> dograh:func_api_services_telephony_providers_vobiz_provider_initiate_call\nSupporting commits:\n- 3cdede0: feat: limit campaign concurrency to number of CLIs\n- 4a8e4fe: fix: BACKEND_API_ENDPOINT resolution from env and cloudflared tunnel (#135)\n- 8c42866: fix: better error handling for telephony\n- c711920: feat: telephony call transfer (#155)\n- e7adbc7: feat: add default telephony variables\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0006",
+    "category": "shared_dependency",
+    "dependency_id": "file:api/services/telephony/providers/twilio_provider.py",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_telephony_providers_vobiz_provider_initiate_call",
+      "dograh:func_api_services_telephony_providers_vonage_provider_initiate_call"
+    ],
+    "source_commit_shas": [
+      "4a8e4fe",
+      "8c42866",
+      "97fbd9b",
+      "c711920",
+      "e7adbc7"
+    ],
+    "commit_messages": [
+      "fix: BACKEND_API_ENDPOINT resolution from env and cloudflared tunnel (#135)",
+      "fix: better error handling for telephony",
+      "Feat/inbound telephony (#113)",
+      "feat: telephony call transfer (#155)",
+      "feat: add default telephony variables"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0006\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_telephony_providers_vobiz_provider_initiate_call <-> dograh:func_api_services_telephony_providers_vonage_provider_initiate_call\nSupporting commits:\n- 4a8e4fe: fix: BACKEND_API_ENDPOINT resolution from env and cloudflared tunnel (#135)\n- 8c42866: fix: better error handling for telephony\n- 97fbd9b: Feat/inbound telephony (#113)\n- c711920: feat: telephony call transfer (#155)\n- e7adbc7: feat: add default telephony variables\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0007",
+    "category": "shared_dependency",
+    "dependency_id": "file:api/services/workflow/pipecat_engine.py",
+    "pair_count": 9,
+    "function_ids": [
+      "dograh:func_api_db_workflow_recording_client_check_recording_id_exists",
+      "dograh:func_api_db_workflow_recording_client_get_recording_by_recording_id",
+      "dograh:func_api_routes_knowledge_base_process_document",
+      "dograh:func_api_routes_tool_validate_category",
+      "dograh:func_api_services_workflow_pipecat_engine_custom_tools__create_end_call_handler",
+      "dograh:func_api_services_workflow_pipecat_engine_custom_tools__create_http_tool_handler",
+      "dograh:func_api_services_workflow_pipecat_engine_custom_tools__handle_transfer_result",
+      "dograh:func_api_services_workflow_qa_analysis__generate_conversation_summary",
+      "dograh:func_api_services_workflow_qa_analysis__run_whole_call_qa_analysis",
+      "dograh:func_api_services_workflow_qa_analysis_run_per_node_qa_analysis",
+      "dograh:func_api_services_workflow_workflow___init__",
+      "dograh:func_api_tasks_knowledge_base_processing_process_knowledge_base_document",
+      "dograh:func_api_tests_test_pipecat_engine_context_update_run_pipeline_and_capture_context",
+      "dograh:func_api_tests_test_pipecat_engine_tool_calls_run_pipeline_with_tool_calls",
+      "dograh:func_api_tests_test_user_idle_handler_run_pipeline_with_user_idle"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "033fde8",
+      "04576ac",
+      "4c936ae",
+      "65c76ca",
+      "6b408e5",
+      "7c24505",
+      "7e2de09",
+      "87c8c5e",
+      "87e72d5",
+      "911c5ed",
+      "a172db8",
+      "ac0731a",
+      "c711920",
+      "e34e4f8",
+      "ec2f322",
+      "ef5b9e4",
+      "fe84f08"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "chore: refactor and add tests (#130)",
+      "fix: llm generation in case of user idle",
+      "feat: add openrouter support",
+      "feat: allow uploading recording as part of node transition",
+      "fix: fix variable extraction during pipeline execution flow",
+      "feat: add recording audio option in tool and node transitions (#232)",
+      "feat: Add end call reason in tool calls.",
+      "feat: add full document mode in knowledge base",
+      "feat: add gemini live and speaches integration (#220)",
+      "fix: changes to update pipecat version to 0.0.100 (#122)",
+      "feat: add end_call tool (#118)",
+      "feat: add support for self hosted llm models",
+      "feat: telephony call transfer (#155)",
+      "chore: upgrade pipecat",
+      "feat: add pre call fetch configuration (#222)",
+      "feat: knowledge base functionality for the voice agent (#120)",
+      "feat: add AWS Bedrock support"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0007\nCategory: shared_dependency\nPairs:\n- dograh:func_api_db_workflow_recording_client_check_recording_id_exists <-> dograh:func_api_db_workflow_recording_client_get_recording_by_recording_id\n- dograh:func_api_routes_knowledge_base_process_document <-> dograh:func_api_tasks_knowledge_base_processing_process_knowledge_base_document\n- dograh:func_api_routes_tool_validate_category <-> dograh:func_api_services_workflow_pipecat_engine_custom_tools__handle_transfer_result\n- dograh:func_api_services_workflow_pipecat_engine_custom_tools__create_end_call_handler <-> dograh:func_api_services_workflow_workflow___init__\n- dograh:func_api_services_workflow_pipecat_engine_custom_tools__create_http_tool_handler <-> dograh:func_api_services_workflow_workflow___init__\n- dograh:func_api_services_workflow_qa_analysis__generate_conversation_summary <-> dograh:func_api_services_workflow_qa_analysis__run_whole_call_qa_analysis\n- dograh:func_api_services_workflow_qa_analysis__run_whole_call_qa_analysis <-> dograh:func_api_services_workflow_qa_analysis_run_per_node_qa_analysis\n- dograh:func_api_tests_test_pipecat_engine_context_update_run_pipeline_and_capture_context <-> dograh:func_api_tests_test_user_idle_handler_run_pipeline_with_user_idle\n- dograh:func_api_tests_test_pipecat_engine_tool_calls_run_pipeline_with_tool_calls <-> dograh:func_api_tests_test_user_idle_handler_run_pipeline_with_user_idle\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 033fde8: chore: refactor and add tests (#130)\n- 04576ac: fix: llm generation in case of user idle\n- 4c936ae: feat: add openrouter support\n- 65c76ca: feat: allow uploading recording as part of node transition\n- 6b408e5: fix: fix variable extraction during pipeline execution flow\n- 7c24505: feat: add recording audio option in tool and node transitions (#232)\n- 7e2de09: feat: Add end call reason in tool calls.\n- 87c8c5e: feat: add full document mode in knowledge base\n- 87e72d5: feat: add gemini live and speaches integration (#220)\n- 911c5ed: fix: changes to update pipecat version to 0.0.100 (#122)\n- a172db8: feat: add end_call tool (#118)\n- ac0731a: feat: add support for self hosted llm models\n- c711920: feat: telephony call transfer (#155)\n- e34e4f8: chore: upgrade pipecat\n- ec2f322: feat: add pre call fetch configuration (#222)\n- ef5b9e4: feat: knowledge base functionality for the voice agent (#120)\n- fe84f08: feat: add AWS Bedrock support\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0008",
+    "category": "shared_dependency",
+    "dependency_id": "file:api/services/workflow/pipecat_engine_custom_tools.py",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_workflow_workflow___init__",
+      "dograh:func_api_services_workflow_workflow__assert_connection_counts"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "3e55af9",
+      "a172db8"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "feat: user defined custom tools as part of workflow execution (#94)",
+      "feat: add end_call tool (#118)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0008\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_workflow_workflow___init__ <-> dograh:func_api_services_workflow_workflow__assert_connection_counts\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 3e55af9: feat: user defined custom tools as part of workflow execution (#94)\n- a172db8: feat: add end_call tool (#118)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0009",
+    "category": "shared_dependency",
+    "dependency_id": "file:api/tests/test_pipecat_engine_tool_calls.py",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_tests_test_pipecat_engine_end_call___init__",
+      "dograh:func_api_tests_test_pipecat_engine_node_switch_with_user_speech_test_node_switch_with_concurrent_user_speech"
+    ],
+    "source_commit_shas": [
+      "033fde8",
+      "cff9674",
+      "ec2f322"
+    ],
+    "commit_messages": [
+      "chore: refactor and add tests (#130)",
+      "chore: bump pipecat version",
+      "feat: add pre call fetch configuration (#222)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0009\nCategory: shared_dependency\nPairs:\n- dograh:func_api_tests_test_pipecat_engine_end_call___init__ <-> dograh:func_api_tests_test_pipecat_engine_node_switch_with_user_speech_test_node_switch_with_concurrent_user_speech\nSupporting commits:\n- 033fde8: chore: refactor and add tests (#130)\n- cff9674: chore: bump pipecat version\n- ec2f322: feat: add pre call fetch configuration (#222)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0010",
+    "category": "shared_dependency",
+    "dependency_id": "file:api/tests/test_text_and_audio_playback.py",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_routes_workflow_recording_list_recordings",
+      "dograh:func_api_services_workflow_workflow___init__"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "65c76ca",
+      "7c24505"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "feat: allow uploading recording as part of node transition",
+      "feat: add recording audio option in tool and node transitions (#232)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0010\nCategory: shared_dependency\nPairs:\n- dograh:func_api_routes_workflow_recording_list_recordings <-> dograh:func_api_services_workflow_workflow___init__\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 65c76ca: feat: allow uploading recording as part of node transition\n- 7c24505: feat: add recording audio option in tool and node transitions (#232)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0011",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_app_lifespan",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_pipecat_tracing_config_force_flush",
+      "dograh:func_api_services_pipecat_tracing_config_shutdown"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "03df559",
+      "affb39e"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "feat: add worker sync events",
+      "feat: custom telemetry configuration"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0011\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_pipecat_tracing_config_force_flush <-> dograh:func_api_services_pipecat_tracing_config_shutdown\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 03df559: feat: add worker sync events\n- affb39e: feat: custom telemetry configuration\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0012",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_routes_campaign_get_campaign",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_routes_campaign_get_campaigns",
+      "dograh:func_api_routes_campaign_pause_campaign"
+    ],
+    "source_commit_shas": [
+      "38d1d92",
+      "55b727a",
+      "7fab959"
+    ],
+    "commit_messages": [
+      "feat: agent versioning and model configurations override (#227)",
+      "Feat/Add API Trigger and Webhooks in Agent Builder (#83)",
+      "feat: add redial option in campaigns"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0012\nCategory: shared_dependency\nPairs:\n- dograh:func_api_routes_campaign_get_campaigns <-> dograh:func_api_routes_campaign_pause_campaign\nSupporting commits:\n- 38d1d92: feat: agent versioning and model configurations override (#227)\n- 55b727a: Feat/Add API Trigger and Webhooks in Agent Builder (#83)\n- 7fab959: feat: add redial option in campaigns\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0013",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_routes_campaign_get_campaigns",
+    "pair_count": 5,
+    "function_ids": [
+      "dograh:func_api_routes_campaign_get_campaign",
+      "dograh:func_api_routes_campaign_pause_campaign",
+      "dograh:func_api_routes_campaign_resume_campaign",
+      "dograh:func_api_routes_campaign_start_campaign"
+    ],
+    "source_commit_shas": [
+      "38d1d92",
+      "55b727a",
+      "7fab959"
+    ],
+    "commit_messages": [
+      "feat: agent versioning and model configurations override (#227)",
+      "Feat/Add API Trigger and Webhooks in Agent Builder (#83)",
+      "feat: add redial option in campaigns"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0013\nCategory: shared_dependency\nPairs:\n- dograh:func_api_routes_campaign_get_campaign <-> dograh:func_api_routes_campaign_pause_campaign\n- dograh:func_api_routes_campaign_get_campaign <-> dograh:func_api_routes_campaign_resume_campaign\n- dograh:func_api_routes_campaign_get_campaign <-> dograh:func_api_routes_campaign_start_campaign\n- dograh:func_api_routes_campaign_pause_campaign <-> dograh:func_api_routes_campaign_resume_campaign\n- dograh:func_api_routes_campaign_pause_campaign <-> dograh:func_api_routes_campaign_start_campaign\nSupporting commits:\n- 38d1d92: feat: agent versioning and model configurations override (#227)\n- 55b727a: Feat/Add API Trigger and Webhooks in Agent Builder (#83)\n- 7fab959: feat: add redial option in campaigns\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0014",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_routes_campaign_pause_campaign",
+    "pair_count": 3,
+    "function_ids": [
+      "dograh:func_api_routes_campaign_get_campaign",
+      "dograh:func_api_routes_campaign_get_campaigns",
+      "dograh:func_api_routes_campaign_resume_campaign",
+      "dograh:func_api_routes_campaign_start_campaign"
+    ],
+    "source_commit_shas": [
+      "38d1d92",
+      "55b727a",
+      "7fab959"
+    ],
+    "commit_messages": [
+      "feat: agent versioning and model configurations override (#227)",
+      "Feat/Add API Trigger and Webhooks in Agent Builder (#83)",
+      "feat: add redial option in campaigns"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0014\nCategory: shared_dependency\nPairs:\n- dograh:func_api_routes_campaign_get_campaign <-> dograh:func_api_routes_campaign_get_campaigns\n- dograh:func_api_routes_campaign_get_campaigns <-> dograh:func_api_routes_campaign_resume_campaign\n- dograh:func_api_routes_campaign_get_campaigns <-> dograh:func_api_routes_campaign_start_campaign\nSupporting commits:\n- 38d1d92: feat: agent versioning and model configurations override (#227)\n- 55b727a: Feat/Add API Trigger and Webhooks in Agent Builder (#83)\n- 7fab959: feat: add redial option in campaigns\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0015",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_routes_campaign_resume_campaign",
+    "pair_count": 3,
+    "function_ids": [
+      "dograh:func_api_db_workflow_run_client_create_workflow_run",
+      "dograh:func_api_routes_campaign_create_campaign",
+      "dograh:func_api_routes_campaign_start_campaign",
+      "dograh:func_api_routes_telephony_initiate_call"
+    ],
+    "source_commit_shas": [
+      "38d1d92",
+      "4cfdc3d",
+      "4f2a629",
+      "55b727a",
+      "7fab959",
+      "8e2e5c9"
+    ],
+    "commit_messages": [
+      "feat: agent versioning and model configurations override (#227)",
+      "feat: add vonage telephony (#35)",
+      "Initial Commit \ud83d\ude80 \ud83d\ude80",
+      "Feat/Add API Trigger and Webhooks in Agent Builder (#83)",
+      "feat: add redial option in campaigns",
+      "feat: Enable telephony for OSS (#21)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0015\nCategory: shared_dependency\nPairs:\n- dograh:func_api_db_workflow_run_client_create_workflow_run <-> dograh:func_api_routes_campaign_start_campaign\n- dograh:func_api_routes_campaign_create_campaign <-> dograh:func_api_routes_campaign_start_campaign\n- dograh:func_api_routes_campaign_start_campaign <-> dograh:func_api_routes_telephony_initiate_call\nSupporting commits:\n- 38d1d92: feat: agent versioning and model configurations override (#227)\n- 4cfdc3d: feat: add vonage telephony (#35)\n- 4f2a629: Initial Commit \ud83d\ude80 \ud83d\ude80\n- 55b727a: Feat/Add API Trigger and Webhooks in Agent Builder (#83)\n- 7fab959: feat: add redial option in campaigns\n- 8e2e5c9: feat: Enable telephony for OSS (#21)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0016",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_routes_campaign_start_campaign",
+    "pair_count": 7,
+    "function_ids": [
+      "dograh:func_api_db_workflow_run_client_create_workflow_run",
+      "dograh:func_api_routes_campaign_create_campaign",
+      "dograh:func_api_routes_campaign_resume_campaign",
+      "dograh:func_api_routes_telephony_initiate_call",
+      "dograh:func_api_routes_twilio_initiate_call",
+      "dograh:func_api_routes_twilio_start_call",
+      "dograh:func_api_services_campaign_call_dispatcher_dispatch_call",
+      "dograh:func_api_tasks_workflow_run_cost_calculate_workflow_run_cost"
+    ],
+    "source_commit_shas": [
+      "38d1d92",
+      "4cfdc3d",
+      "4f2a629",
+      "55b727a",
+      "7fab959",
+      "8e2e5c9"
+    ],
+    "commit_messages": [
+      "feat: agent versioning and model configurations override (#227)",
+      "feat: add vonage telephony (#35)",
+      "Initial Commit \ud83d\ude80 \ud83d\ude80",
+      "Feat/Add API Trigger and Webhooks in Agent Builder (#83)",
+      "feat: add redial option in campaigns",
+      "feat: Enable telephony for OSS (#21)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0016\nCategory: shared_dependency\nPairs:\n- dograh:func_api_db_workflow_run_client_create_workflow_run <-> dograh:func_api_routes_campaign_resume_campaign\n- dograh:func_api_routes_campaign_create_campaign <-> dograh:func_api_routes_campaign_resume_campaign\n- dograh:func_api_routes_campaign_resume_campaign <-> dograh:func_api_routes_telephony_initiate_call\n- dograh:func_api_routes_campaign_resume_campaign <-> dograh:func_api_routes_twilio_initiate_call\n- dograh:func_api_routes_twilio_initiate_call <-> dograh:func_api_routes_twilio_start_call\n- dograh:func_api_routes_twilio_initiate_call <-> dograh:func_api_services_campaign_call_dispatcher_dispatch_call\n- dograh:func_api_routes_twilio_initiate_call <-> dograh:func_api_tasks_workflow_run_cost_calculate_workflow_run_cost\nSupporting commits:\n- 38d1d92: feat: agent versioning and model configurations override (#227)\n- 4cfdc3d: feat: add vonage telephony (#35)\n- 4f2a629: Initial Commit \ud83d\ude80 \ud83d\ude80\n- 55b727a: Feat/Add API Trigger and Webhooks in Agent Builder (#83)\n- 7fab959: feat: add redial option in campaigns\n- 8e2e5c9: feat: Enable telephony for OSS (#21)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0017",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_routes_knowledge_base_process_document",
+    "pair_count": 4,
+    "function_ids": [
+      "dograh:func_api_services_gen_ai_embedding_openai_service___init__",
+      "dograh:func_api_services_workflow_tools_knowledge_base__perform_retrieval",
+      "dograh:func_api_services_workflow_tools_knowledge_base_retrieve_from_knowledge_base",
+      "dograh:func_api_tasks_knowledge_base_processing_process_knowledge_base_document"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "4c936ae",
+      "87c8c5e",
+      "ef5b9e4"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "feat: add openrouter support",
+      "feat: add full document mode in knowledge base",
+      "feat: knowledge base functionality for the voice agent (#120)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0017\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_gen_ai_embedding_openai_service___init__ <-> dograh:func_api_services_workflow_tools_knowledge_base_retrieve_from_knowledge_base\n- dograh:func_api_services_gen_ai_embedding_openai_service___init__ <-> dograh:func_api_tasks_knowledge_base_processing_process_knowledge_base_document\n- dograh:func_api_services_workflow_tools_knowledge_base__perform_retrieval <-> dograh:func_api_tasks_knowledge_base_processing_process_knowledge_base_document\n- dograh:func_api_services_workflow_tools_knowledge_base_retrieve_from_knowledge_base <-> dograh:func_api_tasks_knowledge_base_processing_process_knowledge_base_document\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 4c936ae: feat: add openrouter support\n- 87c8c5e: feat: add full document mode in knowledge base\n- ef5b9e4: feat: knowledge base functionality for the voice agent (#120)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0018",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_routes_organization_get_telephony_configuration",
+    "pair_count": 2,
+    "function_ids": [
+      "dograh:func_api_routes_organization_save_telephony_configuration",
+      "dograh:func_api_services_campaign_call_dispatcher_dispatch_call",
+      "dograh:func_api_services_telephony_factory_load_telephony_config"
+    ],
+    "source_commit_shas": [
+      "09897cb",
+      "4cfdc3d",
+      "8e2e5c9",
+      "99a768f"
+    ],
+    "commit_messages": [
+      "feat: added vobiz telephony (#65)",
+      "feat: add vonage telephony (#35)",
+      "feat: Enable telephony for OSS (#21)",
+      "feat: enable workflows to be embedded in websites as a script tag (#47)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0018\nCategory: shared_dependency\nPairs:\n- dograh:func_api_routes_organization_save_telephony_configuration <-> dograh:func_api_services_campaign_call_dispatcher_dispatch_call\n- dograh:func_api_routes_organization_save_telephony_configuration <-> dograh:func_api_services_telephony_factory_load_telephony_config\nSupporting commits:\n- 09897cb: feat: added vobiz telephony (#65)\n- 4cfdc3d: feat: add vonage telephony (#35)\n- 8e2e5c9: feat: Enable telephony for OSS (#21)\n- 99a768f: feat: enable workflows to be embedded in websites as a script tag (#47)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0019",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_routes_organization_save_telephony_configuration",
+    "pair_count": 2,
+    "function_ids": [
+      "dograh:func_api_routes_organization_get_telephony_configuration",
+      "dograh:func_api_services_campaign_call_dispatcher_dispatch_call",
+      "dograh:func_api_services_telephony_factory_load_telephony_config"
+    ],
+    "source_commit_shas": [
+      "09897cb",
+      "4cfdc3d",
+      "8e2e5c9",
+      "99a768f"
+    ],
+    "commit_messages": [
+      "feat: added vobiz telephony (#65)",
+      "feat: add vonage telephony (#35)",
+      "feat: Enable telephony for OSS (#21)",
+      "feat: enable workflows to be embedded in websites as a script tag (#47)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0019\nCategory: shared_dependency\nPairs:\n- dograh:func_api_routes_organization_get_telephony_configuration <-> dograh:func_api_services_campaign_call_dispatcher_dispatch_call\n- dograh:func_api_routes_organization_get_telephony_configuration <-> dograh:func_api_services_telephony_factory_load_telephony_config\nSupporting commits:\n- 09897cb: feat: added vobiz telephony (#65)\n- 4cfdc3d: feat: add vonage telephony (#35)\n- 8e2e5c9: feat: Enable telephony for OSS (#21)\n- 99a768f: feat: enable workflows to be embedded in websites as a script tag (#47)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0020",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_routes_telephony_handle_cloudonix_status_callback",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_routes_telephony_handle_twilio_status_callback",
+      "dograh:func_api_routes_telephony_handle_vonage_events"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "4a8e4fe",
+      "514d9c5"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "fix: BACKEND_API_ENDPOINT resolution from env and cloudflared tunnel (#135)",
+      "feat: enable Sarvam Models"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0020\nCategory: shared_dependency\nPairs:\n- dograh:func_api_routes_telephony_handle_twilio_status_callback <-> dograh:func_api_routes_telephony_handle_vonage_events\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 4a8e4fe: fix: BACKEND_API_ENDPOINT resolution from env and cloudflared tunnel (#135)\n- 514d9c5: feat: enable Sarvam Models\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0021",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_routes_telephony_handle_twilio_status_callback",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_routes_telephony_handle_cloudonix_status_callback",
+      "dograh:func_api_routes_telephony_handle_vonage_events"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "4a8e4fe",
+      "514d9c5"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "fix: BACKEND_API_ENDPOINT resolution from env and cloudflared tunnel (#135)",
+      "feat: enable Sarvam Models"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0021\nCategory: shared_dependency\nPairs:\n- dograh:func_api_routes_telephony_handle_cloudonix_status_callback <-> dograh:func_api_routes_telephony_handle_vonage_events\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 4a8e4fe: fix: BACKEND_API_ENDPOINT resolution from env and cloudflared tunnel (#135)\n- 514d9c5: feat: enable Sarvam Models\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0022",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_routes_telephony_handle_vobiz_hangup_callback",
+    "pair_count": 2,
+    "function_ids": [
+      "dograh:func_api_routes_telephony_handle_vobiz_hangup_callback_by_workflow",
+      "dograh:func_api_routes_telephony_handle_vobiz_ring_callback",
+      "dograh:func_api_routes_telephony_initiate_call"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "514d9c5",
+      "90b690e",
+      "d35eeb1"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "feat: enable Sarvam Models",
+      "feat: add cloudonix outbound telephony (#101)",
+      "fix: fix OPENAI_API_KEY bug in retrieval"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0022\nCategory: shared_dependency\nPairs:\n- dograh:func_api_routes_telephony_handle_vobiz_hangup_callback_by_workflow <-> dograh:func_api_routes_telephony_handle_vobiz_ring_callback\n- dograh:func_api_routes_telephony_handle_vobiz_ring_callback <-> dograh:func_api_routes_telephony_initiate_call\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 514d9c5: feat: enable Sarvam Models\n- 90b690e: feat: add cloudonix outbound telephony (#101)\n- d35eeb1: fix: fix OPENAI_API_KEY bug in retrieval\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0023",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_routes_telephony_handle_vobiz_hangup_callback_by_workflow",
+    "pair_count": 9,
+    "function_ids": [
+      "dograh:func_api_routes_telephony__validate_inbound_request",
+      "dograh:func_api_routes_telephony_handle_inbound_telephony",
+      "dograh:func_api_routes_telephony_handle_twilio_status_callback",
+      "dograh:func_api_routes_telephony_handle_vobiz_hangup_callback",
+      "dograh:func_api_routes_telephony_handle_vobiz_ring_callback"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "1d19490",
+      "514d9c5",
+      "d35eeb1"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "chore: upgrade pipecat",
+      "feat: enable Sarvam Models",
+      "fix: fix OPENAI_API_KEY bug in retrieval"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0023\nCategory: shared_dependency\nPairs:\n- dograh:func_api_routes_telephony__validate_inbound_request <-> dograh:func_api_routes_telephony_handle_inbound_telephony\n- dograh:func_api_routes_telephony__validate_inbound_request <-> dograh:func_api_routes_telephony_handle_twilio_status_callback\n- dograh:func_api_routes_telephony__validate_inbound_request <-> dograh:func_api_routes_telephony_handle_vobiz_hangup_callback\n- dograh:func_api_routes_telephony__validate_inbound_request <-> dograh:func_api_routes_telephony_handle_vobiz_ring_callback\n- dograh:func_api_routes_telephony_handle_inbound_telephony <-> dograh:func_api_routes_telephony_handle_twilio_status_callback\n- dograh:func_api_routes_telephony_handle_inbound_telephony <-> dograh:func_api_routes_telephony_handle_vobiz_hangup_callback\n- dograh:func_api_routes_telephony_handle_inbound_telephony <-> dograh:func_api_routes_telephony_handle_vobiz_ring_callback\n- dograh:func_api_routes_telephony_handle_twilio_status_callback <-> dograh:func_api_routes_telephony_handle_vobiz_hangup_callback\n- dograh:func_api_routes_telephony_handle_twilio_status_callback <-> dograh:func_api_routes_telephony_handle_vobiz_ring_callback\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 1d19490: chore: upgrade pipecat\n- 514d9c5: feat: enable Sarvam Models\n- d35eeb1: fix: fix OPENAI_API_KEY bug in retrieval\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0024",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_routes_telephony_handle_vobiz_ring_callback",
+    "pair_count": 5,
+    "function_ids": [
+      "dograh:func_api_routes_telephony__validate_inbound_request",
+      "dograh:func_api_routes_telephony_handle_inbound_telephony",
+      "dograh:func_api_routes_telephony_handle_twilio_status_callback",
+      "dograh:func_api_routes_telephony_handle_vobiz_hangup_callback",
+      "dograh:func_api_routes_telephony_handle_vobiz_hangup_callback_by_workflow",
+      "dograh:func_api_routes_telephony_initiate_call"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "514d9c5",
+      "90b690e",
+      "d35eeb1"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "feat: enable Sarvam Models",
+      "feat: add cloudonix outbound telephony (#101)",
+      "fix: fix OPENAI_API_KEY bug in retrieval"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0024\nCategory: shared_dependency\nPairs:\n- dograh:func_api_routes_telephony__validate_inbound_request <-> dograh:func_api_routes_telephony_handle_vobiz_hangup_callback_by_workflow\n- dograh:func_api_routes_telephony_handle_inbound_telephony <-> dograh:func_api_routes_telephony_handle_vobiz_hangup_callback_by_workflow\n- dograh:func_api_routes_telephony_handle_twilio_status_callback <-> dograh:func_api_routes_telephony_handle_vobiz_hangup_callback_by_workflow\n- dograh:func_api_routes_telephony_handle_vobiz_hangup_callback <-> dograh:func_api_routes_telephony_handle_vobiz_hangup_callback_by_workflow\n- dograh:func_api_routes_telephony_handle_vobiz_hangup_callback <-> dograh:func_api_routes_telephony_initiate_call\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 514d9c5: feat: enable Sarvam Models\n- 90b690e: feat: add cloudonix outbound telephony (#101)\n- d35eeb1: fix: fix OPENAI_API_KEY bug in retrieval\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0025",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_routes_telephony_handle_vonage_events",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_routes_telephony_handle_cloudonix_status_callback",
+      "dograh:func_api_routes_telephony_handle_twilio_status_callback"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "4a8e4fe",
+      "514d9c5"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "fix: BACKEND_API_ENDPOINT resolution from env and cloudflared tunnel (#135)",
+      "feat: enable Sarvam Models"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0025\nCategory: shared_dependency\nPairs:\n- dograh:func_api_routes_telephony_handle_cloudonix_status_callback <-> dograh:func_api_routes_telephony_handle_twilio_status_callback\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 4a8e4fe: fix: BACKEND_API_ENDPOINT resolution from env and cloudflared tunnel (#135)\n- 514d9c5: feat: enable Sarvam Models\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0026",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_routes_telephony_initiate_call",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_telephony_base_initiate_call",
+      "dograh:func_api_services_telephony_providers_twilio_provider_initiate_call"
+    ],
+    "source_commit_shas": [
+      "4cfdc3d",
+      "d35eeb1",
+      "e7adbc7"
+    ],
+    "commit_messages": [
+      "feat: add vonage telephony (#35)",
+      "fix: fix OPENAI_API_KEY bug in retrieval",
+      "feat: add default telephony variables"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0026\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_telephony_base_initiate_call <-> dograh:func_api_services_telephony_providers_twilio_provider_initiate_call\nSupporting commits:\n- 4cfdc3d: feat: add vonage telephony (#35)\n- d35eeb1: fix: fix OPENAI_API_KEY bug in retrieval\n- e7adbc7: feat: add default telephony variables\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0027",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_routes_twilio_initiate_call",
+    "pair_count": 9,
+    "function_ids": [
+      "dograh:func_api_routes_campaign_resume_campaign",
+      "dograh:func_api_routes_campaign_start_campaign",
+      "dograh:func_api_routes_twilio_start_call",
+      "dograh:func_api_services_campaign_call_dispatcher_dispatch_call",
+      "dograh:func_api_tasks_workflow_run_cost_calculate_workflow_run_cost"
+    ],
+    "source_commit_shas": [
+      "4cfdc3d",
+      "4f2a629",
+      "8e2e5c9"
+    ],
+    "commit_messages": [
+      "feat: add vonage telephony (#35)",
+      "Initial Commit \ud83d\ude80 \ud83d\ude80",
+      "feat: Enable telephony for OSS (#21)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0027\nCategory: shared_dependency\nPairs:\n- dograh:func_api_routes_campaign_resume_campaign <-> dograh:func_api_routes_twilio_start_call\n- dograh:func_api_routes_campaign_resume_campaign <-> dograh:func_api_services_campaign_call_dispatcher_dispatch_call\n- dograh:func_api_routes_campaign_resume_campaign <-> dograh:func_api_tasks_workflow_run_cost_calculate_workflow_run_cost\n- dograh:func_api_routes_campaign_start_campaign <-> dograh:func_api_routes_twilio_start_call\n- dograh:func_api_routes_campaign_start_campaign <-> dograh:func_api_services_campaign_call_dispatcher_dispatch_call\n- dograh:func_api_routes_campaign_start_campaign <-> dograh:func_api_tasks_workflow_run_cost_calculate_workflow_run_cost\n- dograh:func_api_routes_twilio_start_call <-> dograh:func_api_services_campaign_call_dispatcher_dispatch_call\n- dograh:func_api_routes_twilio_start_call <-> dograh:func_api_tasks_workflow_run_cost_calculate_workflow_run_cost\n- dograh:func_api_services_campaign_call_dispatcher_dispatch_call <-> dograh:func_api_tasks_workflow_run_cost_calculate_workflow_run_cost\nSupporting commits:\n- 4cfdc3d: feat: add vonage telephony (#35)\n- 4f2a629: Initial Commit \ud83d\ude80 \ud83d\ude80\n- 8e2e5c9: feat: Enable telephony for OSS (#21)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0028",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_routes_twilio_start_call",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_routes_campaign_start_campaign",
+      "dograh:func_api_routes_twilio_initiate_call"
+    ],
+    "source_commit_shas": [
+      "4cfdc3d",
+      "4f2a629",
+      "8e2e5c9"
+    ],
+    "commit_messages": [
+      "feat: add vonage telephony (#35)",
+      "Initial Commit \ud83d\ude80 \ud83d\ude80",
+      "feat: Enable telephony for OSS (#21)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0028\nCategory: shared_dependency\nPairs:\n- dograh:func_api_routes_campaign_start_campaign <-> dograh:func_api_routes_twilio_initiate_call\nSupporting commits:\n- 4cfdc3d: feat: add vonage telephony (#35)\n- 4f2a629: Initial Commit \ud83d\ude80 \ud83d\ude80\n- 8e2e5c9: feat: Enable telephony for OSS (#21)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0029",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_routes_workflow_create_workflow",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_routes_workflow_create_workflow_from_template",
+      "dograh:func_api_routes_workflow_duplicate_workflow_endpoint"
+    ],
+    "source_commit_shas": [
+      "0b86813",
+      "87c8c5e",
+      "f041e60"
+    ],
+    "commit_messages": [
+      "chore: fix API schema for workflow",
+      "feat: add full document mode in knowledge base",
+      "feat: add examples to create workflow and use sdk"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0029\nCategory: shared_dependency\nPairs:\n- dograh:func_api_routes_workflow_create_workflow_from_template <-> dograh:func_api_routes_workflow_duplicate_workflow_endpoint\nSupporting commits:\n- 0b86813: chore: fix API schema for workflow\n- 87c8c5e: feat: add full document mode in knowledge base\n- f041e60: feat: add examples to create workflow and use sdk\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0030",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_routes_workflow_create_workflow_from_template",
+    "pair_count": 11,
+    "function_ids": [
+      "dograh:func_api_routes_workflow_create_workflow",
+      "dograh:func_api_routes_workflow_duplicate_workflow_endpoint",
+      "dograh:func_api_routes_workflow_duplicate_workflow_template",
+      "dograh:func_api_routes_workflow_get_workflow",
+      "dograh:func_api_routes_workflow_update_workflow",
+      "dograh:func_api_routes_workflow_update_workflow_status"
+    ],
+    "source_commit_shas": [
+      "0b86813",
+      "4f2a629",
+      "5fe1c8c",
+      "7fab959",
+      "87c8c5e",
+      "f041e60"
+    ],
+    "commit_messages": [
+      "chore: fix API schema for workflow",
+      "Initial Commit \ud83d\ude80 \ud83d\ude80",
+      "chore: UI enhancements for workflow runs view (#142)",
+      "feat: add redial option in campaigns",
+      "feat: add full document mode in knowledge base",
+      "feat: add examples to create workflow and use sdk"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0030\nCategory: shared_dependency\nPairs:\n- dograh:func_api_routes_workflow_create_workflow <-> dograh:func_api_routes_workflow_duplicate_workflow_endpoint\n- dograh:func_api_routes_workflow_create_workflow <-> dograh:func_api_routes_workflow_duplicate_workflow_template\n- dograh:func_api_routes_workflow_create_workflow <-> dograh:func_api_routes_workflow_get_workflow\n- dograh:func_api_routes_workflow_create_workflow <-> dograh:func_api_routes_workflow_update_workflow\n- dograh:func_api_routes_workflow_create_workflow <-> dograh:func_api_routes_workflow_update_workflow_status\n- dograh:func_api_routes_workflow_duplicate_workflow_template <-> dograh:func_api_routes_workflow_get_workflow\n- dograh:func_api_routes_workflow_duplicate_workflow_template <-> dograh:func_api_routes_workflow_update_workflow\n- dograh:func_api_routes_workflow_duplicate_workflow_template <-> dograh:func_api_routes_workflow_update_workflow_status\n- dograh:func_api_routes_workflow_get_workflow <-> dograh:func_api_routes_workflow_update_workflow\n- dograh:func_api_routes_workflow_get_workflow <-> dograh:func_api_routes_workflow_update_workflow_status\n- dograh:func_api_routes_workflow_update_workflow <-> dograh:func_api_routes_workflow_update_workflow_status\nSupporting commits:\n- 0b86813: chore: fix API schema for workflow\n- 4f2a629: Initial Commit \ud83d\ude80 \ud83d\ude80\n- 5fe1c8c: chore: UI enhancements for workflow runs view (#142)\n- 7fab959: feat: add redial option in campaigns\n- 87c8c5e: feat: add full document mode in knowledge base\n- f041e60: feat: add examples to create workflow and use sdk\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0031",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_routes_workflow_duplicate_workflow_template",
+    "pair_count": 4,
+    "function_ids": [
+      "dograh:func_api_routes_workflow_create_workflow",
+      "dograh:func_api_routes_workflow_create_workflow_from_template",
+      "dograh:func_api_routes_workflow_get_workflow",
+      "dograh:func_api_routes_workflow_update_workflow",
+      "dograh:func_api_routes_workflow_update_workflow_status"
+    ],
+    "source_commit_shas": [
+      "0b86813",
+      "4f2a629",
+      "5fe1c8c",
+      "87c8c5e",
+      "f041e60"
+    ],
+    "commit_messages": [
+      "chore: fix API schema for workflow",
+      "Initial Commit \ud83d\ude80 \ud83d\ude80",
+      "chore: UI enhancements for workflow runs view (#142)",
+      "feat: add full document mode in knowledge base",
+      "feat: add examples to create workflow and use sdk"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0031\nCategory: shared_dependency\nPairs:\n- dograh:func_api_routes_workflow_create_workflow <-> dograh:func_api_routes_workflow_create_workflow_from_template\n- dograh:func_api_routes_workflow_create_workflow_from_template <-> dograh:func_api_routes_workflow_get_workflow\n- dograh:func_api_routes_workflow_create_workflow_from_template <-> dograh:func_api_routes_workflow_update_workflow\n- dograh:func_api_routes_workflow_create_workflow_from_template <-> dograh:func_api_routes_workflow_update_workflow_status\nSupporting commits:\n- 0b86813: chore: fix API schema for workflow\n- 4f2a629: Initial Commit \ud83d\ude80 \ud83d\ude80\n- 5fe1c8c: chore: UI enhancements for workflow runs view (#142)\n- 87c8c5e: feat: add full document mode in knowledge base\n- f041e60: feat: add examples to create workflow and use sdk\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0032",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_routes_workflow_recording__generate_unique_recording_id",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_routes_workflow_recording_get_upload_urls",
+      "dograh:func_api_routes_workflow_recording_list_recordings"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "65c76ca",
+      "6792ecd"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "feat: allow uploading recording as part of node transition",
+      "feat: allow multiple recording file upload"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0032\nCategory: shared_dependency\nPairs:\n- dograh:func_api_routes_workflow_recording_get_upload_urls <-> dograh:func_api_routes_workflow_recording_list_recordings\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 65c76ca: feat: allow uploading recording as part of node transition\n- 6792ecd: feat: allow multiple recording file upload\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0033",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_routes_workflow_recording_get_upload_urls",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_routes_workflow_recording__generate_unique_recording_id",
+      "dograh:func_api_routes_workflow_recording_list_recordings"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "65c76ca",
+      "6792ecd"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "feat: allow uploading recording as part of node transition",
+      "feat: allow multiple recording file upload"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0033\nCategory: shared_dependency\nPairs:\n- dograh:func_api_routes_workflow_recording__generate_unique_recording_id <-> dograh:func_api_routes_workflow_recording_list_recordings\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 65c76ca: feat: allow uploading recording as part of node transition\n- 6792ecd: feat: allow multiple recording file upload\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0034",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_routes_workflow_recording_list_recordings",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_routes_workflow_recording__generate_unique_recording_id",
+      "dograh:func_api_routes_workflow_recording_get_upload_urls"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "65c76ca",
+      "6792ecd"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "feat: allow uploading recording as part of node transition",
+      "feat: allow multiple recording file upload"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0034\nCategory: shared_dependency\nPairs:\n- dograh:func_api_routes_workflow_recording__generate_unique_recording_id <-> dograh:func_api_routes_workflow_recording_get_upload_urls\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 65c76ca: feat: allow uploading recording as part of node transition\n- 6792ecd: feat: allow multiple recording file upload\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0035",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_routes_workflow_update_workflow",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_routes_workflow_create_workflow_from_template",
+      "dograh:func_api_routes_workflow_duplicate_workflow_template"
+    ],
+    "source_commit_shas": [
+      "0b86813",
+      "4f2a629",
+      "5fe1c8c",
+      "f041e60"
+    ],
+    "commit_messages": [
+      "chore: fix API schema for workflow",
+      "Initial Commit \ud83d\ude80 \ud83d\ude80",
+      "chore: UI enhancements for workflow runs view (#142)",
+      "feat: add examples to create workflow and use sdk"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0035\nCategory: shared_dependency\nPairs:\n- dograh:func_api_routes_workflow_create_workflow_from_template <-> dograh:func_api_routes_workflow_duplicate_workflow_template\nSupporting commits:\n- 0b86813: chore: fix API schema for workflow\n- 4f2a629: Initial Commit \ud83d\ude80 \ud83d\ude80\n- 5fe1c8c: chore: UI enhancements for workflow runs view (#142)\n- f041e60: feat: add examples to create workflow and use sdk\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0036",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_gen_ai_embedding_openai_service___init__",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_routes_knowledge_base_process_document",
+      "dograh:func_api_services_workflow_tools_knowledge_base_retrieve_from_knowledge_base"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "4c936ae",
+      "ef5b9e4"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "feat: add openrouter support",
+      "feat: knowledge base functionality for the voice agent (#120)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0036\nCategory: shared_dependency\nPairs:\n- dograh:func_api_routes_knowledge_base_process_document <-> dograh:func_api_services_workflow_tools_knowledge_base_retrieve_from_knowledge_base\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 4c936ae: feat: add openrouter support\n- ef5b9e4: feat: knowledge base functionality for the voice agent (#120)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0037",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_pipecat_in_memory_buffers_append",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_pipecat_in_memory_buffers_generate_transcript_text",
+      "dograh:func_api_services_pipecat_in_memory_buffers_is_empty"
+    ],
+    "source_commit_shas": [
+      "4d80726",
+      "7e2de09",
+      "e31b381"
+    ],
+    "commit_messages": [
+      "feat: download campaign report",
+      "feat: Add end call reason in tool calls.",
+      "fix: fix interruption handling for Gemini Live"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0037\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_pipecat_in_memory_buffers_generate_transcript_text <-> dograh:func_api_services_pipecat_in_memory_buffers_is_empty\nSupporting commits:\n- 4d80726: feat: download campaign report\n- 7e2de09: feat: Add end call reason in tool calls.\n- e31b381: fix: fix interruption handling for Gemini Live\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0038",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_pipecat_in_memory_buffers_generate_transcript_text",
+    "pair_count": 2,
+    "function_ids": [
+      "dograh:func_api_services_pipecat_in_memory_buffers___init__",
+      "dograh:func_api_services_pipecat_in_memory_buffers_append",
+      "dograh:func_api_services_pipecat_in_memory_buffers_is_empty"
+    ],
+    "source_commit_shas": [
+      "4d80726",
+      "7e2de09",
+      "e31b381"
+    ],
+    "commit_messages": [
+      "feat: download campaign report",
+      "feat: Add end call reason in tool calls.",
+      "fix: fix interruption handling for Gemini Live"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0038\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_pipecat_in_memory_buffers___init__ <-> dograh:func_api_services_pipecat_in_memory_buffers_is_empty\n- dograh:func_api_services_pipecat_in_memory_buffers_append <-> dograh:func_api_services_pipecat_in_memory_buffers_is_empty\nSupporting commits:\n- 4d80726: feat: download campaign report\n- 7e2de09: feat: Add end call reason in tool calls.\n- e31b381: fix: fix interruption handling for Gemini Live\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0039",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_pipecat_in_memory_buffers_is_empty",
+    "pair_count": 3,
+    "function_ids": [
+      "dograh:func_api_services_pipecat_in_memory_buffers___init__",
+      "dograh:func_api_services_pipecat_in_memory_buffers_append",
+      "dograh:func_api_services_pipecat_in_memory_buffers_generate_transcript_text"
+    ],
+    "source_commit_shas": [
+      "4d80726",
+      "7e2de09",
+      "e31b381"
+    ],
+    "commit_messages": [
+      "feat: download campaign report",
+      "feat: Add end call reason in tool calls.",
+      "fix: fix interruption handling for Gemini Live"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0039\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_pipecat_in_memory_buffers___init__ <-> dograh:func_api_services_pipecat_in_memory_buffers_append\n- dograh:func_api_services_pipecat_in_memory_buffers___init__ <-> dograh:func_api_services_pipecat_in_memory_buffers_generate_transcript_text\n- dograh:func_api_services_pipecat_in_memory_buffers_append <-> dograh:func_api_services_pipecat_in_memory_buffers_generate_transcript_text\nSupporting commits:\n- 4d80726: feat: download campaign report\n- 7e2de09: feat: Add end call reason in tool calls.\n- e31b381: fix: fix interruption handling for Gemini Live\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0040",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_pipecat_realtime_feedback_observer_on_push_frame",
+    "pair_count": 2,
+    "function_ids": [
+      "dograh:func_api_routes_tool_validate_category",
+      "dograh:func_api_services_pipecat_recording_router_processor__handle_llm_text",
+      "dograh:func_api_services_pipecat_recording_router_processor__handle_response_end",
+      "dograh:func_api_services_workflow_pipecat_engine_end_call_with_reason"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "1967a71",
+      "494c60d",
+      "7c24505",
+      "7e2de09"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "feat: add rtf log when user speaks when muted",
+      "feat: add hybrid text + recording functionality in agents (#191)",
+      "feat: add recording audio option in tool and node transitions (#232)",
+      "feat: Add end call reason in tool calls."
+    ],
+    "ai_prompt": "Theme: cochange_theme_0040\nCategory: shared_dependency\nPairs:\n- dograh:func_api_routes_tool_validate_category <-> dograh:func_api_services_workflow_pipecat_engine_end_call_with_reason\n- dograh:func_api_services_pipecat_recording_router_processor__handle_llm_text <-> dograh:func_api_services_pipecat_recording_router_processor__handle_response_end\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 1967a71: feat: add rtf log when user speaks when muted\n- 494c60d: feat: add hybrid text + recording functionality in agents (#191)\n- 7c24505: feat: add recording audio option in tool and node transitions (#232)\n- 7e2de09: feat: Add end call reason in tool calls.\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0041",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_pipecat_recording_audio_cache__cache_path",
+    "pair_count": 3,
+    "function_ids": [
+      "dograh:func_api_services_pipecat_recording_audio_cache__download_and_convert",
+      "dograh:func_api_services_pipecat_recording_audio_cache_create_recording_audio_fetcher",
+      "dograh:func_api_services_pipecat_recording_audio_cache_warm_recording_cache",
+      "dograh:func_api_services_workflow_workflow___init__"
+    ],
+    "source_commit_shas": [
+      "65c76ca",
+      "7c24505",
+      "87c8c5e",
+      "fe84f08"
+    ],
+    "commit_messages": [
+      "feat: allow uploading recording as part of node transition",
+      "feat: add recording audio option in tool and node transitions (#232)",
+      "feat: add full document mode in knowledge base",
+      "feat: add AWS Bedrock support"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0041\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_pipecat_recording_audio_cache__download_and_convert <-> dograh:func_api_services_pipecat_recording_audio_cache_create_recording_audio_fetcher\n- dograh:func_api_services_pipecat_recording_audio_cache__download_and_convert <-> dograh:func_api_services_pipecat_recording_audio_cache_warm_recording_cache\n- dograh:func_api_services_pipecat_recording_audio_cache__download_and_convert <-> dograh:func_api_services_workflow_workflow___init__\nSupporting commits:\n- 65c76ca: feat: allow uploading recording as part of node transition\n- 7c24505: feat: add recording audio option in tool and node transitions (#232)\n- 87c8c5e: feat: add full document mode in knowledge base\n- fe84f08: feat: add AWS Bedrock support\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0042",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_pipecat_recording_audio_cache__download_and_convert",
+    "pair_count": 5,
+    "function_ids": [
+      "dograh:func_api_services_pipecat_recording_audio_cache__cache_path",
+      "dograh:func_api_services_pipecat_recording_audio_cache_create_recording_audio_fetcher",
+      "dograh:func_api_services_pipecat_recording_audio_cache_warm_recording_cache",
+      "dograh:func_api_services_workflow_workflow___init__"
+    ],
+    "source_commit_shas": [
+      "65c76ca",
+      "7c24505",
+      "87c8c5e",
+      "fe84f08"
+    ],
+    "commit_messages": [
+      "feat: allow uploading recording as part of node transition",
+      "feat: add recording audio option in tool and node transitions (#232)",
+      "feat: add full document mode in knowledge base",
+      "feat: add AWS Bedrock support"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0042\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_pipecat_recording_audio_cache__cache_path <-> dograh:func_api_services_pipecat_recording_audio_cache_create_recording_audio_fetcher\n- dograh:func_api_services_pipecat_recording_audio_cache__cache_path <-> dograh:func_api_services_pipecat_recording_audio_cache_warm_recording_cache\n- dograh:func_api_services_pipecat_recording_audio_cache__cache_path <-> dograh:func_api_services_workflow_workflow___init__\n- dograh:func_api_services_pipecat_recording_audio_cache_create_recording_audio_fetcher <-> dograh:func_api_services_pipecat_recording_audio_cache_warm_recording_cache\n- dograh:func_api_services_pipecat_recording_audio_cache_create_recording_audio_fetcher <-> dograh:func_api_services_workflow_workflow___init__\nSupporting commits:\n- 65c76ca: feat: allow uploading recording as part of node transition\n- 7c24505: feat: add recording audio option in tool and node transitions (#232)\n- 87c8c5e: feat: add full document mode in knowledge base\n- fe84f08: feat: add AWS Bedrock support\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0043",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_pipecat_recording_audio_cache_create_recording_audio_fetcher",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_pipecat_recording_audio_cache__cache_path",
+      "dograh:func_api_services_pipecat_recording_audio_cache__download_and_convert"
+    ],
+    "source_commit_shas": [
+      "65c76ca",
+      "7c24505",
+      "87c8c5e",
+      "fe84f08"
+    ],
+    "commit_messages": [
+      "feat: allow uploading recording as part of node transition",
+      "feat: add recording audio option in tool and node transitions (#232)",
+      "feat: add full document mode in knowledge base",
+      "feat: add AWS Bedrock support"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0043\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_pipecat_recording_audio_cache__cache_path <-> dograh:func_api_services_pipecat_recording_audio_cache__download_and_convert\nSupporting commits:\n- 65c76ca: feat: allow uploading recording as part of node transition\n- 7c24505: feat: add recording audio option in tool and node transitions (#232)\n- 87c8c5e: feat: add full document mode in knowledge base\n- fe84f08: feat: add AWS Bedrock support\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0044",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_pipecat_recording_router_processor___init__",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_pipecat_recording_router_processor__handle_llm_text",
+      "dograh:func_api_services_pipecat_recording_router_processor__reset"
+    ],
+    "source_commit_shas": [
+      "1967a71",
+      "7c24505",
+      "ac0731a"
+    ],
+    "commit_messages": [
+      "feat: add rtf log when user speaks when muted",
+      "feat: add recording audio option in tool and node transitions (#232)",
+      "feat: add support for self hosted llm models"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0044\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_pipecat_recording_router_processor__handle_llm_text <-> dograh:func_api_services_pipecat_recording_router_processor__reset\nSupporting commits:\n- 1967a71: feat: add rtf log when user speaks when muted\n- 7c24505: feat: add recording audio option in tool and node transitions (#232)\n- ac0731a: feat: add support for self hosted llm models\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0045",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_pipecat_recording_router_processor__handle_llm_text",
+    "pair_count": 2,
+    "function_ids": [
+      "dograh:func_api_services_pipecat_realtime_feedback_observer_on_push_frame",
+      "dograh:func_api_services_pipecat_recording_router_processor___init__",
+      "dograh:func_api_services_pipecat_recording_router_processor__handle_response_end",
+      "dograh:func_api_services_pipecat_recording_router_processor__reset"
+    ],
+    "source_commit_shas": [
+      "1967a71",
+      "494c60d",
+      "7c24505",
+      "ac0731a"
+    ],
+    "commit_messages": [
+      "feat: add rtf log when user speaks when muted",
+      "feat: add hybrid text + recording functionality in agents (#191)",
+      "feat: add recording audio option in tool and node transitions (#232)",
+      "feat: add support for self hosted llm models"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0045\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_pipecat_realtime_feedback_observer_on_push_frame <-> dograh:func_api_services_pipecat_recording_router_processor__handle_response_end\n- dograh:func_api_services_pipecat_recording_router_processor___init__ <-> dograh:func_api_services_pipecat_recording_router_processor__reset\nSupporting commits:\n- 1967a71: feat: add rtf log when user speaks when muted\n- 494c60d: feat: add hybrid text + recording functionality in agents (#191)\n- 7c24505: feat: add recording audio option in tool and node transitions (#232)\n- ac0731a: feat: add support for self hosted llm models\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0046",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_pipecat_recording_router_processor__handle_response_end",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_pipecat_realtime_feedback_observer_on_push_frame",
+      "dograh:func_api_services_pipecat_recording_router_processor__handle_llm_text"
+    ],
+    "source_commit_shas": [
+      "1967a71",
+      "494c60d",
+      "7c24505"
+    ],
+    "commit_messages": [
+      "feat: add rtf log when user speaks when muted",
+      "feat: add hybrid text + recording functionality in agents (#191)",
+      "feat: add recording audio option in tool and node transitions (#232)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0046\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_pipecat_realtime_feedback_observer_on_push_frame <-> dograh:func_api_services_pipecat_recording_router_processor__handle_llm_text\nSupporting commits:\n- 1967a71: feat: add rtf log when user speaks when muted\n- 494c60d: feat: add hybrid text + recording functionality in agents (#191)\n- 7c24505: feat: add recording audio option in tool and node transitions (#232)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0047",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_pipecat_recording_router_processor__reset",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_pipecat_recording_router_processor___init__",
+      "dograh:func_api_services_pipecat_recording_router_processor__handle_llm_text"
+    ],
+    "source_commit_shas": [
+      "1967a71",
+      "7c24505",
+      "ac0731a"
+    ],
+    "commit_messages": [
+      "feat: add rtf log when user speaks when muted",
+      "feat: add recording audio option in tool and node transitions (#232)",
+      "feat: add support for self hosted llm models"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0047\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_pipecat_recording_router_processor___init__ <-> dograh:func_api_services_pipecat_recording_router_processor__handle_llm_text\nSupporting commits:\n- 1967a71: feat: add rtf log when user speaks when muted\n- 7c24505: feat: add recording audio option in tool and node transitions (#232)\n- ac0731a: feat: add support for self hosted llm models\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0048",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_pipecat_run_pipeline__run_pipeline",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_routes_tool_validate_category",
+      "dograh:func_api_services_pipecat_event_handlers_register_event_handlers"
+    ],
+    "source_commit_shas": [
+      "3f19a16",
+      "74dbafb",
+      "7c24505",
+      "c711920"
+    ],
+    "commit_messages": [
+      "feat: add posthog events (#231)",
+      "feat: allow recordings in tool transitions",
+      "feat: add recording audio option in tool and node transitions (#232)",
+      "feat: telephony call transfer (#155)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0048\nCategory: shared_dependency\nPairs:\n- dograh:func_api_routes_tool_validate_category <-> dograh:func_api_services_pipecat_event_handlers_register_event_handlers\nSupporting commits:\n- 3f19a16: feat: add posthog events (#231)\n- 74dbafb: feat: allow recordings in tool transitions\n- 7c24505: feat: add recording audio option in tool and node transitions (#232)\n- c711920: feat: telephony call transfer (#155)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0049",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_pipecat_service_factory_create_llm_service",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_pipecat_service_factory_create_stt_service",
+      "dograh:func_api_services_pipecat_service_factory_create_tts_service"
+    ],
+    "source_commit_shas": [
+      "74b0693",
+      "7717810",
+      "7c24505",
+      "909c258",
+      "ac0731a",
+      "cc2d3e7",
+      "edf0fa4"
+    ],
+    "commit_messages": [
+      "fix: fix configuration option",
+      "feat: add early voicemail detection",
+      "feat: add recording audio option in tool and node transitions (#232)",
+      "fix: prevent pipeline freezes when sending endframe (#77)",
+      "feat: add support for self hosted llm models",
+      "chore: render initial and gathered context",
+      "fix: migrate from custom audio recorder to native AudioBuffer (#115)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0049\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_pipecat_service_factory_create_stt_service <-> dograh:func_api_services_pipecat_service_factory_create_tts_service\nSupporting commits:\n- 74b0693: fix: fix configuration option\n- 7717810: feat: add early voicemail detection\n- 7c24505: feat: add recording audio option in tool and node transitions (#232)\n- 909c258: fix: prevent pipeline freezes when sending endframe (#77)\n- ac0731a: feat: add support for self hosted llm models\n- cc2d3e7: chore: render initial and gathered context\n- edf0fa4: fix: migrate from custom audio recorder to native AudioBuffer (#115)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0050",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_pipecat_service_factory_create_stt_service",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_pipecat_service_factory_create_llm_service",
+      "dograh:func_api_services_pipecat_service_factory_create_tts_service"
+    ],
+    "source_commit_shas": [
+      "74b0693",
+      "7717810",
+      "7c24505",
+      "ac0731a",
+      "edf0fa4"
+    ],
+    "commit_messages": [
+      "fix: fix configuration option",
+      "feat: add early voicemail detection",
+      "feat: add recording audio option in tool and node transitions (#232)",
+      "feat: add support for self hosted llm models",
+      "fix: migrate from custom audio recorder to native AudioBuffer (#115)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0050\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_pipecat_service_factory_create_llm_service <-> dograh:func_api_services_pipecat_service_factory_create_tts_service\nSupporting commits:\n- 74b0693: fix: fix configuration option\n- 7717810: feat: add early voicemail detection\n- 7c24505: feat: add recording audio option in tool and node transitions (#232)\n- ac0731a: feat: add support for self hosted llm models\n- edf0fa4: fix: migrate from custom audio recorder to native AudioBuffer (#115)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0051",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_pipecat_service_factory_create_tts_service",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_pipecat_service_factory_create_llm_service",
+      "dograh:func_api_services_pipecat_service_factory_create_stt_service"
+    ],
+    "source_commit_shas": [
+      "74b0693",
+      "7717810",
+      "7c24505",
+      "ac0731a",
+      "edf0fa4"
+    ],
+    "commit_messages": [
+      "fix: fix configuration option",
+      "feat: add early voicemail detection",
+      "feat: add recording audio option in tool and node transitions (#232)",
+      "feat: add support for self hosted llm models",
+      "fix: migrate from custom audio recorder to native AudioBuffer (#115)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0051\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_pipecat_service_factory_create_llm_service <-> dograh:func_api_services_pipecat_service_factory_create_stt_service\nSupporting commits:\n- 74b0693: fix: fix configuration option\n- 7717810: feat: add early voicemail detection\n- 7c24505: feat: add recording audio option in tool and node transitions (#232)\n- ac0731a: feat: add support for self hosted llm models\n- edf0fa4: fix: migrate from custom audio recorder to native AudioBuffer (#115)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0052",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_pipecat_tracing_config_force_flush",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_app_lifespan",
+      "dograh:func_api_services_pipecat_tracing_config_shutdown"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "03df559",
+      "affb39e"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "feat: add worker sync events",
+      "feat: custom telemetry configuration"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0052\nCategory: shared_dependency\nPairs:\n- dograh:func_api_app_lifespan <-> dograh:func_api_services_pipecat_tracing_config_shutdown\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 03df559: feat: add worker sync events\n- affb39e: feat: custom telemetry configuration\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0053",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_pipecat_tracing_config_shutdown",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_app_lifespan",
+      "dograh:func_api_services_pipecat_tracing_config_force_flush"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "03df559",
+      "affb39e"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "feat: add worker sync events",
+      "feat: custom telemetry configuration"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0053\nCategory: shared_dependency\nPairs:\n- dograh:func_api_app_lifespan <-> dograh:func_api_services_pipecat_tracing_config_force_flush\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 03df559: feat: add worker sync events\n- affb39e: feat: custom telemetry configuration\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0054",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_pipecat_transport_setup_create_cloudonix_transport",
+    "pair_count": 6,
+    "function_ids": [
+      "dograh:func_api_services_pipecat_transport_setup_create_twilio_transport",
+      "dograh:func_api_services_pipecat_transport_setup_create_vobiz_transport",
+      "dograh:func_api_services_pipecat_transport_setup_create_vonage_transport",
+      "dograh:func_api_services_pipecat_transport_setup_create_webrtc_transport"
+    ],
+    "source_commit_shas": [
+      "04576ac",
+      "5b820cb",
+      "87c8c5e",
+      "911c5ed"
+    ],
+    "commit_messages": [
+      "fix: llm generation in case of user idle",
+      "feat: integrate Telnyx telephony for outbound and inbound calling (#206)",
+      "feat: add full document mode in knowledge base",
+      "fix: changes to update pipecat version to 0.0.100 (#122)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0054\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_pipecat_transport_setup_create_twilio_transport <-> dograh:func_api_services_pipecat_transport_setup_create_vobiz_transport\n- dograh:func_api_services_pipecat_transport_setup_create_twilio_transport <-> dograh:func_api_services_pipecat_transport_setup_create_vonage_transport\n- dograh:func_api_services_pipecat_transport_setup_create_twilio_transport <-> dograh:func_api_services_pipecat_transport_setup_create_webrtc_transport\n- dograh:func_api_services_pipecat_transport_setup_create_vobiz_transport <-> dograh:func_api_services_pipecat_transport_setup_create_vonage_transport\n- dograh:func_api_services_pipecat_transport_setup_create_vobiz_transport <-> dograh:func_api_services_pipecat_transport_setup_create_webrtc_transport\n- dograh:func_api_services_pipecat_transport_setup_create_vonage_transport <-> dograh:func_api_services_pipecat_transport_setup_create_webrtc_transport\nSupporting commits:\n- 04576ac: fix: llm generation in case of user idle\n- 5b820cb: feat: integrate Telnyx telephony for outbound and inbound calling (#206)\n- 87c8c5e: feat: add full document mode in knowledge base\n- 911c5ed: fix: changes to update pipecat version to 0.0.100 (#122)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0055",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_pipecat_transport_setup_create_vobiz_transport",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_pipecat_transport_setup_create_cloudonix_transport",
+      "dograh:func_api_services_pipecat_transport_setup_create_vonage_transport"
+    ],
+    "source_commit_shas": [
+      "04576ac",
+      "5b820cb",
+      "87c8c5e",
+      "911c5ed"
+    ],
+    "commit_messages": [
+      "fix: llm generation in case of user idle",
+      "feat: integrate Telnyx telephony for outbound and inbound calling (#206)",
+      "feat: add full document mode in knowledge base",
+      "fix: changes to update pipecat version to 0.0.100 (#122)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0055\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_pipecat_transport_setup_create_cloudonix_transport <-> dograh:func_api_services_pipecat_transport_setup_create_vonage_transport\nSupporting commits:\n- 04576ac: fix: llm generation in case of user idle\n- 5b820cb: feat: integrate Telnyx telephony for outbound and inbound calling (#206)\n- 87c8c5e: feat: add full document mode in knowledge base\n- 911c5ed: fix: changes to update pipecat version to 0.0.100 (#122)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0056",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_pipecat_transport_setup_create_vonage_transport",
+    "pair_count": 3,
+    "function_ids": [
+      "dograh:func_api_services_pipecat_transport_setup_create_cloudonix_transport",
+      "dograh:func_api_services_pipecat_transport_setup_create_twilio_transport",
+      "dograh:func_api_services_pipecat_transport_setup_create_vobiz_transport",
+      "dograh:func_api_services_pipecat_transport_setup_create_webrtc_transport"
+    ],
+    "source_commit_shas": [
+      "04576ac",
+      "5b820cb",
+      "87c8c5e",
+      "911c5ed"
+    ],
+    "commit_messages": [
+      "fix: llm generation in case of user idle",
+      "feat: integrate Telnyx telephony for outbound and inbound calling (#206)",
+      "feat: add full document mode in knowledge base",
+      "fix: changes to update pipecat version to 0.0.100 (#122)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0056\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_pipecat_transport_setup_create_cloudonix_transport <-> dograh:func_api_services_pipecat_transport_setup_create_twilio_transport\n- dograh:func_api_services_pipecat_transport_setup_create_cloudonix_transport <-> dograh:func_api_services_pipecat_transport_setup_create_vobiz_transport\n- dograh:func_api_services_pipecat_transport_setup_create_cloudonix_transport <-> dograh:func_api_services_pipecat_transport_setup_create_webrtc_transport\nSupporting commits:\n- 04576ac: fix: llm generation in case of user idle\n- 5b820cb: feat: integrate Telnyx telephony for outbound and inbound calling (#206)\n- 87c8c5e: feat: add full document mode in knowledge base\n- 911c5ed: fix: changes to update pipecat version to 0.0.100 (#122)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0057",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_telephony_ari_manager___init__",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_telephony_ari_manager_start",
+      "dograh:func_api_services_telephony_ari_manager_stop"
+    ],
+    "source_commit_shas": [
+      "13b4143",
+      "3ea235a",
+      "7552b6c",
+      "bd07b75"
+    ],
+    "commit_messages": [
+      "fix: missing call_id in gathered_context (#165)",
+      "fix: fix circuit breaker failure recording",
+      "feat: add asterisk ARI websocket interface (#159)",
+      "feat: tansfer calls with aasterisk (#171)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0057\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_telephony_ari_manager_start <-> dograh:func_api_services_telephony_ari_manager_stop\nSupporting commits:\n- 13b4143: fix: missing call_id in gathered_context (#165)\n- 3ea235a: fix: fix circuit breaker failure recording\n- 7552b6c: feat: add asterisk ARI websocket interface (#159)\n- bd07b75: feat: tansfer calls with aasterisk (#171)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0058",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_telephony_ari_manager_start",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_telephony_ari_manager___init__",
+      "dograh:func_api_services_telephony_ari_manager_stop"
+    ],
+    "source_commit_shas": [
+      "13b4143",
+      "3ea235a",
+      "7552b6c",
+      "bd07b75"
+    ],
+    "commit_messages": [
+      "fix: missing call_id in gathered_context (#165)",
+      "fix: fix circuit breaker failure recording",
+      "feat: add asterisk ARI websocket interface (#159)",
+      "feat: tansfer calls with aasterisk (#171)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0058\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_telephony_ari_manager___init__ <-> dograh:func_api_services_telephony_ari_manager_stop\nSupporting commits:\n- 13b4143: fix: missing call_id in gathered_context (#165)\n- 3ea235a: fix: fix circuit breaker failure recording\n- 7552b6c: feat: add asterisk ARI websocket interface (#159)\n- bd07b75: feat: tansfer calls with aasterisk (#171)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0059",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_telephony_ari_manager_stop",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_telephony_ari_manager___init__",
+      "dograh:func_api_services_telephony_ari_manager_start"
+    ],
+    "source_commit_shas": [
+      "13b4143",
+      "3ea235a",
+      "7552b6c",
+      "bd07b75"
+    ],
+    "commit_messages": [
+      "fix: missing call_id in gathered_context (#165)",
+      "fix: fix circuit breaker failure recording",
+      "feat: add asterisk ARI websocket interface (#159)",
+      "feat: tansfer calls with aasterisk (#171)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0059\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_telephony_ari_manager___init__ <-> dograh:func_api_services_telephony_ari_manager_start\nSupporting commits:\n- 13b4143: fix: missing call_id in gathered_context (#165)\n- 3ea235a: fix: fix circuit breaker failure recording\n- 7552b6c: feat: add asterisk ARI websocket interface (#159)\n- bd07b75: feat: tansfer calls with aasterisk (#171)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0060",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_telephony_base_initiate_call",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_routes_telephony_initiate_call",
+      "dograh:func_api_services_telephony_providers_twilio_provider_initiate_call"
+    ],
+    "source_commit_shas": [
+      "4cfdc3d",
+      "d35eeb1",
+      "e7adbc7"
+    ],
+    "commit_messages": [
+      "feat: add vonage telephony (#35)",
+      "fix: fix OPENAI_API_KEY bug in retrieval",
+      "feat: add default telephony variables"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0060\nCategory: shared_dependency\nPairs:\n- dograh:func_api_routes_telephony_initiate_call <-> dograh:func_api_services_telephony_providers_twilio_provider_initiate_call\nSupporting commits:\n- 4cfdc3d: feat: add vonage telephony (#35)\n- d35eeb1: fix: fix OPENAI_API_KEY bug in retrieval\n- e7adbc7: feat: add default telephony variables\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0061",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_telephony_factory_get_telephony_provider",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_telephony_factory_get_all_telephony_providers",
+      "dograh:func_api_services_telephony_factory_load_telephony_config"
+    ],
+    "source_commit_shas": [
+      "5b820cb",
+      "7552b6c",
+      "97fbd9b",
+      "e2fa4bb"
+    ],
+    "commit_messages": [
+      "feat: integrate Telnyx telephony for outbound and inbound calling (#206)",
+      "feat: add asterisk ARI websocket interface (#159)",
+      "Feat/inbound telephony (#113)",
+      "feat: handle cloudonix incoming calls (#121)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0061\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_telephony_factory_get_all_telephony_providers <-> dograh:func_api_services_telephony_factory_load_telephony_config\nSupporting commits:\n- 5b820cb: feat: integrate Telnyx telephony for outbound and inbound calling (#206)\n- 7552b6c: feat: add asterisk ARI websocket interface (#159)\n- 97fbd9b: Feat/inbound telephony (#113)\n- e2fa4bb: feat: handle cloudonix incoming calls (#121)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0062",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_telephony_factory_load_telephony_config",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_telephony_factory_get_all_telephony_providers",
+      "dograh:func_api_services_telephony_factory_get_telephony_provider"
+    ],
+    "source_commit_shas": [
+      "5b820cb",
+      "7552b6c",
+      "e2fa4bb"
+    ],
+    "commit_messages": [
+      "feat: integrate Telnyx telephony for outbound and inbound calling (#206)",
+      "feat: add asterisk ARI websocket interface (#159)",
+      "feat: handle cloudonix incoming calls (#121)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0062\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_telephony_factory_get_all_telephony_providers <-> dograh:func_api_services_telephony_factory_get_telephony_provider\nSupporting commits:\n- 5b820cb: feat: integrate Telnyx telephony for outbound and inbound calling (#206)\n- 7552b6c: feat: add asterisk ARI websocket interface (#159)\n- e2fa4bb: feat: handle cloudonix incoming calls (#121)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0063",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_telephony_providers_cloudonix_provider_parse_inbound_webhook",
+    "pair_count": 6,
+    "function_ids": [
+      "dograh:func_api_services_telephony_providers_cloudonix_provider_generate_inbound_response",
+      "dograh:func_api_services_telephony_providers_cloudonix_provider_validate_account_id",
+      "dograh:func_api_services_telephony_providers_cloudonix_provider_verify_inbound_signature",
+      "dograh:func_api_services_telephony_providers_twilio_provider_can_handle_webhook"
+    ],
+    "source_commit_shas": [
+      "97fbd9b",
+      "e2fa4bb",
+      "e7adbc7"
+    ],
+    "commit_messages": [
+      "Feat/inbound telephony (#113)",
+      "feat: handle cloudonix incoming calls (#121)",
+      "feat: add default telephony variables"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0063\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_telephony_providers_cloudonix_provider_generate_inbound_response <-> dograh:func_api_services_telephony_providers_cloudonix_provider_validate_account_id\n- dograh:func_api_services_telephony_providers_cloudonix_provider_generate_inbound_response <-> dograh:func_api_services_telephony_providers_cloudonix_provider_verify_inbound_signature\n- dograh:func_api_services_telephony_providers_cloudonix_provider_generate_inbound_response <-> dograh:func_api_services_telephony_providers_twilio_provider_can_handle_webhook\n- dograh:func_api_services_telephony_providers_cloudonix_provider_validate_account_id <-> dograh:func_api_services_telephony_providers_cloudonix_provider_verify_inbound_signature\n- dograh:func_api_services_telephony_providers_cloudonix_provider_validate_account_id <-> dograh:func_api_services_telephony_providers_twilio_provider_can_handle_webhook\n- dograh:func_api_services_telephony_providers_cloudonix_provider_verify_inbound_signature <-> dograh:func_api_services_telephony_providers_twilio_provider_can_handle_webhook\nSupporting commits:\n- 97fbd9b: Feat/inbound telephony (#113)\n- e2fa4bb: feat: handle cloudonix incoming calls (#121)\n- e7adbc7: feat: add default telephony variables\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0064",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_telephony_providers_cloudonix_provider_validate_account_id",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_telephony_providers_cloudonix_provider_parse_inbound_webhook",
+      "dograh:func_api_services_telephony_providers_twilio_provider_can_handle_webhook"
+    ],
+    "source_commit_shas": [
+      "97fbd9b",
+      "e2fa4bb",
+      "e7adbc7"
+    ],
+    "commit_messages": [
+      "Feat/inbound telephony (#113)",
+      "feat: handle cloudonix incoming calls (#121)",
+      "feat: add default telephony variables"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0064\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_telephony_providers_cloudonix_provider_parse_inbound_webhook <-> dograh:func_api_services_telephony_providers_twilio_provider_can_handle_webhook\nSupporting commits:\n- 97fbd9b: Feat/inbound telephony (#113)\n- e2fa4bb: feat: handle cloudonix incoming calls (#121)\n- e7adbc7: feat: add default telephony variables\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0065",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_telephony_providers_twilio_provider_can_handle_webhook",
+    "pair_count": 3,
+    "function_ids": [
+      "dograh:func_api_services_telephony_providers_cloudonix_provider_generate_inbound_response",
+      "dograh:func_api_services_telephony_providers_cloudonix_provider_parse_inbound_webhook",
+      "dograh:func_api_services_telephony_providers_cloudonix_provider_validate_account_id",
+      "dograh:func_api_services_telephony_providers_cloudonix_provider_verify_inbound_signature"
+    ],
+    "source_commit_shas": [
+      "97fbd9b",
+      "e2fa4bb",
+      "e7adbc7"
+    ],
+    "commit_messages": [
+      "Feat/inbound telephony (#113)",
+      "feat: handle cloudonix incoming calls (#121)",
+      "feat: add default telephony variables"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0065\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_telephony_providers_cloudonix_provider_generate_inbound_response <-> dograh:func_api_services_telephony_providers_cloudonix_provider_parse_inbound_webhook\n- dograh:func_api_services_telephony_providers_cloudonix_provider_parse_inbound_webhook <-> dograh:func_api_services_telephony_providers_cloudonix_provider_validate_account_id\n- dograh:func_api_services_telephony_providers_cloudonix_provider_parse_inbound_webhook <-> dograh:func_api_services_telephony_providers_cloudonix_provider_verify_inbound_signature\nSupporting commits:\n- 97fbd9b: Feat/inbound telephony (#113)\n- e2fa4bb: feat: handle cloudonix incoming calls (#121)\n- e7adbc7: feat: add default telephony variables\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0066",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_telephony_providers_twilio_provider_initiate_call",
+    "pair_count": 2,
+    "function_ids": [
+      "dograh:func_api_routes_telephony_initiate_call",
+      "dograh:func_api_services_telephony_base_initiate_call",
+      "dograh:func_api_services_telephony_providers_cloudonix_provider_handle_websocket",
+      "dograh:func_api_services_telephony_providers_vobiz_provider_initiate_call"
+    ],
+    "source_commit_shas": [
+      "3cdede0",
+      "4cfdc3d",
+      "c711920",
+      "d35eeb1",
+      "e7adbc7"
+    ],
+    "commit_messages": [
+      "feat: limit campaign concurrency to number of CLIs",
+      "feat: add vonage telephony (#35)",
+      "feat: telephony call transfer (#155)",
+      "fix: fix OPENAI_API_KEY bug in retrieval",
+      "feat: add default telephony variables"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0066\nCategory: shared_dependency\nPairs:\n- dograh:func_api_routes_telephony_initiate_call <-> dograh:func_api_services_telephony_base_initiate_call\n- dograh:func_api_services_telephony_providers_cloudonix_provider_handle_websocket <-> dograh:func_api_services_telephony_providers_vobiz_provider_initiate_call\nSupporting commits:\n- 3cdede0: feat: limit campaign concurrency to number of CLIs\n- 4cfdc3d: feat: add vonage telephony (#35)\n- c711920: feat: telephony call transfer (#155)\n- d35eeb1: fix: fix OPENAI_API_KEY bug in retrieval\n- e7adbc7: feat: add default telephony variables\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0067",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_telephony_providers_vobiz_provider_initiate_call",
+    "pair_count": 2,
+    "function_ids": [
+      "dograh:func_api_services_telephony_providers_cloudonix_provider_handle_websocket",
+      "dograh:func_api_services_telephony_providers_twilio_provider_initiate_call",
+      "dograh:func_api_services_telephony_providers_vonage_provider_initiate_call"
+    ],
+    "source_commit_shas": [
+      "3cdede0",
+      "4a8e4fe",
+      "4cfdc3d",
+      "8c42866",
+      "c711920",
+      "e7adbc7"
+    ],
+    "commit_messages": [
+      "feat: limit campaign concurrency to number of CLIs",
+      "fix: BACKEND_API_ENDPOINT resolution from env and cloudflared tunnel (#135)",
+      "feat: add vonage telephony (#35)",
+      "fix: better error handling for telephony",
+      "feat: telephony call transfer (#155)",
+      "feat: add default telephony variables"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0067\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_telephony_providers_cloudonix_provider_handle_websocket <-> dograh:func_api_services_telephony_providers_twilio_provider_initiate_call\n- dograh:func_api_services_telephony_providers_twilio_provider_initiate_call <-> dograh:func_api_services_telephony_providers_vonage_provider_initiate_call\nSupporting commits:\n- 3cdede0: feat: limit campaign concurrency to number of CLIs\n- 4a8e4fe: fix: BACKEND_API_ENDPOINT resolution from env and cloudflared tunnel (#135)\n- 4cfdc3d: feat: add vonage telephony (#35)\n- 8c42866: fix: better error handling for telephony\n- c711920: feat: telephony call transfer (#155)\n- e7adbc7: feat: add default telephony variables\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0068",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_telephony_stasis_rtp_transport_cancel",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_telephony_stasis_rtp_transport_start",
+      "dograh:func_api_services_telephony_stasis_rtp_transport_stop"
+    ],
+    "source_commit_shas": [
+      "03d8f30",
+      "33ff3b9",
+      "491e6ed",
+      "4f2a629",
+      "99a768f"
+    ],
+    "commit_messages": [
+      "chore: Fix lint formatting",
+      "on_client_disconnect only when user disconnects.",
+      "chore: upgrade pipecat (#36)",
+      "Initial Commit \ud83d\ude80 \ud83d\ude80",
+      "feat: enable workflows to be embedded in websites as a script tag (#47)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0068\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_telephony_stasis_rtp_transport_start <-> dograh:func_api_services_telephony_stasis_rtp_transport_stop\nSupporting commits:\n- 03d8f30: chore: Fix lint formatting\n- 33ff3b9: on_client_disconnect only when user disconnects.\n- 491e6ed: chore: upgrade pipecat (#36)\n- 4f2a629: Initial Commit \ud83d\ude80 \ud83d\ude80\n- 99a768f: feat: enable workflows to be embedded in websites as a script tag (#47)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0069",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_telephony_stasis_rtp_transport_start",
+    "pair_count": 9,
+    "function_ids": [
+      "dograh:func_api_logging_config_setup_logging",
+      "dograh:func_api_routes_webrtc_signaling__handle_offer",
+      "dograh:func_api_services_telephony_stasis_rtp_transport___init__",
+      "dograh:func_api_services_telephony_stasis_rtp_transport_cancel",
+      "dograh:func_api_services_telephony_stasis_rtp_transport_stop"
+    ],
+    "source_commit_shas": [
+      "03d8f30",
+      "33ff3b9",
+      "491e6ed",
+      "4f2a629",
+      "99a768f"
+    ],
+    "commit_messages": [
+      "chore: Fix lint formatting",
+      "on_client_disconnect only when user disconnects.",
+      "chore: upgrade pipecat (#36)",
+      "Initial Commit \ud83d\ude80 \ud83d\ude80",
+      "feat: enable workflows to be embedded in websites as a script tag (#47)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0069\nCategory: shared_dependency\nPairs:\n- dograh:func_api_logging_config_setup_logging <-> dograh:func_api_services_telephony_stasis_rtp_transport___init__\n- dograh:func_api_logging_config_setup_logging <-> dograh:func_api_services_telephony_stasis_rtp_transport_cancel\n- dograh:func_api_logging_config_setup_logging <-> dograh:func_api_services_telephony_stasis_rtp_transport_stop\n- dograh:func_api_routes_webrtc_signaling__handle_offer <-> dograh:func_api_services_telephony_stasis_rtp_transport___init__\n- dograh:func_api_routes_webrtc_signaling__handle_offer <-> dograh:func_api_services_telephony_stasis_rtp_transport_cancel\n- dograh:func_api_routes_webrtc_signaling__handle_offer <-> dograh:func_api_services_telephony_stasis_rtp_transport_stop\n- dograh:func_api_services_telephony_stasis_rtp_transport___init__ <-> dograh:func_api_services_telephony_stasis_rtp_transport_cancel\n- dograh:func_api_services_telephony_stasis_rtp_transport___init__ <-> dograh:func_api_services_telephony_stasis_rtp_transport_stop\n- dograh:func_api_services_telephony_stasis_rtp_transport_cancel <-> dograh:func_api_services_telephony_stasis_rtp_transport_stop\nSupporting commits:\n- 03d8f30: chore: Fix lint formatting\n- 33ff3b9: on_client_disconnect only when user disconnects.\n- 491e6ed: chore: upgrade pipecat (#36)\n- 4f2a629: Initial Commit \ud83d\ude80 \ud83d\ude80\n- 99a768f: feat: enable workflows to be embedded in websites as a script tag (#47)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0070",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_telephony_stasis_rtp_transport_stop",
+    "pair_count": 4,
+    "function_ids": [
+      "dograh:func_api_logging_config_setup_logging",
+      "dograh:func_api_routes_webrtc_signaling__handle_offer",
+      "dograh:func_api_services_telephony_stasis_rtp_transport___init__",
+      "dograh:func_api_services_telephony_stasis_rtp_transport_cancel",
+      "dograh:func_api_services_telephony_stasis_rtp_transport_start"
+    ],
+    "source_commit_shas": [
+      "03d8f30",
+      "33ff3b9",
+      "491e6ed",
+      "4f2a629",
+      "99a768f"
+    ],
+    "commit_messages": [
+      "chore: Fix lint formatting",
+      "on_client_disconnect only when user disconnects.",
+      "chore: upgrade pipecat (#36)",
+      "Initial Commit \ud83d\ude80 \ud83d\ude80",
+      "feat: enable workflows to be embedded in websites as a script tag (#47)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0070\nCategory: shared_dependency\nPairs:\n- dograh:func_api_logging_config_setup_logging <-> dograh:func_api_services_telephony_stasis_rtp_transport_start\n- dograh:func_api_routes_webrtc_signaling__handle_offer <-> dograh:func_api_services_telephony_stasis_rtp_transport_start\n- dograh:func_api_services_telephony_stasis_rtp_transport___init__ <-> dograh:func_api_services_telephony_stasis_rtp_transport_start\n- dograh:func_api_services_telephony_stasis_rtp_transport_cancel <-> dograh:func_api_services_telephony_stasis_rtp_transport_start\nSupporting commits:\n- 03d8f30: chore: Fix lint formatting\n- 33ff3b9: on_client_disconnect only when user disconnects.\n- 491e6ed: chore: upgrade pipecat (#36)\n- 4f2a629: Initial Commit \ud83d\ude80 \ud83d\ude80\n- 99a768f: feat: enable workflows to be embedded in websites as a script tag (#47)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0071",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_workflow_pipecat_engine___init__",
+    "pair_count": 12,
+    "function_ids": [
+      "dograh:func_api_services_workflow_pipecat_engine__create_transition_func",
+      "dograh:func_api_services_workflow_pipecat_engine__handle_agent_node",
+      "dograh:func_api_services_workflow_pipecat_engine__handle_end_node",
+      "dograh:func_api_services_workflow_pipecat_engine__handle_start_node",
+      "dograh:func_api_services_workflow_pipecat_engine__perform_variable_extraction_if_needed",
+      "dograh:func_api_services_workflow_pipecat_engine__setup_llm_context",
+      "dograh:func_api_services_workflow_pipecat_engine__setup_llm_context_and_start_generation",
+      "dograh:func_api_services_workflow_pipecat_engine_cleanup",
+      "dograh:func_api_services_workflow_pipecat_engine_custom_tools__create_http_tool_handler",
+      "dograh:func_api_services_workflow_pipecat_engine_custom_tools__play_config_message",
+      "dograh:func_api_services_workflow_pipecat_engine_end_call_with_reason",
+      "dograh:func_api_services_workflow_pipecat_engine_initialize",
+      "dograh:func_api_services_workflow_qa_analysis__run_whole_call_qa_analysis",
+      "dograh:func_api_services_workflow_qa_analysis_run_per_node_qa_analysis",
+      "dograh:func_api_services_workflow_tools_knowledge_base_retrieve_from_knowledge_base",
+      "dograh:func_api_tasks_run_integrations_run_integrations_post_workflow_run"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "04576ac",
+      "1967a71",
+      "3e55af9",
+      "4c936ae",
+      "56763a4",
+      "65c76ca",
+      "6b408e5",
+      "6ce25a5",
+      "7fab959",
+      "87e72d5",
+      "8e2e5c9",
+      "96c9037",
+      "a4367bd",
+      "affb39e",
+      "d42c52d",
+      "e34e4f8"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "fix: llm generation in case of user idle",
+      "feat: add rtf log when user speaks when muted",
+      "feat: user defined custom tools as part of workflow execution (#94)",
+      "feat: add openrouter support",
+      "feat: enable context summarization",
+      "feat: allow uploading recording as part of node transition",
+      "fix: fix variable extraction during pipeline execution flow",
+      "feat: simplify pipecat engine execution (#54)",
+      "feat: add redial option in campaigns",
+      "feat: add gemini live and speaches integration (#220)",
+      "feat: Enable telephony for OSS (#21)",
+      "feat: add default initial context variables",
+      "fix: set_node during node execution",
+      "feat: custom telemetry configuration",
+      "fix: await pending variable extraction tasks before pipeline finishes (#198)",
+      "chore: upgrade pipecat"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0071\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_workflow_pipecat_engine__create_transition_func <-> dograh:func_api_services_workflow_pipecat_engine__handle_agent_node\n- dograh:func_api_services_workflow_pipecat_engine__create_transition_func <-> dograh:func_api_services_workflow_pipecat_engine__handle_end_node\n- dograh:func_api_services_workflow_pipecat_engine__create_transition_func <-> dograh:func_api_services_workflow_pipecat_engine__handle_start_node\n- dograh:func_api_services_workflow_pipecat_engine__create_transition_func <-> dograh:func_api_services_workflow_pipecat_engine__setup_llm_context_and_start_generation\n- dograh:func_api_services_workflow_pipecat_engine__create_transition_func <-> dograh:func_api_services_workflow_pipecat_engine_custom_tools__create_http_tool_handler\n- dograh:func_api_services_workflow_pipecat_engine__create_transition_func <-> dograh:func_api_services_workflow_tools_knowledge_base_retrieve_from_knowledge_base\n- dograh:func_api_services_workflow_pipecat_engine__perform_variable_extraction_if_needed <-> dograh:func_api_services_workflow_pipecat_engine_end_call_with_reason\n- dograh:func_api_services_workflow_pipecat_engine__setup_llm_context <-> dograh:func_api_services_workflow_qa_analysis__run_whole_call_qa_analysis\n- dograh:func_api_services_workflow_pipecat_engine__setup_llm_context <-> dograh:func_api_services_workflow_qa_analysis_run_per_node_qa_analysis\n- dograh:func_api_services_workflow_pipecat_engine_cleanup <-> dograh:func_api_services_workflow_pipecat_engine_initialize\n- dograh:func_api_services_workflow_pipecat_engine_custom_tools__create_http_tool_handler <-> dograh:func_api_services_workflow_pipecat_engine_custom_tools__play_config_message\n- dograh:func_api_services_workflow_pipecat_engine_initialize <-> dograh:func_api_tasks_run_integrations_run_integrations_post_workflow_run\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 04576ac: fix: llm generation in case of user idle\n- 1967a71: feat: add rtf log when user speaks when muted\n- 3e55af9: feat: user defined custom tools as part of workflow execution (#94)\n- 4c936ae: feat: add openrouter support\n- 56763a4: feat: enable context summarization\n- 65c76ca: feat: allow uploading recording as part of node transition\n- 6b408e5: fix: fix variable extraction during pipeline execution flow\n- 6ce25a5: feat: simplify pipecat engine execution (#54)\n- 7fab959: feat: add redial option in campaigns\n- 87e72d5: feat: add gemini live and speaches integration (#220)\n- 8e2e5c9: feat: Enable telephony for OSS (#21)\n- 96c9037: feat: add default initial context variables\n- a4367bd: fix: set_node during node execution\n- affb39e: feat: custom telemetry configuration\n- d42c52d: fix: await pending variable extraction tasks before pipeline finishes (#198)\n- e34e4f8: chore: upgrade pipecat\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0072",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_workflow_pipecat_engine__create_transition_func",
+    "pair_count": 4,
+    "function_ids": [
+      "dograh:func_api_services_workflow_pipecat_engine__handle_agent_node",
+      "dograh:func_api_services_workflow_pipecat_engine__handle_end_node",
+      "dograh:func_api_services_workflow_pipecat_engine__handle_start_node",
+      "dograh:func_api_services_workflow_pipecat_engine__register_transition_function_with_llm",
+      "dograh:func_api_services_workflow_pipecat_engine__setup_llm_context"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "6b408e5",
+      "8b3dc02",
+      "8e2e5c9",
+      "e34e4f8"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "fix: fix variable extraction during pipeline execution flow",
+      "fix: render prompt template for variable extraction",
+      "feat: Enable telephony for OSS (#21)",
+      "chore: upgrade pipecat"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0072\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_workflow_pipecat_engine__handle_agent_node <-> dograh:func_api_services_workflow_pipecat_engine__handle_end_node\n- dograh:func_api_services_workflow_pipecat_engine__handle_agent_node <-> dograh:func_api_services_workflow_pipecat_engine__handle_start_node\n- dograh:func_api_services_workflow_pipecat_engine__handle_end_node <-> dograh:func_api_services_workflow_pipecat_engine__handle_start_node\n- dograh:func_api_services_workflow_pipecat_engine__register_transition_function_with_llm <-> dograh:func_api_services_workflow_pipecat_engine__setup_llm_context\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 6b408e5: fix: fix variable extraction during pipeline execution flow\n- 8b3dc02: fix: render prompt template for variable extraction\n- 8e2e5c9: feat: Enable telephony for OSS (#21)\n- e34e4f8: chore: upgrade pipecat\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0073",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_workflow_pipecat_engine__setup_llm_context",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_workflow_pipecat_engine__create_transition_func",
+      "dograh:func_api_services_workflow_pipecat_engine__register_transition_function_with_llm"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "8b3dc02",
+      "e34e4f8"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "fix: render prompt template for variable extraction",
+      "chore: upgrade pipecat"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0073\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_workflow_pipecat_engine__create_transition_func <-> dograh:func_api_services_workflow_pipecat_engine__register_transition_function_with_llm\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 8b3dc02: fix: render prompt template for variable extraction\n- e34e4f8: chore: upgrade pipecat\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0074",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_workflow_pipecat_engine_end_call_with_reason",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_routes_tool_validate_category",
+      "dograh:func_api_services_pipecat_realtime_feedback_observer_on_push_frame"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "7c24505",
+      "7e2de09"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "feat: add recording audio option in tool and node transitions (#232)",
+      "feat: Add end call reason in tool calls."
+    ],
+    "ai_prompt": "Theme: cochange_theme_0074\nCategory: shared_dependency\nPairs:\n- dograh:func_api_routes_tool_validate_category <-> dograh:func_api_services_pipecat_realtime_feedback_observer_on_push_frame\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 7c24505: feat: add recording audio option in tool and node transitions (#232)\n- 7e2de09: feat: Add end call reason in tool calls.\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0075",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_workflow_qa_analysis__run_whole_call_qa_analysis",
+    "pair_count": 2,
+    "function_ids": [
+      "dograh:func_api_services_configuration_check_validity___init__",
+      "dograh:func_api_services_workflow_qa_analysis__generate_conversation_summary",
+      "dograh:func_api_services_workflow_qa_analysis_run_per_node_qa_analysis"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "87e72d5",
+      "e34e4f8",
+      "fe84f08"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "feat: add gemini live and speaches integration (#220)",
+      "chore: upgrade pipecat",
+      "feat: add AWS Bedrock support"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0075\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_configuration_check_validity___init__ <-> dograh:func_api_services_workflow_qa_analysis_run_per_node_qa_analysis\n- dograh:func_api_services_workflow_qa_analysis__generate_conversation_summary <-> dograh:func_api_services_workflow_qa_analysis_run_per_node_qa_analysis\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 87e72d5: feat: add gemini live and speaches integration (#220)\n- e34e4f8: chore: upgrade pipecat\n- fe84f08: feat: add AWS Bedrock support\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0076",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_services_workflow_qa_analysis_run_per_node_qa_analysis",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_configuration_check_validity___init__",
+      "dograh:func_api_services_workflow_qa_analysis__run_whole_call_qa_analysis"
+    ],
+    "source_commit_shas": [
+      "87e72d5",
+      "e34e4f8",
+      "fe84f08"
+    ],
+    "commit_messages": [
+      "feat: add gemini live and speaches integration (#220)",
+      "chore: upgrade pipecat",
+      "feat: add AWS Bedrock support"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0076\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_configuration_check_validity___init__ <-> dograh:func_api_services_workflow_qa_analysis__run_whole_call_qa_analysis\nSupporting commits:\n- 87e72d5: feat: add gemini live and speaches integration (#220)\n- e34e4f8: chore: upgrade pipecat\n- fe84f08: feat: add AWS Bedrock support\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0077",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_tasks_knowledge_base_processing_process_knowledge_base_document",
+    "pair_count": 2,
+    "function_ids": [
+      "dograh:func_api_routes_knowledge_base_process_document",
+      "dograh:func_api_services_gen_ai_embedding_openai_service___init__",
+      "dograh:func_api_services_workflow_tools_knowledge_base__perform_retrieval"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "4c936ae",
+      "87c8c5e",
+      "ef5b9e4"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "feat: add openrouter support",
+      "feat: add full document mode in knowledge base",
+      "feat: knowledge base functionality for the voice agent (#120)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0077\nCategory: shared_dependency\nPairs:\n- dograh:func_api_routes_knowledge_base_process_document <-> dograh:func_api_services_gen_ai_embedding_openai_service___init__\n- dograh:func_api_routes_knowledge_base_process_document <-> dograh:func_api_services_workflow_tools_knowledge_base__perform_retrieval\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 4c936ae: feat: add openrouter support\n- 87c8c5e: feat: add full document mode in knowledge base\n- ef5b9e4: feat: knowledge base functionality for the voice agent (#120)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0078",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_tests_test_pipecat_engine_context_update_run_pipeline_and_capture_context",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_tests_test_pipecat_engine_tool_calls_run_pipeline_with_tool_calls",
+      "dograh:func_api_tests_test_pipecat_engine_variable_extraction_test_extraction_called_for_source_node_not_target_node"
+    ],
+    "source_commit_shas": [
+      "033fde8",
+      "6b408e5",
+      "ec2f322"
+    ],
+    "commit_messages": [
+      "chore: refactor and add tests (#130)",
+      "fix: fix variable extraction during pipeline execution flow",
+      "feat: add pre call fetch configuration (#222)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0078\nCategory: shared_dependency\nPairs:\n- dograh:func_api_tests_test_pipecat_engine_tool_calls_run_pipeline_with_tool_calls <-> dograh:func_api_tests_test_pipecat_engine_variable_extraction_test_extraction_called_for_source_node_not_target_node\nSupporting commits:\n- 033fde8: chore: refactor and add tests (#130)\n- 6b408e5: fix: fix variable extraction during pipeline execution flow\n- ec2f322: feat: add pre call fetch configuration (#222)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0079",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_tests_test_pipecat_engine_context_update_test_context_messages_preserve_conversation_history",
+    "pair_count": 5,
+    "function_ids": [
+      "dograh:func_api_services_workflow_pipecat_engine__create_transition_func",
+      "dograh:func_api_tests_test_pipecat_engine_context_update_run_pipeline_and_capture_context",
+      "dograh:func_api_tests_test_pipecat_engine_context_update_test_sequential_transitions_maintain_correct_context",
+      "dograh:func_api_tests_test_pipecat_engine_context_update_test_single_transition_updates_context_before_next_completion"
+    ],
+    "source_commit_shas": [
+      "6b408e5",
+      "911c5ed",
+      "a4367bd",
+      "ec2f322"
+    ],
+    "commit_messages": [
+      "fix: fix variable extraction during pipeline execution flow",
+      "fix: changes to update pipecat version to 0.0.100 (#122)",
+      "fix: set_node during node execution",
+      "feat: add pre call fetch configuration (#222)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0079\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_workflow_pipecat_engine__create_transition_func <-> dograh:func_api_tests_test_pipecat_engine_context_update_test_sequential_transitions_maintain_correct_context\n- dograh:func_api_services_workflow_pipecat_engine__create_transition_func <-> dograh:func_api_tests_test_pipecat_engine_context_update_test_single_transition_updates_context_before_next_completion\n- dograh:func_api_tests_test_pipecat_engine_context_update_run_pipeline_and_capture_context <-> dograh:func_api_tests_test_pipecat_engine_context_update_test_sequential_transitions_maintain_correct_context\n- dograh:func_api_tests_test_pipecat_engine_context_update_run_pipeline_and_capture_context <-> dograh:func_api_tests_test_pipecat_engine_context_update_test_single_transition_updates_context_before_next_completion\n- dograh:func_api_tests_test_pipecat_engine_context_update_test_sequential_transitions_maintain_correct_context <-> dograh:func_api_tests_test_pipecat_engine_context_update_test_single_transition_updates_context_before_next_completion\nSupporting commits:\n- 6b408e5: fix: fix variable extraction during pipeline execution flow\n- 911c5ed: fix: changes to update pipecat version to 0.0.100 (#122)\n- a4367bd: fix: set_node during node execution\n- ec2f322: feat: add pre call fetch configuration (#222)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0080",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_tests_test_pipecat_engine_context_update_test_sequential_transitions_maintain_correct_context",
+    "pair_count": 3,
+    "function_ids": [
+      "dograh:func_api_services_workflow_pipecat_engine__create_transition_func",
+      "dograh:func_api_tests_test_pipecat_engine_context_update_run_pipeline_and_capture_context",
+      "dograh:func_api_tests_test_pipecat_engine_context_update_test_context_messages_preserve_conversation_history",
+      "dograh:func_api_tests_test_pipecat_engine_context_update_test_single_transition_updates_context_before_next_completion"
+    ],
+    "source_commit_shas": [
+      "6b408e5",
+      "911c5ed",
+      "a4367bd",
+      "ec2f322"
+    ],
+    "commit_messages": [
+      "fix: fix variable extraction during pipeline execution flow",
+      "fix: changes to update pipecat version to 0.0.100 (#122)",
+      "fix: set_node during node execution",
+      "feat: add pre call fetch configuration (#222)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0080\nCategory: shared_dependency\nPairs:\n- dograh:func_api_services_workflow_pipecat_engine__create_transition_func <-> dograh:func_api_tests_test_pipecat_engine_context_update_test_context_messages_preserve_conversation_history\n- dograh:func_api_tests_test_pipecat_engine_context_update_run_pipeline_and_capture_context <-> dograh:func_api_tests_test_pipecat_engine_context_update_test_context_messages_preserve_conversation_history\n- dograh:func_api_tests_test_pipecat_engine_context_update_test_context_messages_preserve_conversation_history <-> dograh:func_api_tests_test_pipecat_engine_context_update_test_single_transition_updates_context_before_next_completion\nSupporting commits:\n- 6b408e5: fix: fix variable extraction during pipeline execution flow\n- 911c5ed: fix: changes to update pipecat version to 0.0.100 (#122)\n- a4367bd: fix: set_node during node execution\n- ec2f322: feat: add pre call fetch configuration (#222)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0081",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_tests_test_pipecat_engine_context_update_test_single_transition_updates_context_before_next_completion",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_tests_test_pipecat_engine_context_update_test_context_messages_preserve_conversation_history",
+      "dograh:func_api_tests_test_pipecat_engine_context_update_test_sequential_transitions_maintain_correct_context"
+    ],
+    "source_commit_shas": [
+      "6b408e5",
+      "911c5ed",
+      "a4367bd",
+      "ec2f322"
+    ],
+    "commit_messages": [
+      "fix: fix variable extraction during pipeline execution flow",
+      "fix: changes to update pipecat version to 0.0.100 (#122)",
+      "fix: set_node during node execution",
+      "feat: add pre call fetch configuration (#222)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0081\nCategory: shared_dependency\nPairs:\n- dograh:func_api_tests_test_pipecat_engine_context_update_test_context_messages_preserve_conversation_history <-> dograh:func_api_tests_test_pipecat_engine_context_update_test_sequential_transitions_maintain_correct_context\nSupporting commits:\n- 6b408e5: fix: fix variable extraction during pipeline execution flow\n- 911c5ed: fix: changes to update pipecat version to 0.0.100 (#122)\n- a4367bd: fix: set_node during node execution\n- ec2f322: feat: add pre call fetch configuration (#222)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0082",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_tests_test_pipecat_engine_tool_calls_run_pipeline_with_tool_calls",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_tests_test_pipecat_engine_context_update_run_pipeline_and_capture_context",
+      "dograh:func_api_tests_test_pipecat_engine_variable_extraction_test_extraction_called_for_source_node_not_target_node"
+    ],
+    "source_commit_shas": [
+      "033fde8",
+      "6b408e5",
+      "ec2f322"
+    ],
+    "commit_messages": [
+      "chore: refactor and add tests (#130)",
+      "fix: fix variable extraction during pipeline execution flow",
+      "feat: add pre call fetch configuration (#222)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0082\nCategory: shared_dependency\nPairs:\n- dograh:func_api_tests_test_pipecat_engine_context_update_run_pipeline_and_capture_context <-> dograh:func_api_tests_test_pipecat_engine_variable_extraction_test_extraction_called_for_source_node_not_target_node\nSupporting commits:\n- 033fde8: chore: refactor and add tests (#130)\n- 6b408e5: fix: fix variable extraction during pipeline execution flow\n- ec2f322: feat: add pre call fetch configuration (#222)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0083",
+    "category": "shared_dependency",
+    "dependency_id": "function:dograh:func_api_tests_test_pipecat_engine_variable_extraction_test_extraction_called_for_source_node_not_target_node",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_tests_test_pipecat_engine_context_update_run_pipeline_and_capture_context",
+      "dograh:func_api_tests_test_pipecat_engine_tool_calls_run_pipeline_with_tool_calls"
+    ],
+    "source_commit_shas": [
+      "033fde8",
+      "494c60d",
+      "6b408e5",
+      "ec2f322"
+    ],
+    "commit_messages": [
+      "chore: refactor and add tests (#130)",
+      "feat: add hybrid text + recording functionality in agents (#191)",
+      "fix: fix variable extraction during pipeline execution flow",
+      "feat: add pre call fetch configuration (#222)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0083\nCategory: shared_dependency\nPairs:\n- dograh:func_api_tests_test_pipecat_engine_context_update_run_pipeline_and_capture_context <-> dograh:func_api_tests_test_pipecat_engine_tool_calls_run_pipeline_with_tool_calls\nSupporting commits:\n- 033fde8: chore: refactor and add tests (#130)\n- 494c60d: feat: add hybrid text + recording functionality in agents (#191)\n- 6b408e5: fix: fix variable extraction during pipeline execution flow\n- ec2f322: feat: add pre call fetch configuration (#222)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0084",
+    "category": "shared_commit_only",
+    "dependency_id": "",
+    "pair_count": 3,
+    "function_ids": [
+      "dograh:func_api_db_campaign_client_create_campaign",
+      "dograh:func_api_routes_campaign__build_campaign_response",
+      "dograh:func_api_routes_campaign_create_campaign",
+      "dograh:func_api_routes_campaign_update_campaign"
+    ],
+    "source_commit_shas": [
+      "38d1d92",
+      "3cdede0",
+      "5fe1c8c",
+      "7fab959",
+      "fe4ea64"
+    ],
+    "commit_messages": [
+      "feat: agent versioning and model configurations override (#227)",
+      "feat: limit campaign concurrency to number of CLIs",
+      "chore: UI enhancements for workflow runs view (#142)",
+      "feat: add redial option in campaigns",
+      "Feat/campaign enhancements (#163)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0084\nCategory: shared_commit_only\nPairs:\n- dograh:func_api_db_campaign_client_create_campaign <-> dograh:func_api_routes_campaign_create_campaign\n- dograh:func_api_routes_campaign__build_campaign_response <-> dograh:func_api_routes_campaign_create_campaign\n- dograh:func_api_routes_campaign__build_campaign_response <-> dograh:func_api_routes_campaign_update_campaign\nSupporting commits:\n- 38d1d92: feat: agent versioning and model configurations override (#227)\n- 3cdede0: feat: limit campaign concurrency to number of CLIs\n- 5fe1c8c: chore: UI enhancements for workflow runs view (#142)\n- 7fab959: feat: add redial option in campaigns\n- fe4ea64: Feat/campaign enhancements (#163)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0085",
+    "category": "shared_commit_only",
+    "dependency_id": "",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_db_workflow_client_create_workflow",
+      "dograh:func_api_db_workflow_client_update_workflow"
+    ],
+    "source_commit_shas": [
+      "38d1d92",
+      "911c5ed",
+      "9bc2ffc"
+    ],
+    "commit_messages": [
+      "feat: agent versioning and model configurations override (#227)",
+      "fix: changes to update pipecat version to 0.0.100 (#122)",
+      "fix: add disposition codes in workflows"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0085\nCategory: shared_commit_only\nPairs:\n- dograh:func_api_db_workflow_client_create_workflow <-> dograh:func_api_db_workflow_client_update_workflow\nSupporting commits:\n- 38d1d92: feat: agent versioning and model configurations override (#227)\n- 911c5ed: fix: changes to update pipecat version to 0.0.100 (#122)\n- 9bc2ffc: fix: add disposition codes in workflows\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0086",
+    "category": "shared_commit_only",
+    "dependency_id": "",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_routes_auth_login",
+      "dograh:func_api_routes_auth_signup"
+    ],
+    "source_commit_shas": [
+      "3f19a16",
+      "642cc34",
+      "f7c1f63"
+    ],
+    "commit_messages": [
+      "feat: add posthog events (#231)",
+      "feat: add authentication for OSS (#167)",
+      "feat: add posthog signup and signin events, enable backend posthog events for oss version (#249)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0086\nCategory: shared_commit_only\nPairs:\n- dograh:func_api_routes_auth_login <-> dograh:func_api_routes_auth_signup\nSupporting commits:\n- 3f19a16: feat: add posthog events (#231)\n- 642cc34: feat: add authentication for OSS (#167)\n- f7c1f63: feat: add posthog signup and signin events, enable backend posthog events for oss version (#249)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0087",
+    "category": "shared_commit_only",
+    "dependency_id": "",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_routes_campaign_resume_campaign",
+      "dograh:func_api_routes_campaign_start_campaign"
+    ],
+    "source_commit_shas": [
+      "38d1d92",
+      "3babb5c",
+      "4cfdc3d",
+      "4f2a629",
+      "55b727a",
+      "7fab959",
+      "8e2e5c9"
+    ],
+    "commit_messages": [
+      "feat: agent versioning and model configurations override (#227)",
+      "feat: add csv upload functionality for OSS (#29)",
+      "feat: add vonage telephony (#35)",
+      "Initial Commit \ud83d\ude80 \ud83d\ude80",
+      "Feat/Add API Trigger and Webhooks in Agent Builder (#83)",
+      "feat: add redial option in campaigns",
+      "feat: Enable telephony for OSS (#21)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0087\nCategory: shared_commit_only\nPairs:\n- dograh:func_api_routes_campaign_resume_campaign <-> dograh:func_api_routes_campaign_start_campaign\nSupporting commits:\n- 38d1d92: feat: agent versioning and model configurations override (#227)\n- 3babb5c: feat: add csv upload functionality for OSS (#29)\n- 4cfdc3d: feat: add vonage telephony (#35)\n- 4f2a629: Initial Commit \ud83d\ude80 \ud83d\ude80\n- 55b727a: Feat/Add API Trigger and Webhooks in Agent Builder (#83)\n- 7fab959: feat: add redial option in campaigns\n- 8e2e5c9: feat: Enable telephony for OSS (#21)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0088",
+    "category": "shared_commit_only",
+    "dependency_id": "",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_routes_knowledge_base_list_documents",
+      "dograh:func_api_routes_knowledge_base_process_document"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "3f19a16",
+      "4c936ae"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "feat: add posthog events (#231)",
+      "feat: add openrouter support"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0088\nCategory: shared_commit_only\nPairs:\n- dograh:func_api_routes_knowledge_base_list_documents <-> dograh:func_api_routes_knowledge_base_process_document\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 3f19a16: feat: add posthog events (#231)\n- 4c936ae: feat: add openrouter support\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0089",
+    "category": "shared_commit_only",
+    "dependency_id": "",
+    "pair_count": 3,
+    "function_ids": [
+      "dograh:func_api_routes_organization_get_telephony_configuration",
+      "dograh:func_api_routes_organization_save_telephony_configuration",
+      "dograh:func_api_routes_webrtc_signaling__handle_offer",
+      "dograh:func_api_routes_webrtc_signaling_handle_websocket"
+    ],
+    "source_commit_shas": [
+      "03d8f30",
+      "09897cb",
+      "3cdede0",
+      "3f19a16",
+      "4cfdc3d",
+      "55b727a",
+      "8e2e5c9",
+      "99a768f",
+      "affb39e"
+    ],
+    "commit_messages": [
+      "chore: Fix lint formatting",
+      "feat: added vobiz telephony (#65)",
+      "feat: limit campaign concurrency to number of CLIs",
+      "feat: add posthog events (#231)",
+      "feat: add vonage telephony (#35)",
+      "Feat/Add API Trigger and Webhooks in Agent Builder (#83)",
+      "feat: Enable telephony for OSS (#21)",
+      "feat: enable workflows to be embedded in websites as a script tag (#47)",
+      "feat: custom telemetry configuration"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0089\nCategory: shared_commit_only\nPairs:\n- dograh:func_api_routes_organization_get_telephony_configuration <-> dograh:func_api_routes_organization_save_telephony_configuration\n- dograh:func_api_routes_organization_save_telephony_configuration <-> dograh:func_api_routes_webrtc_signaling__handle_offer\n- dograh:func_api_routes_webrtc_signaling__handle_offer <-> dograh:func_api_routes_webrtc_signaling_handle_websocket\nSupporting commits:\n- 03d8f30: chore: Fix lint formatting\n- 09897cb: feat: added vobiz telephony (#65)\n- 3cdede0: feat: limit campaign concurrency to number of CLIs\n- 3f19a16: feat: add posthog events (#231)\n- 4cfdc3d: feat: add vonage telephony (#35)\n- 55b727a: Feat/Add API Trigger and Webhooks in Agent Builder (#83)\n- 8e2e5c9: feat: Enable telephony for OSS (#21)\n- 99a768f: feat: enable workflows to be embedded in websites as a script tag (#47)\n- affb39e: feat: custom telemetry configuration\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0090",
+    "category": "shared_commit_only",
+    "dependency_id": "",
+    "pair_count": 5,
+    "function_ids": [
+      "dograh:func_api_routes_telephony__process_status_update",
+      "dograh:func_api_routes_telephony_handle_vonage_events",
+      "dograh:func_api_routes_telephony_initiate_call",
+      "dograh:func_api_routes_telephony_websocket_endpoint",
+      "dograh:func_api_services_pipecat_audio_config_create_audio_config",
+      "dograh:func_api_tasks_run_integrations__execute_webhook_node"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "38d1d92",
+      "4a8e4fe",
+      "4cfdc3d",
+      "55b727a",
+      "5b820cb",
+      "90b690e",
+      "a7f2238"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "feat: agent versioning and model configurations override (#227)",
+      "fix: BACKEND_API_ENDPOINT resolution from env and cloudflared tunnel (#135)",
+      "feat: add vonage telephony (#35)",
+      "Feat/Add API Trigger and Webhooks in Agent Builder (#83)",
+      "feat: integrate Telnyx telephony for outbound and inbound calling (#206)",
+      "feat: add cloudonix outbound telephony (#101)",
+      "feat: Update Dograh's UI Design (#67)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0090\nCategory: shared_commit_only\nPairs:\n- dograh:func_api_routes_telephony__process_status_update <-> dograh:func_api_routes_telephony_handle_vonage_events\n- dograh:func_api_routes_telephony__process_status_update <-> dograh:func_api_routes_telephony_websocket_endpoint\n- dograh:func_api_routes_telephony_initiate_call <-> dograh:func_api_routes_telephony_websocket_endpoint\n- dograh:func_api_routes_telephony_initiate_call <-> dograh:func_api_services_pipecat_audio_config_create_audio_config\n- dograh:func_api_routes_telephony_initiate_call <-> dograh:func_api_tasks_run_integrations__execute_webhook_node\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 38d1d92: feat: agent versioning and model configurations override (#227)\n- 4a8e4fe: fix: BACKEND_API_ENDPOINT resolution from env and cloudflared tunnel (#135)\n- 4cfdc3d: feat: add vonage telephony (#35)\n- 55b727a: Feat/Add API Trigger and Webhooks in Agent Builder (#83)\n- 5b820cb: feat: integrate Telnyx telephony for outbound and inbound calling (#206)\n- 90b690e: feat: add cloudonix outbound telephony (#101)\n- a7f2238: feat: Update Dograh's UI Design (#67)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0091",
+    "category": "shared_commit_only",
+    "dependency_id": "",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_routes_telephony_handle_vobiz_hangup_callback",
+      "dograh:func_api_routes_telephony_handle_vobiz_ring_callback"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "514d9c5",
+      "8342cd1",
+      "90b690e",
+      "d35eeb1"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "feat: enable Sarvam Models",
+      "fix: set provider during campaign run (#69)",
+      "feat: add cloudonix outbound telephony (#101)",
+      "fix: fix OPENAI_API_KEY bug in retrieval"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0091\nCategory: shared_commit_only\nPairs:\n- dograh:func_api_routes_telephony_handle_vobiz_hangup_callback <-> dograh:func_api_routes_telephony_handle_vobiz_ring_callback\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 514d9c5: feat: enable Sarvam Models\n- 8342cd1: fix: set provider during campaign run (#69)\n- 90b690e: feat: add cloudonix outbound telephony (#101)\n- d35eeb1: fix: fix OPENAI_API_KEY bug in retrieval\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0092",
+    "category": "shared_commit_only",
+    "dependency_id": "",
+    "pair_count": 3,
+    "function_ids": [
+      "dograh:func_api_routes_user_get_default_configurations",
+      "dograh:func_api_services_configuration_check_validity___init__",
+      "dograh:func_api_services_configuration_check_validity__validate_service",
+      "dograh:func_api_services_configuration_check_validity_validate"
+    ],
+    "source_commit_shas": [
+      "11e033c",
+      "31e075d",
+      "45c5b7c",
+      "494c60d",
+      "83f05ab",
+      "e255b33",
+      "e34e4f8"
+    ],
+    "commit_messages": [
+      "fix: formatting fix and fix #79",
+      "feat: add CAMB AI TTS integration (#187)",
+      "feat: add voice selectors in elevenlabs (#88)",
+      "feat: add hybrid text + recording functionality in agents (#191)",
+      "fix: send auth credentials with validate service keys",
+      "feat: add Rime TTS",
+      "chore: upgrade pipecat"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0092\nCategory: shared_commit_only\nPairs:\n- dograh:func_api_routes_user_get_default_configurations <-> dograh:func_api_services_configuration_check_validity___init__\n- dograh:func_api_services_configuration_check_validity___init__ <-> dograh:func_api_services_configuration_check_validity__validate_service\n- dograh:func_api_services_configuration_check_validity__validate_service <-> dograh:func_api_services_configuration_check_validity_validate\nSupporting commits:\n- 11e033c: fix: formatting fix and fix #79\n- 31e075d: feat: add CAMB AI TTS integration (#187)\n- 45c5b7c: feat: add voice selectors in elevenlabs (#88)\n- 494c60d: feat: add hybrid text + recording functionality in agents (#191)\n- 83f05ab: fix: send auth credentials with validate service keys\n- e255b33: feat: add Rime TTS\n- e34e4f8: chore: upgrade pipecat\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0093",
+    "category": "shared_commit_only",
+    "dependency_id": "",
+    "pair_count": 2,
+    "function_ids": [
+      "dograh:func_api_services_campaign_call_dispatcher___init__",
+      "dograh:func_api_services_campaign_call_dispatcher_dispatch_call",
+      "dograh:func_api_services_workflow_pipecat_engine__handle_start_node"
+    ],
+    "source_commit_shas": [
+      "4a8e4fe",
+      "4f2a629",
+      "6b408e5",
+      "8e2e5c9"
+    ],
+    "commit_messages": [
+      "fix: BACKEND_API_ENDPOINT resolution from env and cloudflared tunnel (#135)",
+      "Initial Commit \ud83d\ude80 \ud83d\ude80",
+      "fix: fix variable extraction during pipeline execution flow",
+      "feat: Enable telephony for OSS (#21)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0093\nCategory: shared_commit_only\nPairs:\n- dograh:func_api_services_campaign_call_dispatcher___init__ <-> dograh:func_api_services_campaign_call_dispatcher_dispatch_call\n- dograh:func_api_services_campaign_call_dispatcher_dispatch_call <-> dograh:func_api_services_workflow_pipecat_engine__handle_start_node\nSupporting commits:\n- 4a8e4fe: fix: BACKEND_API_ENDPOINT resolution from env and cloudflared tunnel (#135)\n- 4f2a629: Initial Commit \ud83d\ude80 \ud83d\ude80\n- 6b408e5: fix: fix variable extraction during pipeline execution flow\n- 8e2e5c9: feat: Enable telephony for OSS (#21)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0094",
+    "category": "shared_commit_only",
+    "dependency_id": "",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_filesystem_minio___init__",
+      "dograh:func_api_services_filesystem_minio_aget_signed_url"
+    ],
+    "source_commit_shas": [
+      "0345df6",
+      "4f2a629",
+      "79bc91b",
+      "93c4558"
+    ],
+    "commit_messages": [
+      "Optimise requirements.txt and update pipecat imports",
+      "Initial Commit \ud83d\ude80 \ud83d\ude80",
+      "feat: add mcp server to Dograh OSS (#240)",
+      "feat: enable duplicate workflow feature"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0094\nCategory: shared_commit_only\nPairs:\n- dograh:func_api_services_filesystem_minio___init__ <-> dograh:func_api_services_filesystem_minio_aget_signed_url\nSupporting commits:\n- 0345df6: Optimise requirements.txt and update pipecat imports\n- 4f2a629: Initial Commit \ud83d\ude80 \ud83d\ude80\n- 79bc91b: feat: add mcp server to Dograh OSS (#240)\n- 93c4558: feat: enable duplicate workflow feature\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0095",
+    "category": "shared_commit_only",
+    "dependency_id": "",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_pipecat_pipeline_builder_build_pipeline",
+      "dograh:func_api_services_pipecat_pipeline_builder_create_pipeline_components"
+    ],
+    "source_commit_shas": [
+      "713c35d",
+      "8376e3e",
+      "87e72d5",
+      "edf0fa4"
+    ],
+    "commit_messages": [
+      "fix: fix pointer events on phone call dialog (#70)",
+      "Feat: set start metadata in pipeline",
+      "feat: add gemini live and speaches integration (#220)",
+      "fix: migrate from custom audio recorder to native AudioBuffer (#115)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0095\nCategory: shared_commit_only\nPairs:\n- dograh:func_api_services_pipecat_pipeline_builder_build_pipeline <-> dograh:func_api_services_pipecat_pipeline_builder_create_pipeline_components\nSupporting commits:\n- 713c35d: fix: fix pointer events on phone call dialog (#70)\n- 8376e3e: Feat: set start metadata in pipeline\n- 87e72d5: feat: add gemini live and speaches integration (#220)\n- edf0fa4: fix: migrate from custom audio recorder to native AudioBuffer (#115)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0096",
+    "category": "shared_commit_only",
+    "dependency_id": "",
+    "pair_count": 4,
+    "function_ids": [
+      "dograh:func_api_services_pipecat_realtime_feedback_observer__send_message",
+      "dograh:func_api_services_pipecat_realtime_feedback_observer_on_push_frame",
+      "dograh:func_api_services_pipecat_run_pipeline__run_pipeline",
+      "dograh:func_api_services_workflow_pipecat_engine__perform_variable_extraction_if_needed",
+      "dograh:func_api_services_workflow_pipecat_engine_end_call_with_reason"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "1967a71",
+      "2d91336",
+      "7c24505",
+      "7e2de09",
+      "cac2587",
+      "dfb741e",
+      "e771247",
+      "fe84f08"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "feat: add rtf log when user speaks when muted",
+      "fix: cleanup rtf on pipeline finish",
+      "feat: add recording audio option in tool and node transitions (#232)",
+      "feat: Add end call reason in tool calls.",
+      "feat: add rtf in logs (#119)",
+      "feat: abort call on pipeline error and send rtf event",
+      "feat: add transcript panel during live call for better visibility (#116)",
+      "feat: add AWS Bedrock support"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0096\nCategory: shared_commit_only\nPairs:\n- dograh:func_api_services_pipecat_realtime_feedback_observer__send_message <-> dograh:func_api_services_pipecat_realtime_feedback_observer_on_push_frame\n- dograh:func_api_services_pipecat_realtime_feedback_observer_on_push_frame <-> dograh:func_api_services_pipecat_run_pipeline__run_pipeline\n- dograh:func_api_services_pipecat_realtime_feedback_observer_on_push_frame <-> dograh:func_api_services_workflow_pipecat_engine__perform_variable_extraction_if_needed\n- dograh:func_api_services_pipecat_realtime_feedback_observer_on_push_frame <-> dograh:func_api_services_workflow_pipecat_engine_end_call_with_reason\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 1967a71: feat: add rtf log when user speaks when muted\n- 2d91336: fix: cleanup rtf on pipeline finish\n- 7c24505: feat: add recording audio option in tool and node transitions (#232)\n- 7e2de09: feat: Add end call reason in tool calls.\n- cac2587: feat: add rtf in logs (#119)\n- dfb741e: feat: abort call on pipeline error and send rtf event\n- e771247: feat: add transcript panel during live call for better visibility (#116)\n- fe84f08: feat: add AWS Bedrock support\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0097",
+    "category": "shared_commit_only",
+    "dependency_id": "",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_twilio",
+      "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_vonage"
+    ],
+    "source_commit_shas": [
+      "1967a71",
+      "4cfdc3d",
+      "e31b381"
+    ],
+    "commit_messages": [
+      "feat: add rtf log when user speaks when muted",
+      "feat: add vonage telephony (#35)",
+      "fix: fix interruption handling for Gemini Live"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0097\nCategory: shared_commit_only\nPairs:\n- dograh:func_api_services_pipecat_run_pipeline_run_pipeline_twilio <-> dograh:func_api_services_pipecat_run_pipeline_run_pipeline_vonage\nSupporting commits:\n- 1967a71: feat: add rtf log when user speaks when muted\n- 4cfdc3d: feat: add vonage telephony (#35)\n- e31b381: fix: fix interruption handling for Gemini Live\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0098",
+    "category": "shared_commit_only",
+    "dependency_id": "",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_pipecat_service_factory_create_llm_service",
+      "dograh:func_api_services_pipecat_service_factory_create_llm_service_from_provider"
+    ],
+    "source_commit_shas": [
+      "31e075d",
+      "7c24505",
+      "ac0731a"
+    ],
+    "commit_messages": [
+      "feat: add CAMB AI TTS integration (#187)",
+      "feat: add recording audio option in tool and node transitions (#232)",
+      "feat: add support for self hosted llm models"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0098\nCategory: shared_commit_only\nPairs:\n- dograh:func_api_services_pipecat_service_factory_create_llm_service <-> dograh:func_api_services_pipecat_service_factory_create_llm_service_from_provider\nSupporting commits:\n- 31e075d: feat: add CAMB AI TTS integration (#187)\n- 7c24505: feat: add recording audio option in tool and node transitions (#232)\n- ac0731a: feat: add support for self hosted llm models\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0099",
+    "category": "shared_commit_only",
+    "dependency_id": "",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_pipecat_transport_setup_create_ari_transport",
+      "dograh:func_api_services_pipecat_transport_setup_create_twilio_transport"
+    ],
+    "source_commit_shas": [
+      "5b820cb",
+      "7552b6c",
+      "87c8c5e"
+    ],
+    "commit_messages": [
+      "feat: integrate Telnyx telephony for outbound and inbound calling (#206)",
+      "feat: add asterisk ARI websocket interface (#159)",
+      "feat: add full document mode in knowledge base"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0099\nCategory: shared_commit_only\nPairs:\n- dograh:func_api_services_pipecat_transport_setup_create_ari_transport <-> dograh:func_api_services_pipecat_transport_setup_create_twilio_transport\nSupporting commits:\n- 5b820cb: feat: integrate Telnyx telephony for outbound and inbound calling (#206)\n- 7552b6c: feat: add asterisk ARI websocket interface (#159)\n- 87c8c5e: feat: add full document mode in knowledge base\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0100",
+    "category": "shared_commit_only",
+    "dependency_id": "",
+    "pair_count": 2,
+    "function_ids": [
+      "dograh:func_api_services_telephony_providers_cloudonix_provider_initiate_call",
+      "dograh:func_api_services_telephony_providers_twilio_provider_get_webhook_response",
+      "dograh:func_api_services_telephony_providers_twilio_provider_initiate_call"
+    ],
+    "source_commit_shas": [
+      "8c42866",
+      "b9ddd30",
+      "d35eeb1",
+      "e7adbc7"
+    ],
+    "commit_messages": [
+      "fix: better error handling for telephony",
+      "fix: fix cloudonix call hangup (#154)",
+      "fix: fix OPENAI_API_KEY bug in retrieval",
+      "feat: add default telephony variables"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0100\nCategory: shared_commit_only\nPairs:\n- dograh:func_api_services_telephony_providers_cloudonix_provider_initiate_call <-> dograh:func_api_services_telephony_providers_twilio_provider_initiate_call\n- dograh:func_api_services_telephony_providers_twilio_provider_get_webhook_response <-> dograh:func_api_services_telephony_providers_twilio_provider_initiate_call\nSupporting commits:\n- 8c42866: fix: better error handling for telephony\n- b9ddd30: fix: fix cloudonix call hangup (#154)\n- d35eeb1: fix: fix OPENAI_API_KEY bug in retrieval\n- e7adbc7: feat: add default telephony variables\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0101",
+    "category": "shared_commit_only",
+    "dependency_id": "",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_workflow_duplicate__duplicate_recordings",
+      "dograh:func_api_services_workflow_duplicate_duplicate_workflow"
+    ],
+    "source_commit_shas": [
+      "38d1d92",
+      "65c76ca",
+      "8b3dc02"
+    ],
+    "commit_messages": [
+      "feat: agent versioning and model configurations override (#227)",
+      "feat: allow uploading recording as part of node transition",
+      "fix: render prompt template for variable extraction"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0101\nCategory: shared_commit_only\nPairs:\n- dograh:func_api_services_workflow_duplicate__duplicate_recordings <-> dograh:func_api_services_workflow_duplicate_duplicate_workflow\nSupporting commits:\n- 38d1d92: feat: agent versioning and model configurations override (#227)\n- 65c76ca: feat: allow uploading recording as part of node transition\n- 8b3dc02: fix: render prompt template for variable extraction\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0102",
+    "category": "shared_commit_only",
+    "dependency_id": "",
+    "pair_count": 2,
+    "function_ids": [
+      "dograh:func_api_services_workflow_pipecat_engine___init__",
+      "dograh:func_api_services_workflow_pipecat_engine__create_transition_func",
+      "dograh:func_api_services_workflow_pipecat_engine_initialize"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "04576ac",
+      "3e55af9",
+      "4c936ae",
+      "65c76ca",
+      "6b408e5",
+      "6ce25a5",
+      "87e72d5",
+      "8b3dc02",
+      "8e2e5c9",
+      "909c258",
+      "96c9037",
+      "a4367bd",
+      "e34e4f8"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "fix: llm generation in case of user idle",
+      "feat: user defined custom tools as part of workflow execution (#94)",
+      "feat: add openrouter support",
+      "feat: allow uploading recording as part of node transition",
+      "fix: fix variable extraction during pipeline execution flow",
+      "feat: simplify pipecat engine execution (#54)",
+      "feat: add gemini live and speaches integration (#220)",
+      "fix: render prompt template for variable extraction",
+      "feat: Enable telephony for OSS (#21)",
+      "fix: prevent pipeline freezes when sending endframe (#77)",
+      "feat: add default initial context variables",
+      "fix: set_node during node execution",
+      "chore: upgrade pipecat"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0102\nCategory: shared_commit_only\nPairs:\n- dograh:func_api_services_workflow_pipecat_engine___init__ <-> dograh:func_api_services_workflow_pipecat_engine__create_transition_func\n- dograh:func_api_services_workflow_pipecat_engine___init__ <-> dograh:func_api_services_workflow_pipecat_engine_initialize\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 04576ac: fix: llm generation in case of user idle\n- 3e55af9: feat: user defined custom tools as part of workflow execution (#94)\n- 4c936ae: feat: add openrouter support\n- 65c76ca: feat: allow uploading recording as part of node transition\n- 6b408e5: fix: fix variable extraction during pipeline execution flow\n- 6ce25a5: feat: simplify pipecat engine execution (#54)\n- 87e72d5: feat: add gemini live and speaches integration (#220)\n- 8b3dc02: fix: render prompt template for variable extraction\n- 8e2e5c9: feat: Enable telephony for OSS (#21)\n- 909c258: fix: prevent pipeline freezes when sending endframe (#77)\n- 96c9037: feat: add default initial context variables\n- a4367bd: fix: set_node during node execution\n- e34e4f8: chore: upgrade pipecat\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0103",
+    "category": "shared_commit_only",
+    "dependency_id": "",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_workflow_pipecat_engine__perform_variable_extraction_if_needed",
+      "dograh:func_api_services_workflow_tools_knowledge_base__perform_retrieval"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "87c8c5e",
+      "affb39e"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "feat: add full document mode in knowledge base",
+      "feat: custom telemetry configuration"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0103\nCategory: shared_commit_only\nPairs:\n- dograh:func_api_services_workflow_pipecat_engine__perform_variable_extraction_if_needed <-> dograh:func_api_services_workflow_tools_knowledge_base__perform_retrieval\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 87c8c5e: feat: add full document mode in knowledge base\n- affb39e: feat: custom telemetry configuration\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0104",
+    "category": "shared_commit_only",
+    "dependency_id": "",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_workflow_pipecat_engine__update_llm_context",
+      "dograh:func_api_services_workflow_workflow___init__"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "ec2f322",
+      "ec58356"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "feat: add pre call fetch configuration (#222)",
+      "feat: add message before tool calls (#185)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0104\nCategory: shared_commit_only\nPairs:\n- dograh:func_api_services_workflow_pipecat_engine__update_llm_context <-> dograh:func_api_services_workflow_workflow___init__\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- ec2f322: feat: add pre call fetch configuration (#222)\n- ec58356: feat: add message before tool calls (#185)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0105",
+    "category": "shared_commit_only",
+    "dependency_id": "",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_services_workflow_pipecat_engine_custom_tools_get_tool_schemas",
+      "dograh:func_api_services_workflow_pipecat_engine_custom_tools_register_handlers"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "3e55af9",
+      "494c60d"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "feat: user defined custom tools as part of workflow execution (#94)",
+      "feat: add hybrid text + recording functionality in agents (#191)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0105\nCategory: shared_commit_only\nPairs:\n- dograh:func_api_services_workflow_pipecat_engine_custom_tools_get_tool_schemas <-> dograh:func_api_services_workflow_pipecat_engine_custom_tools_register_handlers\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- 3e55af9: feat: user defined custom tools as part of workflow execution (#94)\n- 494c60d: feat: add hybrid text + recording functionality in agents (#191)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0106",
+    "category": "shared_commit_only",
+    "dependency_id": "",
+    "pair_count": 2,
+    "function_ids": [
+      "dograh:func_api_tasks_run_integrations__build_render_context",
+      "dograh:func_api_tasks_run_integrations__run_qa_nodes",
+      "dograh:func_api_tasks_run_integrations_run_integrations_post_workflow_run"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "a836825",
+      "c8742db",
+      "cff9674",
+      "df2bfd7"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "feat: add qa node in workflow builder (#172)",
+      "feat: run per node QA",
+      "chore: bump pipecat version",
+      "fix: API calling endpoint"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0106\nCategory: shared_commit_only\nPairs:\n- dograh:func_api_tasks_run_integrations__build_render_context <-> dograh:func_api_tasks_run_integrations_run_integrations_post_workflow_run\n- dograh:func_api_tasks_run_integrations__run_qa_nodes <-> dograh:func_api_tasks_run_integrations_run_integrations_post_workflow_run\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- a836825: feat: add qa node in workflow builder (#172)\n- c8742db: feat: run per node QA\n- cff9674: chore: bump pipecat version\n- df2bfd7: fix: API calling endpoint\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  },
+  {
+    "theme_id": "cochange_theme_0107",
+    "category": "shared_commit_only",
+    "dependency_id": "",
+    "pair_count": 1,
+    "function_ids": [
+      "dograh:func_api_tests_test_pipecat_engine_end_call___init__",
+      "dograh:func_api_tests_test_pipecat_engine_end_call_test_extraction_skipped_for_node_without_extraction"
+    ],
+    "source_commit_shas": [
+      "00a1a22",
+      "cff9674",
+      "ec2f322"
+    ],
+    "commit_messages": [
+      "feat: refactor node spec and add mcp tools (#244)",
+      "chore: bump pipecat version",
+      "feat: add pre call fetch configuration (#222)"
+    ],
+    "ai_prompt": "Theme: cochange_theme_0107\nCategory: shared_commit_only\nPairs:\n- dograh:func_api_tests_test_pipecat_engine_end_call___init__ <-> dograh:func_api_tests_test_pipecat_engine_end_call_test_extraction_skipped_for_node_without_extraction\nSupporting commits:\n- 00a1a22: feat: refactor node spec and add mcp tools (#244)\n- cff9674: chore: bump pipecat version\n- ec2f322: feat: add pre call fetch configuration (#222)\nQuestion: Is there one shared reason these functions keep changing together, or no clear shared reason?",
+    "ai_summary": null
+  }
+]
