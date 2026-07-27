@@ -1,0 +1,110 @@
+========================================================================
+EVALUATION REPORT — MCP Tools vs Baseline
+========================================================================
+
+-- semantic-search-voice (Semantic Search) --
+
+  Baseline steps:
+    grep_files                       0.01s  R:     0  W:     0  1 keys
+    read_file_headers                0.00s  R:     0  W:     0  0 items
+    extract_function_names           0.00s  R:     0  W:     0  0 items
+    read_function_bodies             0.00s  R:     0  W:     0  0 items
+
+  Treatment steps:
+    search_code_semantics           23.25s  S:     7  R:   435  5 nodes, 0 edges
+
+  Metric                        Baseline    Treatment   Delta
+  ----------------------------------------------------------
+  Tool calls                         4           1      -75%
+  Tokens consumed                    0         442      —
+  Latency                         0.01s     23.25s    +332086%
+  Correct                           NO         YES      [OK]
+
+-- cochange-campaign-routes (Co-Change Explanation) --
+
+  Baseline steps:
+    grep_git_log                     2.54s  R:     6  W:    24  4 items
+    grep_git_log                     1.78s  R:     6  W:    18  3 items
+    extract_commit_shas              0.00s  R:     0  W:    24  4 items
+    intersect_commits                0.00s  R:     0  W:    18  3 items
+    compute_jaccard                  0.00s  R:     0  W:     3  1 keys
+    read_commit_messages             0.13s  R:     0  W:    64  3 items
+
+  Treatment steps:
+    explain_coupling                 8.28s  S:    21  R:   512  category=shared_commit_only, count=7
+
+  Metric                        Baseline    Treatment   Delta
+  ----------------------------------------------------------
+  Tool calls                         6           1      -83%
+  Tokens consumed                  163         533      +227%
+  Latency                         4.46s      8.28s    +86%
+  Correct                          YES         YES      —
+
+-- commit-review-build-pipeline (Commit Impact Review) --
+
+  Baseline steps:
+    grep_files                       0.01s  R:     0  W:     0  1 keys
+    find_callers_recursive           0.01s  R:     0  W:     0  1 keys
+    read_each_caller_code            0.00s  R:     0  W:     0  0 items
+    grep_git_log                     3.49s  R:     6  W:    28  4 items
+
+  Treatment steps:
+    commit_review                    2.12s  S:    15  R:   155  1 functions reviewed
+
+  Metric                        Baseline    Treatment   Delta
+  ----------------------------------------------------------
+  Tool calls                         4           1      -75%
+  Tokens consumed                   34         170      +400%
+  Latency                         3.51s      2.12s    -40%
+  Correct                           NO         YES      [OK]
+
+-- cochange-telephony-factory (Co-Change Explanation) --
+
+  Baseline steps:
+    grep_git_log                     0.09s  R:     8  W:    14  2 items
+    grep_git_log                     1.92s  R:     8  W:     1  0 items
+    intersect_commits                0.00s  R:     0  W:     1  0 items
+    compute_jaccard                  0.00s  R:     0  W:     3  1 keys
+    read_commit_messages             0.00s  R:     0  W:     0  0 items
+
+  Treatment steps:
+    explain_coupling                 4.20s  S:    26  R:   337  category=shared_dependency, count=6
+
+  Metric                        Baseline    Treatment   Delta
+  ----------------------------------------------------------
+  Tool calls                         5           1      -80%
+  Tokens consumed                   35         363      +937%
+  Latency                         2.01s      4.20s    +109%
+  Correct                           NO         YES      [OK]
+
+-- semantic-search-telephony-providers (Semantic Search) --
+
+  Baseline steps:
+    grep_files                       0.01s  R:     0  W:     0  1 keys
+    read_file_headers                0.00s  R:     0  W:     0  0 items
+    extract_class_names              0.00s  R:     0  W:     0  None
+    read_function_bodies             0.00s  R:     0  W:     0  0 items
+
+  Treatment steps:
+    search_code_semantics            0.20s  S:     8  R:   433  5 nodes, 0 edges
+
+  Metric                        Baseline    Treatment   Delta
+  ----------------------------------------------------------
+  Tool calls                         4           1      -75%
+  Tokens consumed                    0         441      —
+  Latency                         0.01s      0.20s    +2133%
+  Correct                           NO         YES      [OK]
+
+-- AGGREGATE --
+  Tasks: 5
+
+  Metric                        Baseline    Treatment   Delta
+  ----------------------------------------------------------
+  Total tool calls                  23           5      -78%
+  Total tokens consumed            232        1949      +740%
+  Total latency                   9.99s     38.06s    +281%
+  Correct answers               1/5         5/5         [OK]
+
+========================================================================
+END REPORT
+========================================================================

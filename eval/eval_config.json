@@ -1,0 +1,94 @@
+[
+  {
+    "id": "semantic-search-voice",
+    "capability": "semantic_search",
+    "description": "Find functions related to voice call handling and audio processing",
+    "prompt": "voice call handling and audio processing pipeline",
+    "k": 5,
+    "ground_truth": {
+      "expected_substrings": ["voice", "audio", "telephony"],
+      "expected_file_hint": "voice"
+    },
+    "baseline_steps": [
+      {"action": "grep_files", "pattern": "voice|audio|telephony", "glob": "**/*.py"},
+      {"action": "read_file_headers", "source": "grep_result"},
+      {"action": "extract_function_names", "source": "grep_result"},
+      {"action": "read_function_bodies", "max_functions": 20}
+    ],
+    "treatment_tools": ["search_code_semantics"]
+  },
+  {
+    "id": "cochange-campaign-routes",
+    "capability": "explain_coupling",
+    "description": "Explain why resume_campaign and start_campaign always change together",
+    "func_a": "dograh:func_api_routes_campaign_resume_campaign",
+    "func_b": "dograh:func_api_routes_campaign_start_campaign",
+    "ground_truth": {
+      "expected_category": "shared_commit_only",
+      "min_occurrence_count": 3
+    },
+    "baseline_steps": [
+      {"action": "grep_git_log", "pattern": "resume_campaign"},
+      {"action": "grep_git_log", "pattern": "start_campaign"},
+      {"action": "extract_commit_shas"},
+      {"action": "intersect_commits"},
+      {"action": "compute_jaccard"},
+      {"action": "read_commit_messages", "max_messages": 10}
+    ],
+    "treatment_tools": ["explain_coupling"]
+  },
+  {
+    "id": "commit-review-build-pipeline",
+    "capability": "commit_review",
+    "description": "Assess impact of changing build_pipeline — a central orchestration function",
+    "changed_ids": ["dograh:func_api_services_pipecat_pipeline_builder_build_pipeline"],
+    "ground_truth": {
+      "expected_layers": ["blast_radius", "betweenness", "ppr_territory", "co_change_warnings"],
+      "expect_blast_nonempty": true
+    },
+    "baseline_steps": [
+      {"action": "grep_files", "pattern": "build_pipeline", "glob": "**/*.py"},
+      {"action": "find_callers_recursive", "depth": 3},
+      {"action": "read_each_caller_code"},
+      {"action": "grep_git_log", "pattern": "build_pipeline"}
+    ],
+    "treatment_tools": ["commit_review"]
+  },
+  {
+    "id": "cochange-telephony-factory",
+    "capability": "explain_coupling",
+    "description": "Explain why get_telephony_provider and load_telephony_provider change together",
+    "func_a": "dograh:func_api_services_telephony_factory_get_telephony_provider",
+    "func_b": "dograh:func_api_services_telephony_factory_load_telephony_config",
+    "ground_truth": {
+      "expected_category": "shared_dependency",
+      "min_occurrence_count": 3
+    },
+    "baseline_steps": [
+      {"action": "grep_git_log", "pattern": "get_telephony_provider"},
+      {"action": "grep_git_log", "pattern": "load_telephony_provider"},
+      {"action": "intersect_commits"},
+      {"action": "compute_jaccard"},
+      {"action": "read_commit_messages", "max_messages": 10}
+    ],
+    "treatment_tools": ["explain_coupling"]
+  },
+  {
+    "id": "semantic-search-telephony-providers",
+    "capability": "semantic_search",
+    "description": "Find telephony provider implementations (twilio, vonage, vobiz)",
+    "prompt": "telephony service provider implementations for call routing",
+    "k": 5,
+    "ground_truth": {
+      "expected_substrings": ["twilio", "vonage", "vobiz", "telephony"],
+      "expected_file_hint": "telephony"
+    },
+    "baseline_steps": [
+      {"action": "grep_files", "pattern": "class.*Provider|def .*call", "glob": "**/telephony/**/*.py"},
+      {"action": "read_file_headers", "source": "grep_result"},
+      {"action": "extract_class_names", "source": "grep_result"},
+      {"action": "read_function_bodies", "max_functions": 15}
+    ],
+    "treatment_tools": ["search_code_semantics"]
+  }
+]
