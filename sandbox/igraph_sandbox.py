@@ -16,9 +16,7 @@ Usage:
 
 import json
 import math
-import os
 import random as _random
-import urllib.request
 from pathlib import Path
 import numpy as np
 import igraph as ig
@@ -41,6 +39,7 @@ nodes_data: list[dict] = []
 edges_data: list[dict] = []
 _calls_degrees: list[int] = []
 _calls_max: int = 1
+_calls_only_graph = None
 
 
 def has_nonzero_embedding(values) -> bool:
@@ -121,118 +120,166 @@ def _load_from_files(data_root: str | Path) -> bool:
 def _load_from_helixdb(helix_url: str, payload_path: str | Path) -> bool:
     global nodes_data, edges_data
 
-    from helixdb import Client, g, read_batch, Predicate, Projection
+    from helixdb import Client, g, read_batch, Projection
 
     pp = Path(payload_path)
-    if not pp.exists():
-        print(f"  Error: {payload_path} not found.")
-        print("  Run scalable_ingest.py first to generate graph_payload.json.")
-        return False
 
-    with open(pp, encoding="utf-8") as f:
-        payload = json.load(f)
-
-    all_nodes = payload.get("nodes", [])
-    all_edges = payload.get("edges", [])
-    print(f"  {len(all_nodes)} nodes, {len(all_edges)} edges in {payload_path}")
-
-    # ── Parse function identities from payload ────────────────────────────
-    func_identities = [n for n in all_nodes if n.get("type") == "FunctionIdentity"]
-    func_states     = [n for n in all_nodes if n.get("type") == "FunctionState"]
-
-    # Latest active state per function from payload
-    state_by_func: dict[str, dict] = {}
-    for s in func_states:
-        fid = s.get("function_id", "")
-        if not fid:
-            continue
-        cur = state_by_func.get(fid)
-        if not cur or s.get("status") == "active":
-            state_by_func[fid] = s
-
-    # ── Try to get fresh vectors from HelixDB ─────────────────────────────
+    # ── Query FunctionIdentity from HelixDB (the canonical source) ────────
+    helix_rows = []
+    helix_ok = True
     try:
         c = Client(helix_url)
-        helix_state_batch = (
+        fi_batch = (
             read_batch()
-            .var_as("states",
-                g().n_with_label("FunctionState")
-                   .limit(2000)
+            .var_as("fns",
+                g().n_with_label("FunctionIdentity")
+                   .limit(10000)
                    .project([
-                       Projection.property("function_id"),
-                       Projection.property("ai_summary_vec"),
-                       Projection.property("status"),
+                       Projection.property("node_id"),
+                       Projection.property("name"),
+                       Projection.property("file"),
+                       Projection.property("code_vec"),
                    ])
             )
-            .returning(["states"])
+            .returning(["fns"])
         )
-        helix_result = c.query().dynamic(helix_state_batch.to_dynamic_request()).send()
-        helix_rows = helix_result.get("states", {}).get("properties", [])
-        for s in helix_rows:
-            fid = s.get("function_id", "")
-            if s.get("status") != "active":
-                continue
-            vec = s.get("ai_summary_vec")
-            if fid and vec and isinstance(vec, list) and any(abs(v) > 1e-12 for v in vec):
-                if fid in state_by_func:
-                    state_by_func[fid]["ai_summary_vec"] = vec
-        print(f"  HelixDB: {len([s for s in helix_rows if s.get('status')=='active'])} active states (vectors merged)")
+        fi_result = c.query().dynamic(fi_batch.to_dynamic_request()).send()
+        helix_rows = fi_result.get("fns", {}).get("properties", [])
     except Exception as e:
-        print(f"  HelixDB query failed ({e}), using payload vectors only")
+        print(f"  HelixDB query failed ({e}), trying graph_payload.json fallback")
+        helix_ok = False
 
-    # ── Build igraph nodes_data ───────────────────────────────────────────
+    # ── Build nodes_data ──────────────────────────────────────────────────
     nodes_data = []
-    for fi in func_identities:
-        fid = fi.get("id", "")
-        state = state_by_func.get(fid, {})
-        code = (state.get("code") or "")[:3000]
-        ai_summary = state.get("ai_summary", "")
-        embedding = state.get("ai_summary_vec", [])
-        if isinstance(embedding, str):
-            try:
-                import json as _j
-                embedding = _j.loads(embedding)
-            except Exception:
-                embedding = []
+    if helix_ok and helix_rows:
+        for row in helix_rows:
+            fid = row.get("node_id", "")
+            vec = row.get("code_vec", [])
+            if isinstance(vec, str):
+                try:
+                    vec = json.loads(vec)
+                except Exception:
+                    vec = []
+            valid = (isinstance(vec, list) and len(vec) == 384
+                     and any(abs(v) > 1e-12 for v in vec))
+            nodes_data.append({
+                "id": fid,
+                "file": row.get("file", ""),
+                "name": row.get("name", ""),
+                "code": "",
+                "text_summary": "",
+                "embedding": vec if valid else [],
+                "status": "active",
+            })
+        print(f"  HelixDB: {len(nodes_data)} FunctionIdentity (code_vec embeddings)")
+    elif pp.exists():
+        with open(pp, encoding="utf-8") as f:
+            payload = json.load(f)
+        for n in payload.get("nodes", []):
+            if n.get("type") != "FunctionIdentity":
+                continue
+            vec = n.get("code_vec", [])
+            if isinstance(vec, str):
+                try:
+                    vec = json.loads(vec)
+                except Exception:
+                    vec = []
+            valid = (isinstance(vec, list) and len(vec) == 384
+                     and any(abs(v) > 1e-12 for v in vec))
+            nodes_data.append({
+                "id": n.get("id", ""),
+                "file": n.get("file", ""),
+                "name": n.get("name", ""),
+                "code": n.get("code", ""),
+                "text_summary": n.get("text_summary", ""),
+                "embedding": vec if valid else [],
+                "status": "active",
+            })
+        print(f"  graph_payload.json: {len(nodes_data)} nodes (HelixDB fallback)")
+    else:
+        print(f"  No HelixDB and no {pp} — no node data")
+        return False
 
-        nodes_data.append({
-            "id": fid,
-            "file": fi.get("file", ""),
-            "name": fi.get("name", ""),
-            "code": code,
-            "text_summary": ai_summary,
-            "embedding": embedding,
-            "status": state.get("status", "active"),
-        })
+    # ── Drop nodes without valid embeddings ───────────────────────────────
+    before = len(nodes_data)
+    nodes_data = [n for n in nodes_data if has_nonzero_embedding(n.get("embedding", []))]
+    dropped = before - len(nodes_data)
+    if dropped:
+        print(f"  Dropped {dropped} nodes without code_vec embeddings")
 
-    # ── Build igraph edges_data from payload ──────────────────────────────
+    # ── Build edges_data from graph_payload.json ──────────────────────────
+    payload_edges = []
+    if pp.exists():
+        with open(pp, encoding="utf-8") as f:
+            payload_data = json.load(f)
+        payload_edges = payload_data.get("edges", [])
+
+    # Infer repo prefix from first edge's from field and filter stale nodes
+    repo_prefix = ""
+    for raw in payload_edges:
+        src = raw.get("from", "")
+        if ":" in src:
+            repo_prefix = src.split(":")[0] + ":"
+            break
+    if repo_prefix:
+        before = len(nodes_data)
+        nodes_data = [n for n in nodes_data if n["id"].startswith(repo_prefix)]
+        dropped = before - len(nodes_data)
+        if dropped:
+            print(f"  Dropped {dropped} nodes from other repos (prefix={repo_prefix})")
+
     node_id_set = {n["id"] for n in nodes_data}
-
-    def _to_igraph_edge(raw: dict) -> dict | None:
+    edges_data = []
+    for raw in payload_edges:
         label = raw.get("label", "")
         if label not in ("CALLS", "IMPORTS", "INHERITS"):
-            return None
+            continue
         src = raw.get("from", "")
         tgt = raw.get("to", "")
-        if src not in node_id_set or tgt not in node_id_set:
-            return None
-        return {
-            "source": src,
-            "target": tgt,
-            "type": label,
-            "co_change_count": 0,
-            "category": "",
-            "ast_relation_type": "unknown",
-            "theme_proportions": {},
-        }
+        if src in node_id_set and tgt in node_id_set:
+            edges_data.append({
+                "source": src,
+                "target": tgt,
+                "type": label,
+                "co_change_count": 0,
+                "category": "",
+                "ast_relation_type": "unknown",
+                "theme_proportions": {},
+                })
 
-    edges_data = [_to_igraph_edge(e) for e in all_edges]
-    edges_data = [e for e in edges_data if e is not None]
+    # ── Load CO_CHANGE edges from cochange_pairs.json ──────────────────────
+    if not repo_prefix:
+        for n in nodes_data:
+            nid = n.get("id", "")
+            if ":" in nid:
+                repo_prefix = nid.split(":")[0] + ":"
+                break
+    repo_name = repo_prefix.rstrip(":")
+    cochange_file = Path(__file__).resolve().parent / f"{repo_name}_cochange_pairs.json"
+    if cochange_file.exists():
+        with open(cochange_file, encoding="utf-8") as f:
+            cochange_pairs = json.load(f)
+        co_added = 0
+        for pair in cochange_pairs:
+            src = pair.get("source", "") or pair.get("func_a", "")
+            tgt = pair.get("target", "") or pair.get("func_b", "")
+            if src in node_id_set and tgt in node_id_set:
+                edges_data.append({
+                    "source": src,
+                    "target": tgt,
+                    "type": "CO_CHANGE",
+                    "co_change_count": pair.get("co_change_count", pair.get("count", 1)),
+                    "category": pair.get("category", ""),
+                    "ast_relation_type": "co_change",
+                    "theme_proportions": pair.get("theme_proportions", {}),
+                })
+                co_added += 1
+        print(f"  CO_CHANGE: {co_added} edges loaded from {cochange_file.name}")
+    else:
+        print(f"  No CO_CHANGE file at {cochange_file.name} — skipping")
 
-    n_active = sum(1 for n in nodes_data if n["status"] == "active")
     has_vec = sum(1 for n in nodes_data if has_nonzero_embedding(n.get("embedding", [])))
-    print(f"  Nodes: {len(nodes_data)} ({n_active} active, {has_vec} with vectors)")
-    print(f"  Edges: {len(edges_data)}")
+    print(f"  Nodes: {len(nodes_data)} ({has_vec} with code_vec), Edges: {len(edges_data)}")
     return True
 
 
@@ -342,54 +389,20 @@ def _compute_weights():
 # Load co-change themes. Build label text per theme for query-time cosine scoring.
 # theme_vec_map is populated lazily on first query that uses theme overlay.
 
-EMBED_MODEL = "nvidia/llama-nemotron-embed-vl-1b-v2:free"
-EMBED_DIMS  = 2048
-SKIP_THEME_EMBED = os.environ.get("AMO_SKIP_THEME_EMBED", "").lower() in {"1", "true", "yes"}
+_themes_data: list[dict] = []
+_theme_ids: list[str] = []
+_theme_labels: list[str] = []
+_theme_vecs: list[np.ndarray] = []
+_theme_vec_map: dict[str, np.ndarray] = {}
+_themes_embedded = False
 
-_themes_path = ROOT / "sandbox" / "amo_cochange_themes.json"
-_themes_data: list[dict] = json.loads(_themes_path.read_text(encoding="utf-8")) if _themes_path.exists() else []
-
-def _load_api_key() -> str:
-    preferred = ("llm_api_key_2", "llm_api_key2", "llm_api_key")
-    candidates = [Path.cwd() / ".env", ROOT / ".env",
-                  Path.cwd().parent / ".env", ROOT.parent / ".env"]
-    for p in candidates:
-        if not p.exists():
-            continue
-        vals: dict[str, str] = {}
-        for line in p.read_text(encoding="utf-8").splitlines():
-            if "=" not in line:
-                continue
-            k, v = line.split("=", 1)
-            vals[k.strip().lower()] = v.strip()
-        for name in preferred:
-            if vals.get(name):
-                return vals[name]
-    return ""
-
-_API_KEY = _load_api_key()
 
 def _embed_text(text: str) -> np.ndarray:
-    if not _API_KEY or not text.strip():
-        return np.zeros(EMBED_DIMS, dtype=np.float32)
-    try:
-        payload = json.dumps({"model": EMBED_MODEL, "input": text[:2000]}).encode()
-        req = urllib.request.Request(
-            "https://openrouter.ai/api/v1/embeddings",
-            data=payload,
-            headers={"Authorization": f"Bearer {_API_KEY}",
-                     "Content-Type": "application/json"},
-        )
-        resp = json.loads(urllib.request.urlopen(req, timeout=20).read())
-        vec = np.array(resp["data"][0]["embedding"], dtype=np.float32)
-        if QUERY_FEATURE_MEAN is not None:
-            vec = vec.reshape(1, -1) - QUERY_FEATURE_MEAN
-            vec = vec / np.maximum(np.linalg.norm(vec, axis=1, keepdims=True), 1e-8)
-            return vec[0].astype(np.float32)
-        return vec
-    except Exception as e:
-        print(f"  [embed warn] {e}")
-        return np.zeros(EMBED_DIMS, dtype=np.float32)
+    from sentence_transformers import SentenceTransformer
+    model = SentenceTransformer("all-MiniLM-L6-v2")
+    vecs = model.encode([text], show_progress_bar=False, normalize_embeddings=True)
+    return np.array(vecs[0], dtype=np.float32)
+
 
 def _theme_label_text(theme: dict) -> str:
     if theme.get("dependency_id"):
@@ -400,12 +413,6 @@ def _theme_label_text(theme: dict) -> str:
     )
     return f"{theme.get('category', 'cochange')} {msgs}".strip()[:300]
 
-# theme vectors: populated once on first theme-overlay query
-_theme_ids:   list[str]           = [t["theme_id"] for t in _themes_data]
-_theme_labels:list[str]           = [_theme_label_text(t) for t in _themes_data]
-_theme_vecs:  list[np.ndarray]    = []
-_theme_vec_map: dict[str, np.ndarray] = {}
-_themes_embedded = False
 
 def _ensure_theme_vecs() -> None:
     global _theme_vecs, _theme_vec_map, _themes_embedded
@@ -414,15 +421,11 @@ def _ensure_theme_vecs() -> None:
     if not _themes_data:
         _themes_embedded = True
         return
-    if SKIP_THEME_EMBED or not _API_KEY:
-        _theme_vecs = [np.zeros(EMBED_DIMS, dtype=np.float32) for _ in _themes_data]
-    else:
-        import time
-        print(f"  Embedding {len(_themes_data)} theme labels (first theme-overlay query)...")
-        _theme_vecs = []
-        for label in _theme_labels:
-            _theme_vecs.append(_embed_text(label))
-            time.sleep(0.15)
+    from sentence_transformers import SentenceTransformer
+    print(f"  Embedding {len(_themes_data)} theme labels...")
+    model = SentenceTransformer("all-MiniLM-L6-v2")
+    vecs = model.encode(_theme_labels, show_progress_bar=False, normalize_embeddings=True)
+    _theme_vecs = [np.array(v, dtype=np.float32) for v in vecs]
     _theme_vec_map = dict(zip(_theme_ids, _theme_vecs))
     _themes_embedded = True
 
@@ -557,7 +560,12 @@ def run_cold_discovery(query_embedding: np.ndarray, top_k_seeds=20, final_k=10,
         G.es["weight"] = _theme_boosted_weights(query_embedding)
         ppr_graph = G  # full graph including CO_CHANGE with boosted weights
     else:
-        ppr_graph = calls_only  # CALLS-only, static weights
+        # Build CALLS-only subgraph (lazy, cached)
+        global _calls_only_graph
+        if _calls_only_graph is None or _calls_only_graph.vcount() != G.vcount():
+            calls_edge_ids = [e.index for e in G.es if e["type"] == "CALLS"]
+            _calls_only_graph = G.subgraph_edges(calls_edge_ids, delete_vertices=False)
+        ppr_graph = _calls_only_graph
 
     ppr_scores = ppr_graph.personalized_pagerank(
         vertices=None,
@@ -753,8 +761,11 @@ def find_connecting_path(source_id: str, target_id: str) -> list[str]:
 # ── Phase 5: Ground-truth validation ─────────────────────────────────────────
 
 def load_query_embedding(query_text: str) -> np.ndarray:
-    """Embed a query string using the same OpenRouter model."""
-    return _embed_text(query_text)
+    """Embed a query string using local sentence-transformers (384-dim)."""
+    from sentence_transformers import SentenceTransformer
+    model = SentenceTransformer("all-MiniLM-L6-v2")
+    vecs = model.encode([query_text], show_progress_bar=False, normalize_embeddings=True)
+    return np.array(vecs[0], dtype=np.float32)
 
 
 def run_validation():
