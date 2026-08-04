@@ -14,6 +14,7 @@ import ast
 import json
 import math
 import time
+from collections import Counter
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from itertools import islice, product
@@ -68,11 +69,16 @@ class CurrentSourceCalls:
         self._functions: dict[
             str, dict[str, list[ast.FunctionDef | ast.AsyncFunctionDef]]
         ] = {}
-        self._module_imports: dict[str, list[ast.ImportFrom]] = {}
+        self._classes: dict[str, dict[str, set[str]]] = {}
+        self._module_imports: dict[str, list[ast.Import | ast.ImportFrom]] = {}
+        self._module_files: dict[tuple[str, str | None, int], str | None] = {}
         self._calls: dict[tuple[str, str], set[str] | None] = {}
-        self._resolved_import_calls: dict[
-            tuple[str, str], set[tuple[str, str]]
+        self._direct_calls: dict[tuple[str, str], set[str] | None] = {}
+        self._function_owner_classes: dict[str, dict[int, str]] = {}
+        self._resolved_static_calls: dict[
+            tuple[str, str], dict[tuple[str, str], str]
         ] = {}
+        self._unresolved_attribute_calls: dict[tuple[str, str], set[str]] = {}
 
     def _tree(self, file_path: str) -> ast.AST | None:
         normalized = file_path.replace("\\", "/")
@@ -109,6 +115,25 @@ class CurrentSourceCalls:
     ) -> list[ast.FunctionDef | ast.AsyncFunctionDef]:
         return self._function_index(file_path).get(function_name, [])
 
+    def _class_index(self, file_path: str) -> dict[str, set[str]]:
+        normalized = file_path.replace("\\", "/")
+        if normalized in self._classes:
+            return self._classes[normalized]
+        tree = self._tree(normalized)
+        index: dict[str, set[str]] = {}
+        if tree is not None:
+            for node in ast.walk(tree):
+                if not isinstance(node, ast.ClassDef):
+                    continue
+                methods = {
+                    child.name
+                    for child in node.body
+                    if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef))
+                }
+                index[node.name] = methods
+        self._classes[normalized] = index
+        return index
+
     def calls(self, file_path: str, function_name: str) -> set[str] | None:
         key = (file_path.replace("\\", "/"), function_name)
         if key in self._calls:
@@ -133,10 +158,54 @@ class CurrentSourceCalls:
         self._calls[key] = names
         return names
 
+    def direct_calls(self, file_path: str, function_name: str) -> set[str] | None:
+        key = (file_path.replace("\\", "/"), function_name)
+        if key in self._direct_calls:
+            return self._direct_calls[key]
+        tree = self._tree(key[0])
+        if tree is None:
+            self._direct_calls[key] = None
+            return None
+        matches = self._matches(key[0], function_name)
+        if not matches:
+            self._direct_calls[key] = None
+            return None
+        names = {
+            child.func.id
+            for node in matches
+            for child in ast.walk(node)
+            if isinstance(child, ast.Call) and isinstance(child.func, ast.Name)
+        }
+        self._direct_calls[key] = names
+        return names
+
+    def _owner_class(
+        self,
+        file_path: str,
+        function: ast.FunctionDef | ast.AsyncFunctionDef,
+    ) -> str | None:
+        normalized = file_path.replace("\\", "/")
+        if normalized not in self._function_owner_classes:
+            owners: dict[int, str] = {}
+            tree = self._tree(normalized)
+            if tree is not None:
+                for node in ast.walk(tree):
+                    if not isinstance(node, ast.ClassDef):
+                        continue
+                    for child in node.body:
+                        if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                            owners[id(child)] = node.name
+            self._function_owner_classes[normalized] = owners
+        return self._function_owner_classes[normalized].get(id(function))
+
     def _module_file(
         self, source_file: str, module: str | None, level: int
     ) -> str | None:
-        source_parts = list(Path(source_file.replace("\\", "/")).parent.parts)
+        normalized = source_file.replace("\\", "/")
+        cache_key = (normalized, module, level)
+        if cache_key in self._module_files:
+            return self._module_files[cache_key]
+        source_parts = list(Path(normalized).parent.parts)
         if level:
             parents_to_drop = level - 1
             if parents_to_drop > len(source_parts):
@@ -147,6 +216,7 @@ class CurrentSourceCalls:
         if module:
             module_parts.extend(module.split("."))
         if not module_parts:
+            self._module_files[cache_key] = None
             return None
         candidates = [
             Path(*module_parts).with_suffix(".py"),
@@ -154,19 +224,22 @@ class CurrentSourceCalls:
         ]
         for candidate in candidates:
             if (self.source_repo / candidate).exists():
-                return candidate.as_posix()
+                resolved = candidate.as_posix()
+                self._module_files[cache_key] = resolved
+                return resolved
+        self._module_files[cache_key] = None
         return None
 
     @staticmethod
-    def _scope_imports(node: ast.AST) -> list[ast.ImportFrom]:
-        imports: list[ast.ImportFrom] = []
+    def _scope_imports(node: ast.AST) -> list[ast.Import | ast.ImportFrom]:
+        imports: list[ast.Import | ast.ImportFrom] = []
 
         def visit(current: ast.AST, *, root: bool = False) -> None:
             if not root and isinstance(
                 current, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
             ):
                 return
-            if isinstance(current, ast.ImportFrom):
+            if isinstance(current, (ast.Import, ast.ImportFrom)):
                 imports.append(current)
             for child in ast.iter_child_nodes(current):
                 visit(child)
@@ -174,22 +247,47 @@ class CurrentSourceCalls:
         visit(node, root=True)
         return imports
 
-    def resolved_import_calls(
+    @staticmethod
+    def _attribute_chain(node: ast.AST) -> tuple[str, ...] | None:
+        parts: list[str] = []
+        current = node
+        while isinstance(current, ast.Attribute):
+            parts.append(current.attr)
+            current = current.value
+        if not isinstance(current, ast.Name):
+            return None
+        parts.append(current.id)
+        return tuple(reversed(parts))
+
+    @staticmethod
+    def _module_name_for_file(file_path: str) -> str:
+        path = Path(file_path.replace("\\", "/"))
+        if path.name == "__init__.py":
+            path = path.parent
+        else:
+            path = path.with_suffix("")
+        return ".".join(path.parts)
+
+    def resolved_static_calls(
         self, file_path: str, function_name: str
-    ) -> set[tuple[str, str]]:
+    ) -> dict[tuple[str, str], str]:
         normalized = file_path.replace("\\", "/")
         key = (normalized, function_name)
-        if key in self._resolved_import_calls:
-            return self._resolved_import_calls[key]
+        if key in self._resolved_static_calls:
+            return self._resolved_static_calls[key]
         tree = self._tree(normalized)
         if tree is None:
-            return set()
+            self._resolved_static_calls[key] = {}
+            self._unresolved_attribute_calls[key] = set()
+            return {}
         matches = self._matches(normalized, function_name)
         if not matches:
-            return set()
+            self._resolved_static_calls[key] = {}
+            self._unresolved_attribute_calls[key] = set()
+            return {}
 
         if normalized not in self._module_imports:
-            module_imports: list[ast.ImportFrom] = []
+            module_imports: list[ast.Import | ast.ImportFrom] = []
             for statement in getattr(tree, "body", []):
                 if isinstance(
                     statement, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
@@ -199,10 +297,28 @@ class CurrentSourceCalls:
             self._module_imports[normalized] = module_imports
         module_imports = self._module_imports[normalized]
 
-        resolved: set[tuple[str, str]] = set()
+        resolved: dict[tuple[str, str], str] = {}
+        unresolved_attributes: set[str] = set()
+        same_file_classes = self._class_index(normalized)
         for function in matches:
-            bindings: dict[str, tuple[str, str]] = {}
+            direct_bindings: dict[str, tuple[str, str]] = {}
+            module_bindings: dict[str, tuple[str, tuple[str, ...]]] = {}
+            class_bindings: dict[str, tuple[str, str]] = {}
             for import_node in module_imports + self._scope_imports(function):
+                if isinstance(import_node, ast.Import):
+                    for alias in import_node.names:
+                        module_file = self._module_file(normalized, alias.name, 0)
+                        if module_file is None:
+                            continue
+                        local_name = alias.asname or alias.name.split(".")[0]
+                        prefix = (
+                            (local_name,)
+                            if alias.asname
+                            else tuple(alias.name.split("."))
+                        )
+                        module_bindings[local_name] = (module_file, prefix)
+                    continue
+
                 module_file = self._module_file(
                     normalized, import_node.module, import_node.level
                 )
@@ -211,19 +327,100 @@ class CurrentSourceCalls:
                 for alias in import_node.names:
                     if alias.name == "*":
                         continue
-                    bindings[alias.asname or alias.name] = (module_file, alias.name)
+                    local_name = alias.asname or alias.name
+                    if self.calls(module_file, alias.name) is not None:
+                        direct_bindings[local_name] = (module_file, alias.name)
+                        continue
+                    if alias.name in self._class_index(module_file):
+                        class_bindings[local_name] = (module_file, alias.name)
+                        continue
+                    child_module = (
+                        f"{import_node.module}.{alias.name}"
+                        if import_node.module
+                        else alias.name
+                    )
+                    child_file = self._module_file(
+                        normalized, child_module, import_node.level
+                    )
+                    if child_file is not None:
+                        module_bindings[local_name] = (child_file, (local_name,))
 
             for child in ast.walk(function):
-                if not isinstance(child, ast.Call) or not isinstance(child.func, ast.Name):
+                if not isinstance(child, ast.Call):
                     continue
-                target = bindings.get(child.func.id)
-                if target is None:
+                if isinstance(child.func, ast.Name):
+                    target = direct_bindings.get(child.func.id)
+                    if target is not None:
+                        target_file, target_name = target
+                        if self.calls(target_file, target_name) is not None:
+                            resolved[target] = "imported_function"
                     continue
-                target_file, target_name = target
-                if self.calls(target_file, target_name) is not None:
-                    resolved.add(target)
-        self._resolved_import_calls[key] = resolved
+                if not isinstance(child.func, ast.Attribute):
+                    continue
+                chain = self._attribute_chain(child.func)
+                if chain is None or len(chain) < 2:
+                    unresolved_attributes.add(child.func.attr)
+                    continue
+                root_name, target_name = chain[0], chain[-1]
+
+                if root_name in {"self", "cls"}:
+                    owner_class = self._owner_class(normalized, function)
+                    if (
+                        owner_class is not None
+                        and target_name in same_file_classes.get(owner_class, set())
+                    ):
+                        resolved[(normalized, target_name)] = "same_file_method"
+                    else:
+                        unresolved_attributes.add(target_name)
+                    continue
+
+                if (
+                    len(chain) == 2
+                    and target_name in same_file_classes.get(root_name, set())
+                ):
+                    resolved[(normalized, target_name)] = "same_file_class_method"
+                    continue
+
+                class_binding = class_bindings.get(root_name)
+                if class_binding is not None and len(chain) == 2:
+                    target_file, class_name = class_binding
+                    if target_name in self._class_index(target_file).get(class_name, set()):
+                        resolved[(target_file, target_name)] = "imported_class_method"
+                        continue
+
+                module_binding = module_bindings.get(root_name)
+                if module_binding is not None:
+                    base_file, prefix = module_binding
+                    if chain[: len(prefix)] == prefix:
+                        extra_modules = chain[len(prefix) : -1]
+                        target_file = base_file
+                        if extra_modules:
+                            base_module = self._module_name_for_file(base_file)
+                            target_file = self._module_file(
+                                normalized,
+                                ".".join((base_module, *extra_modules)),
+                                0,
+                            )
+                        if (
+                            target_file is not None
+                            and self.calls(target_file, target_name) is not None
+                        ):
+                            resolved[(target_file, target_name)] = "module_attribute"
+                            continue
+
+                unresolved_attributes.add(target_name)
+
+        self._resolved_static_calls[key] = resolved
+        self._unresolved_attribute_calls[key] = unresolved_attributes
         return resolved
+
+    def unresolved_attribute_calls(
+        self, file_path: str, function_name: str
+    ) -> set[str]:
+        key = (file_path.replace("\\", "/"), function_name)
+        if key not in self._resolved_static_calls:
+            self.resolved_static_calls(*key)
+        return self._unresolved_attribute_calls.get(key, set())
 
 
 def build_current_calls_overlay(
@@ -240,6 +437,21 @@ def build_current_calls_overlay(
         source_calls.calls(item.file, item.name) is not None for item in meta
     ]
 
+    exact_targets: dict[tuple[str, str], list[int]] = {}
+    name_targets: dict[str, list[int]] = {}
+    for idx, item in enumerate(meta):
+        if not current_nodes[idx]:
+            continue
+        key = (item.file.replace("\\", "/"), item.name)
+        exact_targets.setdefault(key, []).append(idx)
+        name_targets.setdefault(item.name, []).append(idx)
+
+    static_targets_by_source = {
+        source: source_calls.resolved_static_calls(item.file, item.name)
+        for source, item in enumerate(meta)
+        if current_nodes[source]
+    }
+
     for edge in raw_directed.es:
         source, target = edge.tuple
         if not current_nodes[source]:
@@ -250,23 +462,41 @@ def build_current_calls_overlay(
             continue
         calls = source_calls.calls(meta[source].file, meta[source].name)
         if calls is not None and meta[target].name in calls:
-            current_edges[(source, target)] = "raw_current_name_match"
+            target_identity = (
+                meta[target].file.replace("\\", "/"),
+                meta[target].name,
+            )
+            static_targets = static_targets_by_source.get(source, {})
+            if (
+                target_identity in static_targets
+                and len(exact_targets.get(target_identity, [])) == 1
+            ):
+                category = static_targets[target_identity]
+                status = f"raw_current_static_{category}"
+            elif meta[source].file.replace("\\", "/") == target_identity[0]:
+                status = "raw_current_same_file_name"
+            elif len(name_targets.get(meta[target].name, [])) == 1:
+                status = "raw_current_unique_name"
+            else:
+                status = "raw_current_ambiguous_name"
+            current_edges[(source, target)] = status
         else:
             rejected_stale += 1
-
-    exact_targets: dict[tuple[str, str], list[int]] = {}
-    for idx, item in enumerate(meta):
-        key = (item.file.replace("\\", "/"), item.name)
-        exact_targets.setdefault(key, []).append(idx)
 
     added_same_file = 0
     ambiguous_same_file = 0
     for source, item in enumerate(meta):
-        calls = source_calls.calls(item.file, item.name)
+        calls = source_calls.direct_calls(item.file, item.name)
         if not calls:
             continue
         normalized_file = item.file.replace("\\", "/")
+        static_target_names = {
+            target_name
+            for (_, target_name) in static_targets_by_source.get(source, {})
+        }
         for target_name in calls:
+            if target_name in static_target_names:
+                continue
             targets = exact_targets.get((normalized_file, target_name), [])
             if len(targets) > 1:
                 ambiguous_same_file += 1
@@ -278,30 +508,40 @@ def build_current_calls_overlay(
                 continue
             key = (source, target)
             if key not in current_edges:
-                current_edges[key] = "added_current_same_file"
+                current_edges[key] = "added_current_same_file_name"
                 added_same_file += 1
 
-    added_imported = 0
-    ambiguous_imported = 0
-    unresolved_imported = 0
+    added_static: Counter[str] = Counter()
+    ambiguous_static: Counter[str] = Counter()
+    unresolved_static: Counter[str] = Counter()
     for source, item in enumerate(meta):
-        for target_file, target_name in source_calls.resolved_import_calls(
-            item.file, item.name
-        ):
+        for (target_file, target_name), category in static_targets_by_source.get(
+            source, {}
+        ).items():
             targets = exact_targets.get((target_file, target_name), [])
             if len(targets) > 1:
-                ambiguous_imported += 1
+                ambiguous_static[category] += 1
                 continue
             if not targets:
-                unresolved_imported += 1
+                unresolved_static[category] += 1
                 continue
             target = targets[0]
             if source == target:
                 continue
             key = (source, target)
             if key not in current_edges:
-                current_edges[key] = "added_current_import"
-                added_imported += 1
+                current_edges[key] = f"added_current_static_{category}"
+                added_static[category] += 1
+
+    unresolved_attribute_names: Counter[str] = Counter()
+    unresolved_attribute_function_count = 0
+    for source, item in enumerate(meta):
+        if not current_nodes[source]:
+            continue
+        unresolved = source_calls.unresolved_attribute_calls(item.file, item.name)
+        if unresolved:
+            unresolved_attribute_function_count += 1
+            unresolved_attribute_names.update(unresolved)
 
     edge_tuples = sorted(current_edges)
     graph = ig.Graph(n=len(meta), edges=edge_tuples, directed=True)
@@ -318,9 +558,29 @@ def build_current_calls_overlay(
         "unavailable_function_identities": len(current_nodes) - sum(current_nodes),
         "same_file_current_edges_added": added_same_file,
         "ambiguous_same_file_targets_skipped": ambiguous_same_file,
-        "imported_current_edges_added": added_imported,
-        "ambiguous_imported_targets_skipped": ambiguous_imported,
-        "unresolved_imported_targets_skipped": unresolved_imported,
+        "static_current_edges_added_by_category": dict(sorted(added_static.items())),
+        "ambiguous_static_targets_skipped_by_category": dict(
+            sorted(ambiguous_static.items())
+        ),
+        "unresolved_static_targets_skipped_by_category": dict(
+            sorted(unresolved_static.items())
+        ),
+        "raw_current_ambiguous_name_edges_retained": list(
+            current_edges.values()
+        ).count("raw_current_ambiguous_name"),
+        "unresolved_attribute_functions": unresolved_attribute_function_count,
+        "unresolved_attribute_name_occurrences_by_function": sum(
+            unresolved_attribute_names.values()
+        ),
+        "top_unresolved_attribute_names": [
+            {"name": name, "function_count": count}
+            for name, count in unresolved_attribute_names.most_common(25)
+        ],
+        "unresolved_attribute_note": (
+            "These are attribute-call names that the conservative source overlay "
+            "could not bind statically. They include dynamic dispatch and other "
+            "receiver-dependent calls; they are diagnostics, not resolved edges."
+        ),
         "edge_status_counts": {
             status: graph.es["current_status"].count(status)
             for status in sorted(set(graph.es["current_status"]))
