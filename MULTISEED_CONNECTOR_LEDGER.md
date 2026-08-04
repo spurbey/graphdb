@@ -26,6 +26,24 @@ it does not silently damage another subsystem.
 - No production/MCP integration until the query-conditioned evaluation succeeds.
 - Existing unrelated worktree changes remain untouched.
 
+## Commit map
+
+Use these commits as the stable navigation sequence for this experiment:
+
+| Commit | Scope |
+|---|---|
+| `a1b226e` | structural multi-seed baseline and controls |
+| `9bf2f7f` | frozen training and holdout query cases |
+| `8394b51` | query-conditioned runner, current-source overlay, and union optimizer |
+| `03731b7` | Helix topology, feature, Pareto, and mode-ranking audits |
+| `4703064` | bounded traversal and path-alternative evidence |
+| `10c03fd` | same-file and import-aware overlay iterations |
+| `d11f304` | first exact fixed-root union probes |
+| `e4affff` | matched raw-versus-overlay comparison runs |
+| `37b19e5` | rejected nested-call scoping regression evidence |
+| `afe2d78` | definitive overlay matrix and forced truncation probe |
+| `ea675cc` | full research ledger through Run 010 |
+
 ## Current live-data concerns to verify
 
 1. `CALLS` direction is caller to callee.
