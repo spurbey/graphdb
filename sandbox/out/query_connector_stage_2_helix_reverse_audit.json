@@ -1,0 +1,2893 @@
+{
+  "experiment": "query_conditioned_connector_feature_ablation",
+  "stage": "candidate_and_feature_audit",
+  "created_at": "2026-08-04T13:55:04.995374+00:00",
+  "source": {
+    "graph": "live_helix_calls",
+    "semantic_vectors": "C:\\Users\\sumit\\Downloads\\Dora\\graphdb\\.turbovec_code.json",
+    "semantic_vector_note": "Exact legacy vectors are used for experimental introspection only; runtime retrieval should use TurboVec."
+  },
+  "diagnostics": {
+    "helix_rows": 4880,
+    "canonical_nodes": 4704,
+    "duplicate_rows_collapsed": 176,
+    "helix_call_edges": 6826,
+    "canonical_call_edges": 6769,
+    "unresolved_edges": 0,
+    "node_export_ms": 156.52,
+    "edge_export_ms": 616.85,
+    "legacy_vector_rows": 4821,
+    "canonical_nodes_with_exact_vector": 4704,
+    "canonical_nodes_without_exact_vector": 0,
+    "invalid_vectors": 0,
+    "product_nodes": 3050,
+    "local_cochange_pairs": 247
+  },
+  "formula_definitions": {
+    "structural": "100*coverage_ratio + 4/(1+max_distance) + 2/(1+distance_sum)",
+    "structural_semantic": "structural + 2*raw_query_cosine",
+    "structural_semantic_hub": "structural_semantic - 0.75*log_degree_norm - 3*generic_name",
+    "all_current_features": "structural_semantic_hub + 0.5*cochange_ratio"
+  },
+  "cases": [
+    {
+      "case_id": "pipeline_builders_common_orchestrator",
+      "query": "Which pipeline orchestration function coordinates component creation, normal and realtime pipeline construction, and task creation?",
+      "direction_mode": "common_caller",
+      "igraph_distance_mode": "in",
+      "max_hops": 2,
+      "source_evidence": [
+        "dograh/api/services/pipecat/run_pipeline.py:835",
+        "dograh/api/services/pipecat/run_pipeline.py:1015",
+        "dograh/api/services/pipecat/run_pipeline.py:1026",
+        "dograh/api/services/pipecat/run_pipeline.py:1041"
+      ],
+      "seeds": [
+        {
+          "id": "dograh:func_api_services_pipecat_pipeline_builder_create_pipeline_components",
+          "name": "create_pipeline_components",
+          "file": "api/services/pipecat/pipeline_builder.py"
+        },
+        {
+          "id": "dograh:func_api_services_pipecat_pipeline_builder_build_pipeline",
+          "name": "build_pipeline",
+          "file": "api/services/pipecat/pipeline_builder.py"
+        },
+        {
+          "id": "dograh:func_api_services_pipecat_pipeline_builder_build_realtime_pipeline",
+          "name": "build_realtime_pipeline",
+          "file": "api/services/pipecat/pipeline_builder.py"
+        },
+        {
+          "id": "dograh:func_api_services_pipecat_pipeline_builder_create_pipeline_task",
+          "name": "create_pipeline_task",
+          "file": "api/services/pipecat/pipeline_builder.py"
+        }
+      ],
+      "expected_ids": [
+        "dograh:func_api_services_pipecat_run_pipeline__run_pipeline"
+      ],
+      "acceptable_ids": [
+        "dograh:func_api_services_pipecat_run_pipeline__run_pipeline_impl"
+      ],
+      "frontier_by_seed": [
+        {
+          "seed_id": "dograh:func_api_services_pipecat_pipeline_builder_create_pipeline_components",
+          "seed_name": "create_pipeline_components",
+          "exact_depth_counts": {
+            "1": 2,
+            "2": 5
+          },
+          "cumulative_depth_counts": {
+            "1": 3,
+            "2": 8
+          }
+        },
+        {
+          "seed_id": "dograh:func_api_services_pipecat_pipeline_builder_build_pipeline",
+          "seed_name": "build_pipeline",
+          "exact_depth_counts": {
+            "1": 1,
+            "2": 5
+          },
+          "cumulative_depth_counts": {
+            "1": 2,
+            "2": 7
+          }
+        },
+        {
+          "seed_id": "dograh:func_api_services_pipecat_pipeline_builder_build_realtime_pipeline",
+          "seed_name": "build_realtime_pipeline",
+          "exact_depth_counts": {
+            "1": 1,
+            "2": 5
+          },
+          "cumulative_depth_counts": {
+            "1": 2,
+            "2": 7
+          }
+        },
+        {
+          "seed_id": "dograh:func_api_services_pipecat_pipeline_builder_create_pipeline_task",
+          "seed_name": "create_pipeline_task",
+          "exact_depth_counts": {
+            "1": 2,
+            "2": 5
+          },
+          "cumulative_depth_counts": {
+            "1": 3,
+            "2": 8
+          }
+        }
+      ],
+      "candidate_counts": {
+        "reached_by_any_seed": 7,
+        "full_seed_coverage": 6,
+        "semantic_candidate_pool": 6
+      },
+      "expected_rows": [
+        {
+          "id": "dograh:func_api_services_pipecat_run_pipeline__run_pipeline",
+          "name": "_run_pipeline",
+          "file": "api/services/pipecat/run_pipeline.py",
+          "coverage": 4,
+          "coverage_ratio": 1.0,
+          "distances": [
+            1,
+            1,
+            1,
+            1
+          ],
+          "max_distance": 1,
+          "distance_sum": 4,
+          "degree": 93,
+          "in_degree": 8,
+          "out_degree": 85,
+          "hub_norm": 0.74421764,
+          "semantic_raw": 0.35414767,
+          "has_exact_embedding": true,
+          "direct_outgoing_to_seeds": 4,
+          "direct_incoming_from_seeds": 0,
+          "cochange_seed_count": 0,
+          "cochange_ratio": 0.0,
+          "is_generic_negative": false,
+          "is_expected": true,
+          "formula_contributions": {
+            "structural": {
+              "coverage": 100.0,
+              "max_distance": 2.0,
+              "distance_sum": 0.4
+            },
+            "structural_semantic": {
+              "coverage": 100.0,
+              "max_distance": 2.0,
+              "distance_sum": 0.4,
+              "semantic": 0.70829535
+            },
+            "structural_semantic_hub": {
+              "coverage": 100.0,
+              "max_distance": 2.0,
+              "distance_sum": 0.4,
+              "semantic": 0.70829535,
+              "hub": -0.55816323,
+              "generic_name": 0.0
+            },
+            "all_current_features": {
+              "coverage": 100.0,
+              "max_distance": 2.0,
+              "distance_sum": 0.4,
+              "semantic": 0.70829535,
+              "hub": -0.55816323,
+              "generic_name": 0.0,
+              "cochange": 0.0
+            }
+          },
+          "formula_totals": {
+            "structural": 102.4,
+            "structural_semantic": 103.10829535,
+            "structural_semantic_hub": 102.55013212,
+            "all_current_features": 102.55013212
+          }
+        }
+      ],
+      "ranks": {
+        "distance_lexicographic": 1,
+        "semantic_only_within_full_coverage": 3,
+        "structural": 1,
+        "structural_semantic": 1,
+        "structural_semantic_hub": 1,
+        "all_current_features": 1
+      },
+      "top": {
+        "distance_lexicographic": [
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline__run_pipeline",
+            "name": "_run_pipeline",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "max_distance": 1,
+            "distance_sum": 4,
+            "degree": 93,
+            "in_degree": 8,
+            "out_degree": 85,
+            "hub_norm": 0.74421764,
+            "semantic_raw": 0.35414767,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 4,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": true,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.4
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.4,
+                "semantic": 0.70829535
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.4,
+                "semantic": 0.70829535,
+                "hub": -0.55816323,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.4,
+                "semantic": 0.70829535,
+                "hub": -0.55816323,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 102.4,
+              "structural_semantic": 103.10829535,
+              "structural_semantic_hub": 102.55013212,
+              "all_current_features": 102.55013212
+            }
+          },
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_ari_stasis",
+            "name": "run_pipeline_ari_stasis",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              2,
+              2,
+              2,
+              2
+            ],
+            "max_distance": 2,
+            "distance_sum": 8,
+            "degree": 5,
+            "in_degree": 1,
+            "out_degree": 4,
+            "hub_norm": 0.29350043,
+            "semantic_raw": 0.42760444,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 0,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.85520887
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.85520887,
+                "hub": -0.22012533,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.85520887,
+                "hub": -0.22012533,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 101.55555556,
+              "structural_semantic": 102.41076443,
+              "structural_semantic_hub": 102.1906391,
+              "all_current_features": 102.1906391
+            }
+          },
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_plivo",
+            "name": "run_pipeline_plivo",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              2,
+              2,
+              2,
+              2
+            ],
+            "max_distance": 2,
+            "distance_sum": 8,
+            "degree": 6,
+            "in_degree": 1,
+            "out_degree": 5,
+            "hub_norm": 0.3187512,
+            "semantic_raw": 0.3237645,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 0,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64752901
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64752901,
+                "hub": -0.2390634,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64752901,
+                "hub": -0.2390634,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 101.55555556,
+              "structural_semantic": 102.20308456,
+              "structural_semantic_hub": 101.96402116,
+              "all_current_features": 101.96402116
+            }
+          },
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_telnyx",
+            "name": "run_pipeline_telnyx",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              2,
+              2,
+              2,
+              2
+            ],
+            "max_distance": 2,
+            "distance_sum": 8,
+            "degree": 7,
+            "in_degree": 1,
+            "out_degree": 6,
+            "hub_norm": 0.3406244,
+            "semantic_raw": 0.32380733,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 0,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64761466
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64761466,
+                "hub": -0.2554683,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64761466,
+                "hub": -0.2554683,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 101.55555556,
+              "structural_semantic": 102.20317021,
+              "structural_semantic_hub": 101.94770191,
+              "all_current_features": 101.94770191
+            }
+          },
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_twilio",
+            "name": "run_pipeline_twilio",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              2,
+              2,
+              2,
+              2
+            ],
+            "max_distance": 2,
+            "distance_sum": 8,
+            "degree": 7,
+            "in_degree": 2,
+            "out_degree": 5,
+            "hub_norm": 0.3406244,
+            "semantic_raw": 0.28351471,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 0,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.56702942
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.56702942,
+                "hub": -0.2554683,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.56702942,
+                "hub": -0.2554683,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 101.55555556,
+              "structural_semantic": 102.12258497,
+              "structural_semantic_hub": 101.86711667,
+              "all_current_features": 101.86711667
+            }
+          },
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_smallwebrtc",
+            "name": "run_pipeline_smallwebrtc",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              2,
+              2,
+              2,
+              2
+            ],
+            "max_distance": 2,
+            "distance_sum": 8,
+            "degree": 12,
+            "in_degree": 2,
+            "out_degree": 10,
+            "hub_norm": 0.42015335,
+            "semantic_raw": 0.37033439,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 0,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.74066877
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.74066877,
+                "hub": -0.31511502,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.74066877,
+                "hub": -0.31511502,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 101.55555556,
+              "structural_semantic": 102.29622433,
+              "structural_semantic_hub": 101.98110931,
+              "all_current_features": 101.98110931
+            }
+          },
+          {
+            "id": "dograh:func_api_services_looptalk_core_pipeline_builder_create_agent_pipeline",
+            "name": "create_agent_pipeline",
+            "file": "api/services/looptalk/core/pipeline_builder.py",
+            "coverage": 2,
+            "coverage_ratio": 0.5,
+            "distances": [
+              1,
+              1
+            ],
+            "max_distance": 1,
+            "distance_sum": 2,
+            "degree": 24,
+            "in_degree": 0,
+            "out_degree": 24,
+            "hub_norm": 0.52727025,
+            "semantic_raw": 0.44708371,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 2,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 50.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.66666667
+              },
+              "structural_semantic": {
+                "coverage": 50.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.66666667,
+                "semantic": 0.89416742
+              },
+              "structural_semantic_hub": {
+                "coverage": 50.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.66666667,
+                "semantic": 0.89416742,
+                "hub": -0.39545268,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 50.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.66666667,
+                "semantic": 0.89416742,
+                "hub": -0.39545268,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 52.66666667,
+              "structural_semantic": 53.56083409,
+              "structural_semantic_hub": 53.16538141,
+              "all_current_features": 53.16538141
+            }
+          }
+        ],
+        "semantic_only_within_full_coverage": [
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_ari_stasis",
+            "name": "run_pipeline_ari_stasis",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              2,
+              2,
+              2,
+              2
+            ],
+            "max_distance": 2,
+            "distance_sum": 8,
+            "degree": 5,
+            "in_degree": 1,
+            "out_degree": 4,
+            "hub_norm": 0.29350043,
+            "semantic_raw": 0.42760444,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 0,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.85520887
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.85520887,
+                "hub": -0.22012533,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.85520887,
+                "hub": -0.22012533,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 101.55555556,
+              "structural_semantic": 102.41076443,
+              "structural_semantic_hub": 102.1906391,
+              "all_current_features": 102.1906391
+            }
+          },
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_smallwebrtc",
+            "name": "run_pipeline_smallwebrtc",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              2,
+              2,
+              2,
+              2
+            ],
+            "max_distance": 2,
+            "distance_sum": 8,
+            "degree": 12,
+            "in_degree": 2,
+            "out_degree": 10,
+            "hub_norm": 0.42015335,
+            "semantic_raw": 0.37033439,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 0,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.74066877
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.74066877,
+                "hub": -0.31511502,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.74066877,
+                "hub": -0.31511502,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 101.55555556,
+              "structural_semantic": 102.29622433,
+              "structural_semantic_hub": 101.98110931,
+              "all_current_features": 101.98110931
+            }
+          },
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline__run_pipeline",
+            "name": "_run_pipeline",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "max_distance": 1,
+            "distance_sum": 4,
+            "degree": 93,
+            "in_degree": 8,
+            "out_degree": 85,
+            "hub_norm": 0.74421764,
+            "semantic_raw": 0.35414767,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 4,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": true,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.4
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.4,
+                "semantic": 0.70829535
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.4,
+                "semantic": 0.70829535,
+                "hub": -0.55816323,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.4,
+                "semantic": 0.70829535,
+                "hub": -0.55816323,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 102.4,
+              "structural_semantic": 103.10829535,
+              "structural_semantic_hub": 102.55013212,
+              "all_current_features": 102.55013212
+            }
+          },
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_telnyx",
+            "name": "run_pipeline_telnyx",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              2,
+              2,
+              2,
+              2
+            ],
+            "max_distance": 2,
+            "distance_sum": 8,
+            "degree": 7,
+            "in_degree": 1,
+            "out_degree": 6,
+            "hub_norm": 0.3406244,
+            "semantic_raw": 0.32380733,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 0,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64761466
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64761466,
+                "hub": -0.2554683,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64761466,
+                "hub": -0.2554683,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 101.55555556,
+              "structural_semantic": 102.20317021,
+              "structural_semantic_hub": 101.94770191,
+              "all_current_features": 101.94770191
+            }
+          },
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_plivo",
+            "name": "run_pipeline_plivo",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              2,
+              2,
+              2,
+              2
+            ],
+            "max_distance": 2,
+            "distance_sum": 8,
+            "degree": 6,
+            "in_degree": 1,
+            "out_degree": 5,
+            "hub_norm": 0.3187512,
+            "semantic_raw": 0.3237645,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 0,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64752901
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64752901,
+                "hub": -0.2390634,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64752901,
+                "hub": -0.2390634,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 101.55555556,
+              "structural_semantic": 102.20308456,
+              "structural_semantic_hub": 101.96402116,
+              "all_current_features": 101.96402116
+            }
+          },
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_twilio",
+            "name": "run_pipeline_twilio",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              2,
+              2,
+              2,
+              2
+            ],
+            "max_distance": 2,
+            "distance_sum": 8,
+            "degree": 7,
+            "in_degree": 2,
+            "out_degree": 5,
+            "hub_norm": 0.3406244,
+            "semantic_raw": 0.28351471,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 0,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.56702942
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.56702942,
+                "hub": -0.2554683,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.56702942,
+                "hub": -0.2554683,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 101.55555556,
+              "structural_semantic": 102.12258497,
+              "structural_semantic_hub": 101.86711667,
+              "all_current_features": 101.86711667
+            }
+          }
+        ],
+        "structural": [
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline__run_pipeline",
+            "name": "_run_pipeline",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "max_distance": 1,
+            "distance_sum": 4,
+            "degree": 93,
+            "in_degree": 8,
+            "out_degree": 85,
+            "hub_norm": 0.74421764,
+            "semantic_raw": 0.35414767,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 4,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": true,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.4
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.4,
+                "semantic": 0.70829535
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.4,
+                "semantic": 0.70829535,
+                "hub": -0.55816323,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.4,
+                "semantic": 0.70829535,
+                "hub": -0.55816323,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 102.4,
+              "structural_semantic": 103.10829535,
+              "structural_semantic_hub": 102.55013212,
+              "all_current_features": 102.55013212
+            }
+          },
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_ari_stasis",
+            "name": "run_pipeline_ari_stasis",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              2,
+              2,
+              2,
+              2
+            ],
+            "max_distance": 2,
+            "distance_sum": 8,
+            "degree": 5,
+            "in_degree": 1,
+            "out_degree": 4,
+            "hub_norm": 0.29350043,
+            "semantic_raw": 0.42760444,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 0,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.85520887
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.85520887,
+                "hub": -0.22012533,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.85520887,
+                "hub": -0.22012533,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 101.55555556,
+              "structural_semantic": 102.41076443,
+              "structural_semantic_hub": 102.1906391,
+              "all_current_features": 102.1906391
+            }
+          },
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_plivo",
+            "name": "run_pipeline_plivo",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              2,
+              2,
+              2,
+              2
+            ],
+            "max_distance": 2,
+            "distance_sum": 8,
+            "degree": 6,
+            "in_degree": 1,
+            "out_degree": 5,
+            "hub_norm": 0.3187512,
+            "semantic_raw": 0.3237645,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 0,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64752901
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64752901,
+                "hub": -0.2390634,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64752901,
+                "hub": -0.2390634,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 101.55555556,
+              "structural_semantic": 102.20308456,
+              "structural_semantic_hub": 101.96402116,
+              "all_current_features": 101.96402116
+            }
+          },
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_smallwebrtc",
+            "name": "run_pipeline_smallwebrtc",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              2,
+              2,
+              2,
+              2
+            ],
+            "max_distance": 2,
+            "distance_sum": 8,
+            "degree": 12,
+            "in_degree": 2,
+            "out_degree": 10,
+            "hub_norm": 0.42015335,
+            "semantic_raw": 0.37033439,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 0,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.74066877
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.74066877,
+                "hub": -0.31511502,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.74066877,
+                "hub": -0.31511502,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 101.55555556,
+              "structural_semantic": 102.29622433,
+              "structural_semantic_hub": 101.98110931,
+              "all_current_features": 101.98110931
+            }
+          },
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_telnyx",
+            "name": "run_pipeline_telnyx",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              2,
+              2,
+              2,
+              2
+            ],
+            "max_distance": 2,
+            "distance_sum": 8,
+            "degree": 7,
+            "in_degree": 1,
+            "out_degree": 6,
+            "hub_norm": 0.3406244,
+            "semantic_raw": 0.32380733,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 0,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64761466
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64761466,
+                "hub": -0.2554683,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64761466,
+                "hub": -0.2554683,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 101.55555556,
+              "structural_semantic": 102.20317021,
+              "structural_semantic_hub": 101.94770191,
+              "all_current_features": 101.94770191
+            }
+          },
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_twilio",
+            "name": "run_pipeline_twilio",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              2,
+              2,
+              2,
+              2
+            ],
+            "max_distance": 2,
+            "distance_sum": 8,
+            "degree": 7,
+            "in_degree": 2,
+            "out_degree": 5,
+            "hub_norm": 0.3406244,
+            "semantic_raw": 0.28351471,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 0,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.56702942
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.56702942,
+                "hub": -0.2554683,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.56702942,
+                "hub": -0.2554683,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 101.55555556,
+              "structural_semantic": 102.12258497,
+              "structural_semantic_hub": 101.86711667,
+              "all_current_features": 101.86711667
+            }
+          },
+          {
+            "id": "dograh:func_api_services_looptalk_core_pipeline_builder_create_agent_pipeline",
+            "name": "create_agent_pipeline",
+            "file": "api/services/looptalk/core/pipeline_builder.py",
+            "coverage": 2,
+            "coverage_ratio": 0.5,
+            "distances": [
+              1,
+              1
+            ],
+            "max_distance": 1,
+            "distance_sum": 2,
+            "degree": 24,
+            "in_degree": 0,
+            "out_degree": 24,
+            "hub_norm": 0.52727025,
+            "semantic_raw": 0.44708371,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 2,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 50.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.66666667
+              },
+              "structural_semantic": {
+                "coverage": 50.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.66666667,
+                "semantic": 0.89416742
+              },
+              "structural_semantic_hub": {
+                "coverage": 50.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.66666667,
+                "semantic": 0.89416742,
+                "hub": -0.39545268,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 50.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.66666667,
+                "semantic": 0.89416742,
+                "hub": -0.39545268,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 52.66666667,
+              "structural_semantic": 53.56083409,
+              "structural_semantic_hub": 53.16538141,
+              "all_current_features": 53.16538141
+            }
+          }
+        ],
+        "structural_semantic": [
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline__run_pipeline",
+            "name": "_run_pipeline",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "max_distance": 1,
+            "distance_sum": 4,
+            "degree": 93,
+            "in_degree": 8,
+            "out_degree": 85,
+            "hub_norm": 0.74421764,
+            "semantic_raw": 0.35414767,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 4,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": true,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.4
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.4,
+                "semantic": 0.70829535
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.4,
+                "semantic": 0.70829535,
+                "hub": -0.55816323,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.4,
+                "semantic": 0.70829535,
+                "hub": -0.55816323,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 102.4,
+              "structural_semantic": 103.10829535,
+              "structural_semantic_hub": 102.55013212,
+              "all_current_features": 102.55013212
+            }
+          },
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_ari_stasis",
+            "name": "run_pipeline_ari_stasis",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              2,
+              2,
+              2,
+              2
+            ],
+            "max_distance": 2,
+            "distance_sum": 8,
+            "degree": 5,
+            "in_degree": 1,
+            "out_degree": 4,
+            "hub_norm": 0.29350043,
+            "semantic_raw": 0.42760444,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 0,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.85520887
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.85520887,
+                "hub": -0.22012533,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.85520887,
+                "hub": -0.22012533,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 101.55555556,
+              "structural_semantic": 102.41076443,
+              "structural_semantic_hub": 102.1906391,
+              "all_current_features": 102.1906391
+            }
+          },
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_smallwebrtc",
+            "name": "run_pipeline_smallwebrtc",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              2,
+              2,
+              2,
+              2
+            ],
+            "max_distance": 2,
+            "distance_sum": 8,
+            "degree": 12,
+            "in_degree": 2,
+            "out_degree": 10,
+            "hub_norm": 0.42015335,
+            "semantic_raw": 0.37033439,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 0,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.74066877
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.74066877,
+                "hub": -0.31511502,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.74066877,
+                "hub": -0.31511502,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 101.55555556,
+              "structural_semantic": 102.29622433,
+              "structural_semantic_hub": 101.98110931,
+              "all_current_features": 101.98110931
+            }
+          },
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_telnyx",
+            "name": "run_pipeline_telnyx",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              2,
+              2,
+              2,
+              2
+            ],
+            "max_distance": 2,
+            "distance_sum": 8,
+            "degree": 7,
+            "in_degree": 1,
+            "out_degree": 6,
+            "hub_norm": 0.3406244,
+            "semantic_raw": 0.32380733,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 0,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64761466
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64761466,
+                "hub": -0.2554683,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64761466,
+                "hub": -0.2554683,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 101.55555556,
+              "structural_semantic": 102.20317021,
+              "structural_semantic_hub": 101.94770191,
+              "all_current_features": 101.94770191
+            }
+          },
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_plivo",
+            "name": "run_pipeline_plivo",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              2,
+              2,
+              2,
+              2
+            ],
+            "max_distance": 2,
+            "distance_sum": 8,
+            "degree": 6,
+            "in_degree": 1,
+            "out_degree": 5,
+            "hub_norm": 0.3187512,
+            "semantic_raw": 0.3237645,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 0,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64752901
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64752901,
+                "hub": -0.2390634,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64752901,
+                "hub": -0.2390634,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 101.55555556,
+              "structural_semantic": 102.20308456,
+              "structural_semantic_hub": 101.96402116,
+              "all_current_features": 101.96402116
+            }
+          },
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_twilio",
+            "name": "run_pipeline_twilio",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              2,
+              2,
+              2,
+              2
+            ],
+            "max_distance": 2,
+            "distance_sum": 8,
+            "degree": 7,
+            "in_degree": 2,
+            "out_degree": 5,
+            "hub_norm": 0.3406244,
+            "semantic_raw": 0.28351471,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 0,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.56702942
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.56702942,
+                "hub": -0.2554683,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.56702942,
+                "hub": -0.2554683,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 101.55555556,
+              "structural_semantic": 102.12258497,
+              "structural_semantic_hub": 101.86711667,
+              "all_current_features": 101.86711667
+            }
+          },
+          {
+            "id": "dograh:func_api_services_looptalk_core_pipeline_builder_create_agent_pipeline",
+            "name": "create_agent_pipeline",
+            "file": "api/services/looptalk/core/pipeline_builder.py",
+            "coverage": 2,
+            "coverage_ratio": 0.5,
+            "distances": [
+              1,
+              1
+            ],
+            "max_distance": 1,
+            "distance_sum": 2,
+            "degree": 24,
+            "in_degree": 0,
+            "out_degree": 24,
+            "hub_norm": 0.52727025,
+            "semantic_raw": 0.44708371,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 2,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 50.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.66666667
+              },
+              "structural_semantic": {
+                "coverage": 50.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.66666667,
+                "semantic": 0.89416742
+              },
+              "structural_semantic_hub": {
+                "coverage": 50.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.66666667,
+                "semantic": 0.89416742,
+                "hub": -0.39545268,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 50.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.66666667,
+                "semantic": 0.89416742,
+                "hub": -0.39545268,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 52.66666667,
+              "structural_semantic": 53.56083409,
+              "structural_semantic_hub": 53.16538141,
+              "all_current_features": 53.16538141
+            }
+          }
+        ],
+        "structural_semantic_hub": [
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline__run_pipeline",
+            "name": "_run_pipeline",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "max_distance": 1,
+            "distance_sum": 4,
+            "degree": 93,
+            "in_degree": 8,
+            "out_degree": 85,
+            "hub_norm": 0.74421764,
+            "semantic_raw": 0.35414767,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 4,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": true,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.4
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.4,
+                "semantic": 0.70829535
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.4,
+                "semantic": 0.70829535,
+                "hub": -0.55816323,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.4,
+                "semantic": 0.70829535,
+                "hub": -0.55816323,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 102.4,
+              "structural_semantic": 103.10829535,
+              "structural_semantic_hub": 102.55013212,
+              "all_current_features": 102.55013212
+            }
+          },
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_ari_stasis",
+            "name": "run_pipeline_ari_stasis",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              2,
+              2,
+              2,
+              2
+            ],
+            "max_distance": 2,
+            "distance_sum": 8,
+            "degree": 5,
+            "in_degree": 1,
+            "out_degree": 4,
+            "hub_norm": 0.29350043,
+            "semantic_raw": 0.42760444,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 0,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.85520887
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.85520887,
+                "hub": -0.22012533,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.85520887,
+                "hub": -0.22012533,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 101.55555556,
+              "structural_semantic": 102.41076443,
+              "structural_semantic_hub": 102.1906391,
+              "all_current_features": 102.1906391
+            }
+          },
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_smallwebrtc",
+            "name": "run_pipeline_smallwebrtc",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              2,
+              2,
+              2,
+              2
+            ],
+            "max_distance": 2,
+            "distance_sum": 8,
+            "degree": 12,
+            "in_degree": 2,
+            "out_degree": 10,
+            "hub_norm": 0.42015335,
+            "semantic_raw": 0.37033439,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 0,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.74066877
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.74066877,
+                "hub": -0.31511502,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.74066877,
+                "hub": -0.31511502,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 101.55555556,
+              "structural_semantic": 102.29622433,
+              "structural_semantic_hub": 101.98110931,
+              "all_current_features": 101.98110931
+            }
+          },
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_plivo",
+            "name": "run_pipeline_plivo",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              2,
+              2,
+              2,
+              2
+            ],
+            "max_distance": 2,
+            "distance_sum": 8,
+            "degree": 6,
+            "in_degree": 1,
+            "out_degree": 5,
+            "hub_norm": 0.3187512,
+            "semantic_raw": 0.3237645,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 0,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64752901
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64752901,
+                "hub": -0.2390634,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64752901,
+                "hub": -0.2390634,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 101.55555556,
+              "structural_semantic": 102.20308456,
+              "structural_semantic_hub": 101.96402116,
+              "all_current_features": 101.96402116
+            }
+          },
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_telnyx",
+            "name": "run_pipeline_telnyx",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              2,
+              2,
+              2,
+              2
+            ],
+            "max_distance": 2,
+            "distance_sum": 8,
+            "degree": 7,
+            "in_degree": 1,
+            "out_degree": 6,
+            "hub_norm": 0.3406244,
+            "semantic_raw": 0.32380733,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 0,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64761466
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64761466,
+                "hub": -0.2554683,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64761466,
+                "hub": -0.2554683,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 101.55555556,
+              "structural_semantic": 102.20317021,
+              "structural_semantic_hub": 101.94770191,
+              "all_current_features": 101.94770191
+            }
+          },
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_twilio",
+            "name": "run_pipeline_twilio",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              2,
+              2,
+              2,
+              2
+            ],
+            "max_distance": 2,
+            "distance_sum": 8,
+            "degree": 7,
+            "in_degree": 2,
+            "out_degree": 5,
+            "hub_norm": 0.3406244,
+            "semantic_raw": 0.28351471,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 0,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.56702942
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.56702942,
+                "hub": -0.2554683,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.56702942,
+                "hub": -0.2554683,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 101.55555556,
+              "structural_semantic": 102.12258497,
+              "structural_semantic_hub": 101.86711667,
+              "all_current_features": 101.86711667
+            }
+          },
+          {
+            "id": "dograh:func_api_services_looptalk_core_pipeline_builder_create_agent_pipeline",
+            "name": "create_agent_pipeline",
+            "file": "api/services/looptalk/core/pipeline_builder.py",
+            "coverage": 2,
+            "coverage_ratio": 0.5,
+            "distances": [
+              1,
+              1
+            ],
+            "max_distance": 1,
+            "distance_sum": 2,
+            "degree": 24,
+            "in_degree": 0,
+            "out_degree": 24,
+            "hub_norm": 0.52727025,
+            "semantic_raw": 0.44708371,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 2,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 50.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.66666667
+              },
+              "structural_semantic": {
+                "coverage": 50.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.66666667,
+                "semantic": 0.89416742
+              },
+              "structural_semantic_hub": {
+                "coverage": 50.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.66666667,
+                "semantic": 0.89416742,
+                "hub": -0.39545268,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 50.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.66666667,
+                "semantic": 0.89416742,
+                "hub": -0.39545268,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 52.66666667,
+              "structural_semantic": 53.56083409,
+              "structural_semantic_hub": 53.16538141,
+              "all_current_features": 53.16538141
+            }
+          }
+        ],
+        "all_current_features": [
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline__run_pipeline",
+            "name": "_run_pipeline",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              1,
+              1,
+              1,
+              1
+            ],
+            "max_distance": 1,
+            "distance_sum": 4,
+            "degree": 93,
+            "in_degree": 8,
+            "out_degree": 85,
+            "hub_norm": 0.74421764,
+            "semantic_raw": 0.35414767,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 4,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": true,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.4
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.4,
+                "semantic": 0.70829535
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.4,
+                "semantic": 0.70829535,
+                "hub": -0.55816323,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.4,
+                "semantic": 0.70829535,
+                "hub": -0.55816323,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 102.4,
+              "structural_semantic": 103.10829535,
+              "structural_semantic_hub": 102.55013212,
+              "all_current_features": 102.55013212
+            }
+          },
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_ari_stasis",
+            "name": "run_pipeline_ari_stasis",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              2,
+              2,
+              2,
+              2
+            ],
+            "max_distance": 2,
+            "distance_sum": 8,
+            "degree": 5,
+            "in_degree": 1,
+            "out_degree": 4,
+            "hub_norm": 0.29350043,
+            "semantic_raw": 0.42760444,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 0,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.85520887
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.85520887,
+                "hub": -0.22012533,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.85520887,
+                "hub": -0.22012533,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 101.55555556,
+              "structural_semantic": 102.41076443,
+              "structural_semantic_hub": 102.1906391,
+              "all_current_features": 102.1906391
+            }
+          },
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_smallwebrtc",
+            "name": "run_pipeline_smallwebrtc",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              2,
+              2,
+              2,
+              2
+            ],
+            "max_distance": 2,
+            "distance_sum": 8,
+            "degree": 12,
+            "in_degree": 2,
+            "out_degree": 10,
+            "hub_norm": 0.42015335,
+            "semantic_raw": 0.37033439,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 0,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.74066877
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.74066877,
+                "hub": -0.31511502,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.74066877,
+                "hub": -0.31511502,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 101.55555556,
+              "structural_semantic": 102.29622433,
+              "structural_semantic_hub": 101.98110931,
+              "all_current_features": 101.98110931
+            }
+          },
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_plivo",
+            "name": "run_pipeline_plivo",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              2,
+              2,
+              2,
+              2
+            ],
+            "max_distance": 2,
+            "distance_sum": 8,
+            "degree": 6,
+            "in_degree": 1,
+            "out_degree": 5,
+            "hub_norm": 0.3187512,
+            "semantic_raw": 0.3237645,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 0,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64752901
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64752901,
+                "hub": -0.2390634,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64752901,
+                "hub": -0.2390634,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 101.55555556,
+              "structural_semantic": 102.20308456,
+              "structural_semantic_hub": 101.96402116,
+              "all_current_features": 101.96402116
+            }
+          },
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_telnyx",
+            "name": "run_pipeline_telnyx",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              2,
+              2,
+              2,
+              2
+            ],
+            "max_distance": 2,
+            "distance_sum": 8,
+            "degree": 7,
+            "in_degree": 1,
+            "out_degree": 6,
+            "hub_norm": 0.3406244,
+            "semantic_raw": 0.32380733,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 0,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64761466
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64761466,
+                "hub": -0.2554683,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.64761466,
+                "hub": -0.2554683,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 101.55555556,
+              "structural_semantic": 102.20317021,
+              "structural_semantic_hub": 101.94770191,
+              "all_current_features": 101.94770191
+            }
+          },
+          {
+            "id": "dograh:func_api_services_pipecat_run_pipeline_run_pipeline_twilio",
+            "name": "run_pipeline_twilio",
+            "file": "api/services/pipecat/run_pipeline.py",
+            "coverage": 4,
+            "coverage_ratio": 1.0,
+            "distances": [
+              2,
+              2,
+              2,
+              2
+            ],
+            "max_distance": 2,
+            "distance_sum": 8,
+            "degree": 7,
+            "in_degree": 2,
+            "out_degree": 5,
+            "hub_norm": 0.3406244,
+            "semantic_raw": 0.28351471,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 0,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222
+              },
+              "structural_semantic": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.56702942
+              },
+              "structural_semantic_hub": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.56702942,
+                "hub": -0.2554683,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 100.0,
+                "max_distance": 1.33333333,
+                "distance_sum": 0.22222222,
+                "semantic": 0.56702942,
+                "hub": -0.2554683,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 101.55555556,
+              "structural_semantic": 102.12258497,
+              "structural_semantic_hub": 101.86711667,
+              "all_current_features": 101.86711667
+            }
+          },
+          {
+            "id": "dograh:func_api_services_looptalk_core_pipeline_builder_create_agent_pipeline",
+            "name": "create_agent_pipeline",
+            "file": "api/services/looptalk/core/pipeline_builder.py",
+            "coverage": 2,
+            "coverage_ratio": 0.5,
+            "distances": [
+              1,
+              1
+            ],
+            "max_distance": 1,
+            "distance_sum": 2,
+            "degree": 24,
+            "in_degree": 0,
+            "out_degree": 24,
+            "hub_norm": 0.52727025,
+            "semantic_raw": 0.44708371,
+            "has_exact_embedding": true,
+            "direct_outgoing_to_seeds": 2,
+            "direct_incoming_from_seeds": 0,
+            "cochange_seed_count": 0,
+            "cochange_ratio": 0.0,
+            "is_generic_negative": false,
+            "is_expected": false,
+            "formula_contributions": {
+              "structural": {
+                "coverage": 50.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.66666667
+              },
+              "structural_semantic": {
+                "coverage": 50.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.66666667,
+                "semantic": 0.89416742
+              },
+              "structural_semantic_hub": {
+                "coverage": 50.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.66666667,
+                "semantic": 0.89416742,
+                "hub": -0.39545268,
+                "generic_name": 0.0
+              },
+              "all_current_features": {
+                "coverage": 50.0,
+                "max_distance": 2.0,
+                "distance_sum": 0.66666667,
+                "semantic": 0.89416742,
+                "hub": -0.39545268,
+                "generic_name": 0.0,
+                "cochange": 0.0
+              }
+            },
+            "formula_totals": {
+              "structural": 52.66666667,
+              "structural_semantic": 53.56083409,
+              "structural_semantic_hub": 53.16538141,
+              "all_current_features": 53.16538141
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "helix_traversal_audit": {
+    "case_id": "pipeline_builders_common_orchestrator",
+    "direction_mode": "common_caller",
+    "depth_limit": 3,
+    "rows": [
+      {
+        "seed_id": "dograh:func_api_services_pipecat_pipeline_builder_create_pipeline_components",
+        "depth": 1,
+        "raw_rows": 3,
+        "canonical_unique": 3,
+        "elapsed_ms": 8.46,
+        "hit_limit": false
+      },
+      {
+        "seed_id": "dograh:func_api_services_pipecat_pipeline_builder_create_pipeline_components",
+        "depth": 2,
+        "raw_rows": 11,
+        "canonical_unique": 11,
+        "elapsed_ms": 5.45,
+        "hit_limit": false
+      },
+      {
+        "seed_id": "dograh:func_api_services_pipecat_pipeline_builder_create_pipeline_components",
+        "depth": 3,
+        "raw_rows": 19,
+        "canonical_unique": 19,
+        "elapsed_ms": 10.7,
+        "hit_limit": false
+      },
+      {
+        "seed_id": "dograh:func_api_services_pipecat_pipeline_builder_build_pipeline",
+        "depth": 1,
+        "raw_rows": 2,
+        "canonical_unique": 2,
+        "elapsed_ms": 8.42,
+        "hit_limit": false
+      },
+      {
+        "seed_id": "dograh:func_api_services_pipecat_pipeline_builder_build_pipeline",
+        "depth": 2,
+        "raw_rows": 10,
+        "canonical_unique": 10,
+        "elapsed_ms": 4.65,
+        "hit_limit": false
+      },
+      {
+        "seed_id": "dograh:func_api_services_pipecat_pipeline_builder_build_pipeline",
+        "depth": 3,
+        "raw_rows": 18,
+        "canonical_unique": 18,
+        "elapsed_ms": 8.87,
+        "hit_limit": false
+      },
+      {
+        "seed_id": "dograh:func_api_services_pipecat_pipeline_builder_build_realtime_pipeline",
+        "depth": 1,
+        "raw_rows": 2,
+        "canonical_unique": 2,
+        "elapsed_ms": 8.1,
+        "hit_limit": false
+      },
+      {
+        "seed_id": "dograh:func_api_services_pipecat_pipeline_builder_build_realtime_pipeline",
+        "depth": 2,
+        "raw_rows": 10,
+        "canonical_unique": 10,
+        "elapsed_ms": 5.54,
+        "hit_limit": false
+      },
+      {
+        "seed_id": "dograh:func_api_services_pipecat_pipeline_builder_build_realtime_pipeline",
+        "depth": 3,
+        "raw_rows": 18,
+        "canonical_unique": 18,
+        "elapsed_ms": 6.2,
+        "hit_limit": false
+      },
+      {
+        "seed_id": "dograh:func_api_services_pipecat_pipeline_builder_create_pipeline_task",
+        "depth": 1,
+        "raw_rows": 3,
+        "canonical_unique": 3,
+        "elapsed_ms": 8.83,
+        "hit_limit": false
+      },
+      {
+        "seed_id": "dograh:func_api_services_pipecat_pipeline_builder_create_pipeline_task",
+        "depth": 2,
+        "raw_rows": 11,
+        "canonical_unique": 11,
+        "elapsed_ms": 6.95,
+        "hit_limit": false
+      },
+      {
+        "seed_id": "dograh:func_api_services_pipecat_pipeline_builder_create_pipeline_task",
+        "depth": 3,
+        "raw_rows": 19,
+        "canonical_unique": 19,
+        "elapsed_ms": 6.12,
+        "hit_limit": false
+      }
+    ]
+  }
+}
