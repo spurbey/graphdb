@@ -1,0 +1,88 @@
+[
+  {
+    "case_id": "masking_shared_secret_value_wrapper_adversarial",
+    "query": "Which shared function converts a raw API key string or list into a masked representation, called directly by the service masker, workflow configuration masker, and nested service secret masker?",
+    "direction_mode": "shared_callee",
+    "max_hops": 1,
+    "seed_ids": [
+      "dograh:func_api_services_configuration_masking__mask_service",
+      "dograh:func_api_services_configuration_masking_mask_workflow_configurations",
+      "dograh:func_api_services_configuration_masking__mask_nested_service_secrets"
+    ],
+    "expected_nodes": [
+      "dograh:func_api_services_configuration_masking__mask_secret_value"
+    ],
+    "acceptable_nodes": [],
+    "generic_negative_names": ["get", "copy", "dict", "isinstance"],
+    "source_evidence": [
+      "dograh/api/services/configuration/masking.py:128",
+      "dograh/api/services/configuration/masking.py:162",
+      "dograh/api/services/configuration/masking.py:175"
+    ],
+    "adversarial_note": "Coverage control rather than a semantic adversary. The expected wrapper has coverage=3 while the displayed runner-up get has coverage=1."
+  },
+  {
+    "case_id": "masking_low_level_key_primitive_adversarial",
+    "query": "Which low-level string function produces the asterisk-padded masked representation of an individual API key, used directly by workflow definition masking, the secret-value wrapper, and the mask-verification check?",
+    "direction_mode": "shared_callee",
+    "max_hops": 1,
+    "seed_ids": [
+      "dograh:func_api_services_configuration_masking__mask_secret_value",
+      "dograh:func_api_services_configuration_masking_mask_workflow_definition",
+      "dograh:func_api_services_configuration_masking_is_mask_of"
+    ],
+    "expected_nodes": [
+      "dograh:func_api_services_configuration_masking_mask_key"
+    ],
+    "acceptable_nodes": [],
+    "generic_negative_names": ["get", "copy", "dict", "isinstance"],
+    "source_evidence": [
+      "dograh/api/services/configuration/masking.py:74",
+      "dograh/api/services/configuration/masking.py:80",
+      "dograh/api/services/configuration/masking.py:214"
+    ],
+    "adversarial_note": "Competitor: _secret_fields_for_node_type is called by mask_workflow_definition (1-hop) but not by _mask_secret_value or is_mask_of - coverage=1 vs mask_key coverage=3. This is a clean adversarial coverage case. Also tests whether 'asterisk-padded' query prefers mask_key over the semantically noisier _secret_fields_for_node_type."
+  },
+  {
+    "case_id": "quota_mps_error_shared_across_authorizers_adversarial",
+    "query": "Which shared result factory wraps MPS network errors into a quota check failure, called by the hosted authorizer, the OSS service-key authorizer, and the OSS managed-correlation authorizer?",
+    "direction_mode": "shared_callee",
+    "max_hops": 1,
+    "seed_ids": [
+      "dograh:func_api_services_quota_service__authorize_hosted_workflow_run_start",
+      "dograh:func_api_services_quota_service__authorize_oss_dograh_keys",
+      "dograh:func_api_services_quota_service__authorize_oss_managed_v2_correlation"
+    ],
+    "expected_nodes": [
+      "dograh:func_api_services_quota_service__mps_unreachable_result"
+    ],
+    "acceptable_nodes": [],
+    "generic_negative_names": ["get", "logger", "return", "result"],
+    "source_evidence": [
+      "dograh/api/services/quota_service.py:220",
+      "dograh/api/services/quota_service.py:298",
+      "dograh/api/services/quota_service.py:347"
+    ],
+    "adversarial_note": "Equal-coverage semantic stress case. The expected MPS error factory and generic get both have coverage=3 in the current overlay; the get competitor is likely a name-resolution artifact rather than a legitimate shared connector."
+  },
+  {
+    "case_id": "telephony_legacy_vs_run_shared_creation_adversarial",
+    "query": "Which internal function creates the inbound workflow run database record and binds telephony resources before the pipeline starts?",
+    "direction_mode": "shared_callee",
+    "max_hops": 1,
+    "seed_ids": [
+      "dograh:func_api_routes_telephony_handle_inbound_run",
+      "dograh:func_api_routes_telephony_handle_inbound_telephony"
+    ],
+    "expected_nodes": [
+      "dograh:func_api_routes_telephony__create_inbound_workflow_run"
+    ],
+    "acceptable_nodes": [],
+    "generic_negative_names": ["get", "logger", "request", "response"],
+    "source_evidence": [
+      "dograh/api/routes/telephony.py:855",
+      "dograh/api/routes/telephony.py:1025"
+    ],
+    "adversarial_note": "Equal-coverage semantic stress case. Both seeds call _create_inbound_workflow_run; the displayed runner-up is a start_inbound_stream identity, not the originally anticipated _detect_provider competitor."
+  }
+]
