@@ -1201,6 +1201,8 @@ def evaluate_case(
         best_summary = None
         best_key = None
         top_summaries: list[tuple[tuple, dict]] = []
+        tradeoff_alphas = (0.0, 0.25, 0.5, 1.0, 2.0, 5.0, 10.0, 50.0)
+        tradeoff_best: dict[float, tuple[tuple, dict]] = {}
         combinations = product(*path_options)
         for combination in islice(combinations, max_union_combinations):
             evaluated_combinations += 1
@@ -1212,6 +1214,15 @@ def evaluate_case(
             top_summaries.append((key, summary))
             top_summaries.sort(key=lambda item: item[0])
             del top_summaries[5:]
+            for alpha in tradeoff_alphas:
+                tradeoff_key = (
+                    summary["union_weighted_cost"]
+                    + alpha * summary["path_cost_sum"],
+                    *key,
+                )
+                current = tradeoff_best.get(alpha)
+                if current is None or tradeoff_key < current[0]:
+                    tradeoff_best[alpha] = (tradeoff_key, summary)
         if best_summary is None:
             return None
 
@@ -1233,6 +1244,25 @@ def evaluate_case(
             audit["selected_cost"] = round(selected_item["cost"], 8)
 
         selected_public = public_combination(best_summary)
+
+        tradeoff_probe = []
+        for alpha in tradeoff_alphas:
+            tradeoff_key, summary = tradeoff_best[alpha]
+            public = public_combination(summary)
+            tradeoff_probe.append(
+                {
+                    "alpha_path_sum": alpha,
+                    "objective": "union_weighted_cost + alpha * path_cost_sum",
+                    "objective_value": round(tradeoff_key[0], 8),
+                    "selected_path_change_count_from_independent": sum(
+                        left["path_indices"] != right["path_indices"]
+                        for left, right in zip(
+                            independent["combination"], summary["combination"]
+                        )
+                    ),
+                    "selection": public,
+                }
+            )
         return {
             "root": meta[root_idx].node_id,
             "root_name": meta[root_idx].name,
@@ -1262,6 +1292,7 @@ def evaluate_case(
                 "top_combinations": [
                     public_combination(summary) for _, summary in top_summaries
                 ],
+                "union_path_sum_tradeoff_probe": tradeoff_probe,
             },
             "within_declared_hop_budget": all(
                 path["selected_hops"] <= case.max_hops for path in path_audits
