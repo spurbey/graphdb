@@ -1,0 +1,88 @@
+[
+  {
+    "case_id": "user_configuration_row_loader_holdout",
+    "query": "Which shared database helper loads the user configuration row before reading configurations or updating validation metadata?",
+    "direction_mode": "shared_callee",
+    "max_hops": 1,
+    "seed_ids": [
+      "dograh:func_api_db_user_client_get_user_configuration_value",
+      "dograh:func_api_db_user_client_get_user_configurations",
+      "dograh:func_api_db_user_client_update_user_configuration_last_validated_at"
+    ],
+    "expected_nodes": [
+      "dograh:func_api_db_user_client__get_user_configuration_row"
+    ],
+    "acceptable_nodes": [],
+    "generic_negative_names": ["get", "execute", "read"],
+    "source_evidence": [
+      "dograh/api/db/user_client.py:82",
+      "dograh/api/db/user_client.py:111",
+      "dograh/api/db/user_client.py:145"
+    ]
+  },
+  {
+    "case_id": "qa_llm_inference_core_holdout",
+    "query": "Which common LLM inference routine executes conversation summaries, per-node QA, and whole-call QA analysis?",
+    "direction_mode": "shared_callee",
+    "max_hops": 2,
+    "seed_ids": [
+      "dograh:func_api_services_workflow_qa_analysis__generate_conversation_summary",
+      "dograh:func_api_services_workflow_qa_analysis_run_per_node_qa_analysis",
+      "dograh:func_api_services_workflow_qa_analysis__run_whole_call_qa_analysis"
+    ],
+    "expected_nodes": [
+      "dograh:func_api_services_workflow_qa_analysis__run_llm_inference"
+    ],
+    "acceptable_nodes": [],
+    "generic_negative_names": ["get", "run", "read"],
+    "source_evidence": [
+      "dograh/api/services/workflow/qa/analysis.py:59",
+      "dograh/api/services/workflow/qa/analysis.py:189",
+      "dograh/api/services/workflow/qa/analysis.py:311"
+    ]
+  },
+  {
+    "case_id": "run_report_csv_builder_holdout",
+    "query": "Which shared CSV builder formats campaign, workflow, and usage run reports?",
+    "direction_mode": "shared_callee",
+    "max_hops": 1,
+    "seed_ids": [
+      "dograh:func_api_services_reports_run_report_generate_campaign_report_csv",
+      "dograh:func_api_services_reports_run_report_generate_workflow_report_csv",
+      "dograh:func_api_services_reports_run_report_generate_usage_runs_report_csv"
+    ],
+    "expected_nodes": [
+      "dograh:func_api_services_reports_run_report_build_run_report_csv"
+    ],
+    "acceptable_nodes": [],
+    "generic_negative_names": ["get", "write", "read"],
+    "source_evidence": [
+      "dograh/api/services/reports/run_report.py:99",
+      "dograh/api/services/reports/run_report.py:111",
+      "dograh/api/services/reports/run_report.py:131"
+    ]
+  },
+  {
+    "case_id": "integration_registry_lazy_load_holdout",
+    "query": "Which lazy-loading guard initializes integration packages before listing packages, node specs, routers, or runtime sessions?",
+    "direction_mode": "shared_callee",
+    "max_hops": 1,
+    "seed_ids": [
+      "dograh:func_api_services_integrations_registry_all_packages",
+      "dograh:func_api_services_integrations_registry_all_node_specs",
+      "dograh:func_api_services_integrations_registry_all_routers",
+      "dograh:func_api_services_integrations_registry_create_runtime_sessions"
+    ],
+    "expected_nodes": [
+      "dograh:func_api_services_integrations_registry__ensure_loaded"
+    ],
+    "acceptable_nodes": [],
+    "generic_negative_names": ["get", "load", "read"],
+    "source_evidence": [
+      "dograh/api/services/integrations/registry.py:35",
+      "dograh/api/services/integrations/registry.py:69",
+      "dograh/api/services/integrations/registry.py:77",
+      "dograh/api/services/integrations/registry.py:87"
+    ]
+  }
+]
