@@ -446,3 +446,198 @@ yet solve arbitrary repository-wide Steiner search, dynamic dispatch, or
 semantic interpretation without a query embedding. The current evidence is
 strong enough to continue experimentation, not strong enough for product/MCP
 integration.
+
+### Run 011 - pairwise root-ranking audit
+
+**Script:** `sandbox/_analyze_connector_results.py`
+
+This audit reports the first lexicographic dimension that separates the saved
+winner and runner-up. It is not a full semantic ablation because the artifacts
+retain only the top rows rather than every candidate.
+
+Across the original seven training and four holdout cases:
+
+| Pairwise deciding dimension | Cases |
+|---|---:|
+| Query cosine | 5/11 |
+| Seed coverage | 2/11 |
+| Directional support | 1/11 |
+| Trivial single candidate | 3/11 |
+
+`pipeline_builders_common_orchestrator` is direction-decided, not
+semantic-decided: `_run_pipeline_impl` has direct outgoing support 4 while the
+runner-up has 0. Among the five actual cosine-decided pairs, three margins are
+greater than 0.04; recording cache remains the fragile case at roughly 0.011.
+
+Decision: add a full no-semantics ranking to the runner before making a causal
+claim that query cosine changes the final root.
+
+### Run 012 - exploratory semantic-root stress cases
+
+**Fixture:** `sandbox/multiseed_adversarial_cases.json`
+
+**Artifacts:**
+
+- `sandbox/out/query_connector_adversarial_run1.json`
+- `sandbox/out/query_connector_adversarial_run2.json`
+
+The first run contained a mis-specified telephony case: only
+`handle_inbound_telephony` calls `_validate_inbound_request`. The corrected run
+uses `_create_inbound_workflow_run`, which is called by both legacy and run-bound
+inbound handlers.
+
+The corrected exploratory results are 4/4 expected roots:
+
+| Case | Pairwise factor | Actual runner-up |
+|---|---|---|
+| shared secret wrapper | coverage 3 vs 1 | `get` |
+| low-level masking primitive | coverage 3 vs 1 | `_secret_fields_for_node_type` |
+| MPS unreachable result | cosine 0.4196 vs 0.1081 | `get` |
+| inbound workflow-run creation | cosine 0.5021 vs 0.3714 | `start_inbound_stream` |
+
+These are in-sample exploratory cases designed after inspecting Dograh; they
+are not independent validation. They show two useful equal-coverage semantic
+discriminations and two coverage controls. No observed case lets semantics hurt.
+
+Most importantly, these runs do not test union-aware path selection: all cases
+use one-hop paths, every combination count is 1/1, no selected path changes, and
+shared-edge savings are zero.
+
+Decision: retain the cases as semantic-root stress evidence, but do not count
+them as proof of the fixed-root union optimizer. The next experiment must use
+real two- or three-hop alternatives for multiple seeds and produce more than one
+Cartesian path combination.
+
+### Run 013 - conservative static-call overlay resolution
+
+**Code:** `sandbox/exp_query_conditioned_connectors.py`
+
+**Tests:** `tests/test_current_source_calls.py`
+
+The ephemeral overlay now distinguishes exact static evidence from name-only
+evidence. It resolves imported functions, imported classes, module aliases,
+same-file class-qualified calls, and `self`/`cls` methods when the owning class
+is statically known. Receiver-dependent attribute calls remain unresolved and
+are reported rather than guessed.
+
+Observed current-source overlay:
+
+| Measurement | Count |
+|---|---:|
+| Raw canonical `CALLS` | 6,769 |
+| Retained raw current name matches | 4,254 |
+| Overlay `CALLS` | 5,087 |
+| Direct same-file additions | 299 |
+| Imported-function exact additions | 376 |
+| Same-file method exact additions | 136 |
+| Module-attribute exact additions | 14 |
+| Imported-class-method exact additions | 8 |
+| Ambiguous raw name edges retained and tagged | 1,067 |
+| Functions with unresolved attribute names | 2,435 |
+| Unresolved attribute-name occurrences by function | 8,444 |
+
+This removes 120 heuristic same-file additions from the prior 5,207-edge
+overlay while adding inspectable exact provenance. The most common unresolved
+names are `get`, `execute`, `async_session`, `info`, and `error`, which is
+consistent with dynamic receivers and library APIs rather than safe static
+targets.
+
+Regression result: 7/7 training cases and 4/4 holdout cases still select the
+expected root at rank 1 and retain a complete bounded route. The focused source
+tests cover module aliases, imported classes, same-file class qualification,
+`self` methods, and unresolved receiver-dependent dispatch.
+
+Limitation retained deliberately: raw ambiguous edges are still present for
+regression safety. This overlay is evidence for experiments, not a sound Python
+call graph.
+
+### Run 014 - real shared-prefix case mining
+
+**Script:** `sandbox/mine_shared_prefix_union_cases.py`
+
+**Artifact:** `sandbox/out/shared_prefix_union_candidates.json`
+
+The first topology pass admitted cross-file `raw_current_unique_name` edges and
+produced a false SDK `add` connector from unrelated attribute calls. That
+failure disproves the assumption that a globally unique function name is
+enough to validate an attribute edge.
+
+The final miner excludes both ambiguous and cross-file unique-name edges. Every
+retained path edge is statically resolved or has same-file name evidence. It
+enumerates real directed Dograh paths up to three hops, requires at least two
+paths per seed, evaluates seed triples exactly within the declared bounds, and
+compares deterministic independent paths with minimum unique-edge unions.
+
+Final mining counts:
+
+| Direction | Roots with enough multi-path seeds | Seed triples evaluated | Qualifying triples | Saved |
+|---|---:|---:|---:|---:|
+| Shared callee | 35 | 1,333 | 153 | 25 |
+| Common caller | 41 | 868 | 115 | 25 |
+
+No candidate hit the 20,000-combination cap. Manual source review selected two
+shared-callee cases: text-chat session normalization and telephony configuration
+normalization. A same-file ARI common-caller case was structurally clean, but
+its shared intermediate is a better root under the current common-caller ranker,
+so it was not frozen as the primary query case.
+
+### Run 015 - query-conditioned shared-prefix union validation
+
+**Fixture:** `sandbox/multiseed_shared_prefix_cases.json`
+
+**Artifact:** `sandbox/out/query_connector_shared_prefix_union.json`
+
+Both source-reviewed cases finally exercise the missing behavior:
+
+| Case | Expected root rank | Combinations | Independent union | Selected union | Changed paths |
+|---|---:|---:|---:|---:|---:|
+| Text-chat normalization | 1 | 27/27 | 6 edges, cost 5.247296 | 4 edges, cost 3.548949 | 2/3 |
+| Telephony config normalization | 1 | 8/8 | 7 edges, cost 6.000251 | 5 edges, cost 4.369353 | 2/3 |
+
+For text chat, append and create routes switch from their separate service
+branches to the shared `_execute_pending_turn_response -> _build_response ->
+normalize_text_chat_session_data` suffix. For telephony, public and outbound
+routes switch from the default-config loader to the shared
+`get_telephony_provider_by_id -> load_telephony_config_by_id ->
+_normalize_with_phone_numbers` suffix.
+
+This is the first real Dograh evidence that fixed-root union optimization can
+select a different multi-step connection than independent shortest weighted
+paths. The claim remains bounded: three seeds, at most three hops, exact path
+and Cartesian enumeration within the saved case limits.
+
+### Run 016 - sharing versus distinct-path objective probe
+
+The two counterqueries use identical roots and seeds but explicitly ask to
+preserve lifecycle-specific or loader-specific branches. Under the default
+objective they still select the same shared unions. Query embeddings continue
+to select the intended root, but they do not reliably encode whether path
+sharing itself is desirable.
+
+The runner now reports the objective family:
+
+`J_alpha = unique_union_weighted_cost + alpha * summed_path_cost`
+
+`alpha=0` is the existing pure-union objective. Increasing `alpha` penalizes
+longer per-seed detours taken only to gain shared edges.
+
+Observed switches:
+
+| Topology | Shared union at alpha 0 | First probed independent selection |
+|---|---:|---:|
+| Text-chat normalization | yes | alpha 1 |
+| Telephony normalization | yes | alpha 50 |
+
+The telephony threshold is high because all-by-ID sharing adds very little
+summed path cost relative to the independent default/inbound mix. This is not a
+single universally correct alpha. A production query API would need an explicit
+sharing preference, calibrated task mode, or a separately validated intent
+classifier. Natural-language node cosine alone is insufficient evidence for
+that control.
+
+Current conclusion: the system can find multi-seed connections and optimize a
+real bounded shared subgraph under a declared mathematical objective. It cannot
+yet claim the selected union is universally optimal for an arbitrary natural-
+language problem statement. Dynamic dispatch, ambiguous retained raw edges,
+root-versus-subgraph joint optimization, and query-to-objective calibration
+remain open.
