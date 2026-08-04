@@ -1,0 +1,110 @@
+[
+  {
+    "case_id": "text_chat_normalization_shared_response_prefix",
+    "query": "Which shared text-chat session-data normalizer produces stable response data across pending-turn execution, message append, and session creation, with the common response-building route preferred when several lifecycle paths exist?",
+    "direction_mode": "shared_callee",
+    "max_hops": 3,
+    "seed_ids": [
+      "dograh:func_api_routes_workflow_text_chat__execute_pending_turn_response",
+      "dograh:func_api_routes_workflow_text_chat_append_text_chat_message",
+      "dograh:func_api_routes_workflow_text_chat_create_text_chat_session"
+    ],
+    "expected_nodes": [
+      "dograh:func_api_services_workflow_text_chat_session_service_normalize_text_chat_session_data"
+    ],
+    "acceptable_nodes": [],
+    "generic_negative_names": ["get", "append", "dict", "list"],
+    "source_evidence": [
+      "dograh/api/routes/workflow_text_chat.py:70",
+      "dograh/api/routes/workflow_text_chat.py:154",
+      "dograh/api/routes/workflow_text_chat.py:222",
+      "dograh/api/routes/workflow_text_chat.py:265",
+      "dograh/api/services/workflow/text_chat_session_service.py:61",
+      "dograh/api/services/workflow/text_chat_session_service.py:83",
+      "dograh/api/services/workflow/text_chat_session_service.py:115"
+    ],
+    "adversarial_note": "Each seed has three exact bounded paths. Independent hop-first selection uses separate response, append-service, and initialize-service branches; the topology-only union reuses the response-building suffix for all three."
+  },
+  {
+    "case_id": "telephony_config_normalization_shared_id_loader",
+    "query": "Which telephony factory helper injects phone-number context while normalizing provider configurations reached from public call resolution, inbound validation, and outbound call initiation, favoring their shared by-ID loading route?",
+    "direction_mode": "shared_callee",
+    "max_hops": 3,
+    "seed_ids": [
+      "dograh:func_api_routes_public_agent__execute_resolved_target",
+      "dograh:func_api_routes_telephony__validate_inbound_request",
+      "dograh:func_api_routes_telephony_initiate_call"
+    ],
+    "expected_nodes": [
+      "dograh:func_api_services_telephony_factory__normalize_with_phone_numbers"
+    ],
+    "acceptable_nodes": [],
+    "generic_negative_names": ["get", "load", "dict", "list"],
+    "source_evidence": [
+      "dograh/api/routes/public_agent.py:177",
+      "dograh/api/routes/public_agent.py:200",
+      "dograh/api/routes/telephony.py:86",
+      "dograh/api/routes/telephony.py:105",
+      "dograh/api/routes/telephony.py:360",
+      "dograh/api/routes/telephony.py:434",
+      "dograh/api/services/telephony/factory.py:30",
+      "dograh/api/services/telephony/factory.py:57",
+      "dograh/api/services/telephony/factory.py:203"
+    ],
+    "adversarial_note": "The seeds have distinct default, inbound, and by-ID routes to normalization. The topology-only union changes all three to converge through get_telephony_provider_by_id and load_telephony_config_by_id."
+  },
+  {
+    "case_id": "text_chat_normalization_distinct_lifecycle_counterquery",
+    "query": "Which shared text-chat session-data normalizer is reached through the distinct initialization, append-message, and response-serialization branches? Preserve those lifecycle-specific branches instead of collapsing them into the response builder.",
+    "direction_mode": "shared_callee",
+    "max_hops": 3,
+    "seed_ids": [
+      "dograh:func_api_routes_workflow_text_chat__execute_pending_turn_response",
+      "dograh:func_api_routes_workflow_text_chat_append_text_chat_message",
+      "dograh:func_api_routes_workflow_text_chat_create_text_chat_session"
+    ],
+    "expected_nodes": [
+      "dograh:func_api_services_workflow_text_chat_session_service_normalize_text_chat_session_data"
+    ],
+    "acceptable_nodes": [],
+    "generic_negative_names": ["get", "append", "dict", "list"],
+    "source_evidence": [
+      "dograh/api/routes/workflow_text_chat.py:70",
+      "dograh/api/routes/workflow_text_chat.py:154",
+      "dograh/api/routes/workflow_text_chat.py:222",
+      "dograh/api/routes/workflow_text_chat.py:265",
+      "dograh/api/services/workflow/text_chat_session_service.py:61",
+      "dograh/api/services/workflow/text_chat_session_service.py:83",
+      "dograh/api/services/workflow/text_chat_session_service.py:115"
+    ],
+    "adversarial_note": "Counterquery over the same topology. It asks the semantic cost to retain the independent lifecycle-specific branches rather than maximize shared response edges."
+  },
+  {
+    "case_id": "telephony_config_normalization_distinct_loader_counterquery",
+    "query": "Which phone-number normalization helper is reached through the distinct default-configuration, inbound-matching, and by-ID configuration loaders? Preserve each loader branch rather than forcing all flows through the shared by-ID route.",
+    "direction_mode": "shared_callee",
+    "max_hops": 3,
+    "seed_ids": [
+      "dograh:func_api_routes_public_agent__execute_resolved_target",
+      "dograh:func_api_routes_telephony__validate_inbound_request",
+      "dograh:func_api_routes_telephony_initiate_call"
+    ],
+    "expected_nodes": [
+      "dograh:func_api_services_telephony_factory__normalize_with_phone_numbers"
+    ],
+    "acceptable_nodes": [],
+    "generic_negative_names": ["get", "load", "dict", "list"],
+    "source_evidence": [
+      "dograh/api/routes/public_agent.py:177",
+      "dograh/api/routes/public_agent.py:200",
+      "dograh/api/routes/telephony.py:86",
+      "dograh/api/routes/telephony.py:105",
+      "dograh/api/routes/telephony.py:360",
+      "dograh/api/routes/telephony.py:434",
+      "dograh/api/services/telephony/factory.py:30",
+      "dograh/api/services/telephony/factory.py:57",
+      "dograh/api/services/telephony/factory.py:203"
+    ],
+    "adversarial_note": "Counterquery over the same topology. It asks the semantic cost to retain default and inbound loader branches instead of selecting the most shared by-ID union."
+  }
+]
