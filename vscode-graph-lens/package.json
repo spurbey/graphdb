@@ -1,0 +1,138 @@
+{
+  "name": "dora-graph-lens",
+  "displayName": "Dora Graph Lens",
+  "description": "Inline knowledge-graph view for functions and classes. Hover a symbol for its subgraph stats, then open callers/callees/co-changes/history in a panel docked beside your code.",
+  "version": "0.1.0",
+  "publisher": "dora",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other",
+    "Visualization"
+  ],
+  "keywords": [
+    "knowledge graph",
+    "code graph",
+    "subgraph",
+    "callers",
+    "co-change",
+    "graphdb"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "doraGraphLens.showSubgraph",
+        "title": "GraphDB: Show Subgraph for Symbol",
+        "category": "GraphDB"
+      },
+      {
+        "command": "doraGraphLens.showCallers",
+        "title": "GraphDB: Show Callers for Symbol",
+        "category": "GraphDB"
+      },
+      {
+        "command": "doraGraphLens.showHistory",
+        "title": "GraphDB: Show History for Symbol",
+        "category": "GraphDB"
+      },
+      {
+        "command": "doraGraphLens.showDocs",
+        "title": "GraphDB: Show Docs for Symbol",
+        "category": "GraphDB"
+      },
+      {
+        "command": "doraGraphLens.status",
+        "title": "GraphDB: Server Status",
+        "category": "GraphDB"
+      },
+      {
+        "command": "doraGraphLens.refreshCache",
+        "title": "GraphDB: Clear Symbol Cache",
+        "category": "GraphDB"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "command": "doraGraphLens.showSubgraph",
+          "group": "doraGraphLens@1",
+          "when": "editorTextFocus"
+        },
+        {
+          "command": "doraGraphLens.showCallers",
+          "group": "doraGraphLens@2",
+          "when": "editorTextFocus"
+        },
+        {
+          "command": "doraGraphLens.showHistory",
+          "group": "doraGraphLens@3",
+          "when": "editorTextFocus"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "Dora Graph Lens",
+      "properties": {
+        "doraGraphLens.serverUrl": {
+          "type": "string",
+          "default": "http://127.0.0.1:7700",
+          "description": "Base URL of the graphdb MCP/HTTP server (graph_mcp_server.py). The extension auto-launches it if unreachable and autoStart is enabled."
+        },
+        "doraGraphLens.repoName": {
+          "type": "string",
+          "default": "",
+          "description": "Repo name used to construct graph node ids (e.g. 'amo', 'dograh'). Empty = derive from workspace folder name."
+        },
+        "doraGraphLens.repoRoot": {
+          "type": "string",
+          "default": "",
+          "description": "Path (relative to the workspace folder) where the ingested repo lives, e.g. 'dograh'. Empty = auto-detect (workspace root, then a folder named like repoName)."
+        },
+        "doraGraphLens.autoStartServer": {
+          "type": "boolean",
+          "default": true,
+          "description": "Launch the graphdb server (python tools/graph_mcp_server.py) automatically when the extension activates and the port is unreachable."
+        },
+        "doraGraphLens.graphdbDir": {
+          "type": "string",
+          "default": "",
+          "description": "Absolute path to the graphdb repo containing tools/graph_mcp_server.py. Empty = auto-detect from workspace."
+        },
+        "doraGraphLens.hoverEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show the inline graph summary card on hover."
+        },
+        "doraGraphLens.codeLensEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show a graph stats CodeLens line above functions and classes."
+        },
+        "doraGraphLens.defaultDepth": {
+          "type": "number",
+          "default": 2,
+          "minimum": 1,
+          "maximum": 5,
+          "description": "Default blast-radius depth for caller/callee views."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.4.0"
+  }
+}
