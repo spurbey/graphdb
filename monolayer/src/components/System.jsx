@@ -33,15 +33,20 @@ const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
 const lerp3 = (a, b, p) => a + (b - a) * p;
 const mixNumber = (a, b, p) => a + (b - a) * p;
 const scaleLength = (value, progress) => {
+  if (typeof value === "number") return `${value * progress}px`;
   const parsed = parseFloat(value);
   if (!Number.isFinite(parsed)) return value;
-  return `${parsed * progress}px`;
+  const unit = (typeof value === "string" && value.match(/[a-z%]+$/i)?.[0]) || "px";
+  return `${parsed * progress}${unit}`;
 };
 const mixLength = (from, to, progress) => {
-  const f = parseFloat(from);
-  const t = parseFloat(to);
-  if (!Number.isFinite(f) || !Number.isFinite(t)) return to;
-  return `${mixNumber(f, t, progress)}px`;
+  const fromValue = parseFloat(from) || 0;
+  const toValue = parseFloat(to) || 0;
+  const unit =
+    (typeof to === "string" && to.match(/[a-z%]+$/i)?.[0]) ||
+    (typeof from === "string" && from.match(/[a-z%]+$/i)?.[0]) ||
+    "px";
+  return `${mixNumber(fromValue, toValue, progress)}${unit}`;
 };
 const progressInDuration = (time, duration) => (duration <= 0 ? 1 : clamp(time / duration));
 const progressInRange = (progress, start, end) => {
