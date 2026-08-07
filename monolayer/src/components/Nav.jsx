@@ -1,7 +1,8 @@
 import { useRef, useState } from "react";
-import { LogoNav, CropmarkSet } from "./icons.jsx";
+import { LogoNav } from "./icons.jsx";
 import { useSite } from "../SiteContext.jsx";
 import { useScramble } from "../anim/useScramble.js";
+import BtnTabs from "./BtnTabs.jsx";
 
 const PROGRESS_ITEMS = ["absurdity", "system", "how it works", "different", "pricing"];
 const MENU_ITEMS = ["absurdity", "system", "how it works", "pricing"];
@@ -91,17 +92,17 @@ export default function Nav() {
 
       {/* fullscreen menu */}
       <div className={`nav__menu${menuOpen ? " open" : ""}`}>
-        <div className="menu__top">
-          <div className="btn-tabs__list is--horizontal">
-            <div className="btn-tabs__cropmarks is--menu"><CropmarkSet /></div>
-            <button className="btn-tabs" onClick={() => setMenuTab("product")}>
-              <span className="btn-tabs__text">product</span>
-            </button>
-            <button className="btn-tabs" onClick={() => setMenuTab("news")}>
-              <span className="btn-tabs__text">news</span>
-            </button>
+<div className="menu__top">
+          <BtnTabs
+            horizontal
+            items={[
+              { key: "product", label: "product" },
+              { key: "news", label: "news" },
+            ]}
+            active={menuTab}
+            onSelect={setMenuTab}
+          />
           </div>
-        </div>
         <div className="menu-tabs__list">
           {menuTab === "product" ? (
             <div className="menu-tabs__item">
