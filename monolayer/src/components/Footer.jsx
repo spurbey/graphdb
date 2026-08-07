@@ -1,56 +1,91 @@
-import { useState } from "react";
-import { LogoFooter, CropmarkSet, EnterIcon } from "./icons.jsx";
+import { useEffect, useRef, useState } from "react";
+import { LogoFooter, EnterIcon } from "./icons.jsx";
+import BtnTabs from "./BtnTabs.jsx";
 
 const PRODUCT_LINKS = ["absurdity", "system", "how it works", "pricing"];
 
 const NEWS_LINKS = [
   { label: "create a account", href: "https://monolayer-demo.webflow.io/news/create-your-monolayer-account", aria: "create a account" },
-  { label: "all news", href: "/news" },
+  { label: "all news", href: "/news", aria: "all news" },
 ];
 
 function FooterTabs({ tab, setTab }) {
+  const listRef = useRef(null);
+
+  // keep both panels mounted (like the original) so switching tabs doesn't
+  // change the column height; lock the tallest one as min-height
+  useEffect(() => {
+    const root = listRef.current;
+    if (!root) return;
+    const measure = () => {
+      const items = Array.from(root.querySelectorAll(".footer-tabs__item"));
+      if (!items.length) return;
+      let max = 0;
+      items.forEach((item) => {
+        const prevStatus = item.getAttribute("data-tabs-status");
+        item.setAttribute("data-tabs-status", "active");
+        item.style.visibility = "hidden";
+        item.style.position = "absolute";
+        max = Math.max(max, item.getBoundingClientRect().height);
+        item.style.visibility = "";
+        item.style.position = "";
+        if (prevStatus) item.setAttribute("data-tabs-status", prevStatus);
+        else item.removeAttribute("data-tabs-status");
+      });
+      if (max) {
+        items.forEach((item) => {
+          item.style.minHeight = `${max}px`;
+        });
+      }
+    };
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
   return (
     <>
       <div className="footer-nav__btn-list">
-        <div className="btn-tabs__list">
-          <div className="btn-tabs__cropmarks">
-            <CropmarkSet />
-          </div>
-          <button className="btn-tabs" onClick={() => setTab("product")}>
-            <span className="btn-tabs__text">product</span>
-          </button>
-          <button className="btn-tabs" onClick={() => setTab("news")}>
-            <span className="btn-tabs__text">news</span>
-          </button>
-        </div>
+        <BtnTabs
+          items={[
+            { key: "product", label: "product" },
+            { key: "news", label: "news" },
+          ]}
+          active={tab}
+          onSelect={setTab}
+        />
       </div>
       <div className="footer-nav__list">
-        <div className="footer-tabs__list">
-          {tab === "product" ? (
-            <div className="footer-tabs__item">
-              {PRODUCT_LINKS.map((label) => (
-                <button className="footer-nav__item" data-underline-link="static" key={label}>
-                  <a
-                    className="footer-nav__item-link"
-                    href="/"
-                    aria-current="page"
-                    data-jump-to={label}
-                    onClick={(e) => e.preventDefault()}
-                  />
-                  <span>{label}</span>
-                </button>
-              ))}
-            </div>
-          ) : (
-            <div className="footer-tabs__item">
-              {NEWS_LINKS.map((link) => (
-                <button className="footer-nav__item" data-underline-link="static" key={link.label}>
-                  <a className="footer-nav__item-link" href={link.href} aria-label={link.aria} />
-                  <span>{link.label}</span>
-                </button>
-              ))}
-            </div>
-          )}
+        <div className="footer-tabs__list" ref={listRef}>
+          <div
+            className="footer-tabs__item"
+            data-tabs-status={tab === "product" ? "active" : "not-active"}
+          >
+            {PRODUCT_LINKS.map((label) => (
+              <button className="footer-nav__item" data-underline-link="static" key={label}>
+                <a
+                  className="footer-nav__item-link"
+                  href="/"
+                  aria-current="page"
+                  aria-label={label}
+                  data-jump-to={label}
+                  onClick={(e) => e.preventDefault()}
+                />
+                <span data-scramble-hover="target">{label}</span>
+              </button>
+            ))}
+          </div>
+          <div
+            className="footer-tabs__item"
+            data-tabs-status={tab === "news" ? "active" : "not-active"}
+          >
+            {NEWS_LINKS.map((link) => (
+              <button className="footer-nav__item" data-underline-link="static" key={link.label}>
+                <a className="footer-nav__item-link" href={link.href} aria-label={link.aria} target="_blank" rel="noreferrer" />
+                <span data-scramble-hover="target">{link.label}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </>
