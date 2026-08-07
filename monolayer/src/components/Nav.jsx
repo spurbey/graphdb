@@ -1,18 +1,30 @@
 import { useRef, useState } from "react";
 import { LogoNav, CropmarkSet } from "./icons.jsx";
+import { useSite } from "../SiteContext.jsx";
 import { useScramble } from "../anim/useScramble.js";
 
-const PROGRESS_ITEMS = ["absurdity", "system", "how it works", "pricing"];
+const PROGRESS_ITEMS = ["absurdity", "system", "how it works", "different", "pricing"];
+const MENU_ITEMS = ["absurdity", "system", "how it works", "pricing"];
 
 export default function Nav() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuTab, setMenuTab] = useState("product");
   const scopeRef = useRef(null);
+  const { lenis } = useSite();
   useScramble(scopeRef, null);
 
   const jumpTo = (label) => {
     const el = document.querySelector(`[data-nav-progress-section="${label}"]`);
-    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    if (el) {
+      const nav = document.querySelector(".nav");
+      const offset = nav ? nav.offsetHeight : 0;
+      const top = Math.max(
+        0,
+        el.getBoundingClientRect().top + (window.scrollY || window.pageYOffset) - offset
+      );
+      if (lenis) lenis.scrollTo(top);
+      else window.scrollTo({ top, behavior: "smooth" });
+    }
     setMenuOpen(false);
   };
 
@@ -44,12 +56,14 @@ export default function Nav() {
         <div className="nav-main__progress" data-nav-progress>
           <div className="nav-main__progress-bar" />
           <div className="nav-main__progress-labels">
-            {PROGRESS_ITEMS.concat(PROGRESS_ITEMS).map((label, i) => (
+            {PROGRESS_ITEMS.map((label, i) => (
               <a
-                key={i}
+                key={label}
                 href="#"
-                className="nav-main__progress-item paragraph-m"
+                className={`nav-main__progress-item paragraph-m${i === 0 ? " is-active" : ""}`}
+                data-nav-progress-item={label}
                 data-scramble-hover="link"
+                aria-current={i === 0 ? "true" : "false"}
                 onClick={(e) => { e.preventDefault(); jumpTo(label); }}
               >
                 <span data-scramble-hover="target" data-nav-progress-label>{label}</span>
@@ -91,7 +105,7 @@ export default function Nav() {
         <div className="menu-tabs__list">
           {menuTab === "product" ? (
             <div className="menu-tabs__item">
-              {["absurdity", "system", "how it works", "pricing"].map((label) => (
+              {MENU_ITEMS.map((label) => (
                 <a key={label} className="menu__link" href="#" onClick={(e) => { e.preventDefault(); jumpTo(label); }}>
                   <span className="menu__link-text heading-xl text-align-center">{label}</span>
                 </a>
