@@ -392,21 +392,58 @@
   z-index: 10;
   pointer-events: none;
   color: var(--theme--background);
+  position: absolute;
+  inset: auto 0% 0%;
+}
+.shutter-scroll-transition.w-variant-indigo {
+  color: var(--theme--background-indigo);
+}
+.shutter-scroll-transition.w-variant-olive {
+  color: var(--theme--background-olive);
+}
+.shutter-scroll-transition.is--top {
+  inset: 0% 0% auto;
+}
+[data-shutter-scroll-panel] {
   position: relative;
-  height: 10em;
   width: 100%;
 }
-.shutter-scroll-transition .shutter-cells {
+[data-shutter-scroll-grid],
+[data-shutter-scroll-fill] {
   display: grid;
-  grid-template-rows: 1fr;
-  height: 100%;
+  grid-template-columns: repeat(var(--shutter-cols, 4), minmax(0, 1fr));
   width: 100%;
 }
-.shutter-scroll-transition .shutter-cell {
-  background: currentColor;
+[data-shutter-scroll-grid] {
+  position: relative;
+  z-index: 2;
+}
+[data-shutter-scroll-fill] {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+[data-shutter-scroll-col] {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+[data-shutter-scroll-cell] {
+  height: 6em;
+  width: 100%;
+  background-color: currentColor;
+  backface-visibility: hidden;
+  will-change: transform;
   transform: scaleY(0);
-  transform-origin: bottom;
+}
+[data-shutter-scroll-fill-col] {
+  width: 100%;
   height: 100%;
+  background-color: currentColor;
+  backface-visibility: hidden;
+  will-change: transform;
+  transform: scaleY(0);
 }
 
 /* ---------- SYSTEM ---------- */

@@ -14,7 +14,6 @@ import Different from "./components/Different.jsx";
 import Pricing from "./components/Pricing.jsx";
 import Footer from "./components/Footer.jsx";
 import Modal from "./components/Modal.jsx";
-import PreSystemShutter from "./components/PreSystemShutter.jsx";
 import SectionNavTracker from "./components/SectionNavTracker.jsx";
 
 import { registerEasings } from "./anim/easings.js";
@@ -88,7 +87,6 @@ export default function App() {
             spaceTop="xxl"
             spaceBottom="xl"
           />
-          <PreSystemShutter />
           <System />
           <How />
           <Different />
@@ -106,7 +104,6 @@ export default function App() {
             shutterVariant="olive"
             shutterTheme="nav:olive"
           />
-          <PreSystemShutter />
           <Pricing />
           <Footer />
         </main>

@@ -3,6 +3,7 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { CustomEase } from "gsap/CustomEase";
 import { useScramble } from "../anim/useScramble.js";
+import ShutterTransition from "./ShutterTransition.jsx";
 
 const CHAPTERS = [
   { number: 1, tagline: "intent", sub: "repo / prompt", text: "① a change is introduced, monolayer sees the intent" },
@@ -711,6 +712,7 @@ export default function System() {
           </div>
         </div>
       </div>
+      <ShutterTransition variant="off-white" theme="nav:base" scrollEnd="bottom top-=50%" />
     </section>
   );
 }
