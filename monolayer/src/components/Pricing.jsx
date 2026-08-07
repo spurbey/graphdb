@@ -1,6 +1,7 @@
 import { useRef } from "react";
 import { useScramble } from "../anim/useScramble.js";
 import { ArrowIcon } from "./icons.jsx";
+import ShutterTransition from "./ShutterTransition.jsx";
 
 const TIERS = [
   {
@@ -128,6 +129,7 @@ export default function Pricing() {
           </div>
         </div>
       </div>
+      <ShutterTransition variant="off-white" theme="nav:base" scrollEnd="bottom top-=50%" />
     </section>
   );
 }
