@@ -1,0 +1,225 @@
+/* ============================================================
+   monolayer.dev — exact design tokens + fluid scaling system
+   Extracted 1:1 from bundle.css + webflow.css study
+   ============================================================ */
+
+@font-face {
+  font-family: "PPFrama";
+  src: url("/fonts/PPFrama-Regular.woff") format("woff");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  /* ---- Fluid scaling engine (the site's single most important system) ---- */
+  --size-unit: 16;
+  --size-container-ideal: 1920;
+  --size-container-min: 992px;
+  --size-container-max: 3840px;
+  --size-container-fluid: 100dvw;
+  --size-container: clamp(992px, 100dvw, 3840px);
+  /* body font-size = container / 120 → 16px @1920w, linear scaling */
+  --size-font: calc(var(--size-container) / (var(--size-container-ideal) / var(--size-unit)));
+  --container-medium-scale: 0.85;
+  --container-small-scale: 0.7;
+  --vh: 1vh;
+  --near-screen-height: 80dvh;
+  --full-screen-height: 100dvh;
+  --over-screen-height: 120dvh;
+  --double-screen-height: 200dvh;
+  --xxl-screen-height: 250dvh;
+
+  /* ---- Color swatches ---- */
+  --swatch--off-white: #e5e5e5;
+  --swatch--black: #000000;
+  --swatch--grey: #a8a8a8;
+  --swatch--grey-40: #0000000f;
+  --swatch--indigo: #0f00b0;
+  --swatch--indigo-light: #2b1add;
+  --swatch--olive: #c7beaa;
+  --swatch--olive-dark: #aca086;
+
+  /* ---- Theme vars (base/light = :root defaults) ---- */
+  --theme--background: var(--swatch--off-white);
+  --theme--body-text: var(--swatch--black);
+  --theme--heading: var(--swatch--black);
+  --theme--border: var(--swatch--grey);
+  --theme--button-outline: var(--swatch--black);
+  --theme--button-text: var(--swatch--black);
+  --theme--background-olive: var(--swatch--olive);
+  --theme--background-indigo: var(--swatch--indigo);
+  --theme--nav-bg: var(--swatch--off-white);
+  --theme--nav-body: var(--swatch--black);
+  --theme--nav-outline: var(--swatch--grey);
+  --theme--menu-cta-bg: var(--swatch--olive);
+  --theme--menu-background: var(--swatch--off-white);
+  --theme--cursor-select-bg: var(--swatch--grey);
+  --theme--cursor-select-text: var(--swatch--black);
+  --theme--transition-shutter: var(--swatch--indigo);
+
+  /* ---- Size tokens (em of the fluid body size) ---- */
+  --size--2px: 0.125em;
+  --size--4px: 0.25em;
+  --size--8px: 0.5em;
+  --size--12px: 0.75em;
+  --size--16px: 1em;
+  --size--24px: 1.5em;
+  --size--32px: 2em;
+  --size--40px: 2.5em;
+  --size--48px: 3em;
+  --size--56px: 3.5em;
+  --size--64px: 4em;
+  --size--72px: 4.5em;
+  --size--80px: 5em;
+  --size--88px: 5.5em;
+  --size--96px: 6em;
+  --size--104px: 6.5em;
+  --size--112px: 7em;
+  --size--128px: 8em;
+  --size--160px: 10em;
+  --size--192px: 12em;
+  --size--224px: 14em;
+  --size--256px: 16em;
+  --size--320px: 20em;
+
+  /* ---- Type tokens (desktop) ---- */
+  --heading-xxl--font-size: var(--size--112px);
+  --heading-xl--font-size: var(--size--104px);
+  --heading-l--font-size: var(--size--96px);
+  --heading-m--font-size: var(--size--72px);
+  --heading-s--font-size: var(--size--48px);
+  --heading-xs--font-size: var(--size--24px);
+
+  --font-heading: "PPFrama", Arial, sans-serif;
+  --font-paragraph: "PPFrama", Arial, sans-serif;
+
+  /* ---- Layout tokens ---- */
+  --page-padding: 2em;
+  --grid-gap: 2em;
+  --container-padding: 1em;
+  --space-xs: 2.5vh;
+  --space-s: 5vh;
+  --space-regular: 8vh;
+  --space-m: 20vh;
+  --space-l: 25vh;
+  --space-xl: 30vh;
+  --space-xxl: 34vh;
+
+  /* Easing */
+  --ease-main: cubic-bezier(0.625, 0.05, 0, 1);
+  --elastic-ease-out: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  --modal-nav-height: 0px;
+}
+
+/* Ultrawide cap — design canvas locked to 16:9 */
+@media screen and (min-width: 992px) and (min-aspect-ratio: 11/5) {
+  :root {
+    --size-container-fluid: min(100dvw, calc(100dvh * 16 / 9));
+    --size-container: clamp(992px, var(--size-container-fluid), 3840px);
+  }
+}
+
+/* ---- Breakpoints re-point the scaling engine ---- */
+@media screen and (max-width: 991px) {
+  :root {
+    --size-container-ideal: 991;
+    --size-container-min: 768px;
+    --size-container-max: 991px;
+    --size-container: clamp(768px, 100dvw, 991px);
+    --container-medium-scale: 0.9;
+    --container-small-scale: 0.8;
+    --near-screen-height: calc(var(--vh) * 80);
+    --full-screen-height: calc(var(--vh) * 100);
+    --over-screen-height: calc(var(--vh) * 120);
+    --double-screen-height: calc(var(--vh) * 200);
+    --xxl-screen-height: calc(var(--vh) * 250);
+
+    --heading-xxl--font-size: var(--size--112px);
+    --heading-xl--font-size: var(--size--104px);
+    --heading-l--font-size: var(--size--88px);
+    --heading-m--font-size: var(--size--56px);
+    --heading-s--font-size: var(--size--40px);
+    --heading-xs--font-size: var(--size--24px);
+
+    --page-padding: 1.5em;
+    --grid-gap: 1.5em;
+    --container-padding: 0.75em;
+    --space-xs: 2vh;
+    --space-s: 4vh;
+    --space-regular: 6vh;
+    --space-m: 14vh;
+    --space-l: 16vh;
+    --space-xl: 20vh;
+    --space-xxl: 24vh;
+  }
+  :root {
+    --size--112px: 5.5em;
+  }
+}
+
+@media screen and (max-width: 767px) {
+  :root {
+    --size-container-ideal: 767;
+    --size-container-min: 480px;
+    --size-container-max: 767px;
+    --size-container: clamp(480px, 100dvw, 767px);
+    --container-medium-scale: 1;
+    --container-small-scale: 1;
+
+    --heading-xxl--font-size: var(--size--96px);
+    --heading-xl--font-size: var(--size--80px);
+    --heading-l--font-size: var(--size--80px);
+    --heading-m--font-size: var(--size--48px);
+    --heading-s--font-size: var(--size--40px);
+    --heading-xs--font-size: var(--size--24px);
+
+    --page-padding: 1.25em;
+    --grid-gap: 1.25em;
+    --container-padding: 0.75em;
+    --space-xs: 2vh;
+    --space-s: 4vh;
+    --space-regular: 6vh;
+    --space-m: 9vh;
+    --space-l: 16vh;
+    --space-xl: 20vh;
+    --space-xxl: 24vh;
+  }
+}
+
+@media screen and (max-width: 479px) {
+  :root {
+    --size-container-ideal: 479;
+    --size-container-min: 320px;
+    --size-container-max: 479px;
+    --size-container: clamp(320px, 100dvw, 479px);
+
+    --heading-xxl--font-size: 3.5em;
+    --heading-xl--font-size: 2.75em;
+    --heading-l--font-size: 2.75em;
+    --heading-m--font-size: 1.75em;
+    --heading-s--font-size: 1.5em;
+    --heading-xs--font-size: 1em;
+
+    --page-padding: 1.25em;
+    --grid-gap: 1.25em;
+    --container-padding: 0.5em;
+    --space-m: 8vh;
+    --space-l: 12vh;
+    --space-xl: 15vh;
+    --space-xxl: 15vh;
+  }
+}
+
+/* ---- Theme classes ---- */
+.theme-indigo {
+  --theme--menu-cta-bg: var(--swatch--indigo);
+  --theme--nav-body: var(--swatch--off-white);
+  --theme--nav-outline: var(--swatch--indigo-light);
+  --theme--nav-bg: var(--swatch--indigo);
+}
+.theme-olive {
+  --theme--nav-outline: var(--swatch--olive-dark);
+  --theme--nav-bg: var(--swatch--olive);
+}
