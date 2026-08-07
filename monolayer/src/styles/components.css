@@ -423,6 +423,7 @@
 .system__wrap[data-system-visual] {
   position: relative;
   display: block;
+  height: calc(var(--full-screen-height, 100svh) + var(--system-visual-scroll-distance, 220vh));
   background-color: #0f00b0;
 }
 .system__wrap[data-system-visual] > [data-system-visual-source] { display: none !important; }
