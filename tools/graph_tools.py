@@ -296,6 +296,46 @@ def find_structural_siblings(func_id: str, k: int = 8) -> list[dict]:
     return [{"error": "igraph pipeline unavailable"}]
 
 
+def connect_functions(
+    seed_ids: list[str],
+    root_ids: list[str] | None = None,
+    domain: str | None = None,
+    change_kind: str | None = None,
+    direction: str = "all",
+    depth: int = 3,
+    node_budget: int = 512,
+    edge_budget: int = 2048,
+) -> dict:
+    """Find a compact, auditable connection among two to four functions.
+
+    Reads a bounded HelixDB neighborhood, keeps structural edges primary, and
+    activates the most-specific available WORK_AFFINITY dimension.  Optional
+    root_ids constrain the connection target; without roots the bounded union
+    optimizer selects the lowest-cost connector it can prove in the snapshot.
+    """
+
+    if not 2 <= len(seed_ids) <= 4:
+        return {"error": "seed_ids must contain between 2 and 4 functions"}
+    if direction not in {"out", "in", "all"}:
+        return {"error": "direction must be out, in, or all"}
+    try:
+        from helix_traversal import connect_functions_helix
+
+        return connect_functions_helix(
+            seed_ids,
+            root_ids=root_ids,
+            domain=domain,
+            change_kind=change_kind,
+            direction=direction,
+            depth=depth,
+            helix_url=HELIX_URL,
+            node_budget=node_budget,
+            edge_budget=edge_budget,
+        )
+    except Exception as exc:
+        return {"error": str(exc)}
+
+
 def commit_review(changed_function_ids: list[str]) -> list[dict]:
     """
     Review the impact of a commit that changed the given functions.

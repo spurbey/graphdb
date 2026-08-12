@@ -91,11 +91,17 @@ class HelixAffinityBackend:
         self.client = Client(url)
 
     @staticmethod
-    def _properties(payload: dict[str, Any]) -> dict[str, Any]:
+    def _properties(
+        source_function_id: str,
+        target_function_id: str,
+        payload: dict[str, Any],
+    ) -> dict[str, Any]:
         from helixdb import PropertyInput, PropertyValue
 
         compact = json.dumps(payload, ensure_ascii=False, sort_keys=True, separators=(",", ":"))
         return {
+            "source_function_id": PropertyInput.value(source_function_id),
+            "target_function_id": PropertyInput.value(target_function_id),
             "schema": PropertyInput.value(PropertyValue.i64(int(payload["schema"]))),
             "analyzer_version": PropertyInput.value(str(payload["analyzer_version"])),
             "payload_json": PropertyInput.value(compact),
@@ -152,7 +158,9 @@ class HelixAffinityBackend:
                 g().n(NodeRef.var("source")).add_e(
                     EDGE_LABEL,
                     NodeRef.var("target"),
-                    self._properties(add_payload),
+                    self._properties(
+                        source_function_id, target_function_id, add_payload
+                    ),
                 ),
             )
             returns.append("edge")

@@ -19,6 +19,7 @@ from tools.graph_tools import (
     explain_coupling,
     pipeline_status,
     find_structural_siblings,
+    connect_functions,
     commit_review,
     select_tests,
     annotate_commit,
@@ -233,6 +234,50 @@ MANIFEST = {
             },
         },
         {
+            "name": "connect_functions",
+            "description": (
+                "Find a compact directed connection among 2-4 known functions. "
+                "Uses bounded Helix traversal with structural CALLS/IMPORTS/INHERITS "
+                "plus repeated accepted-work affinity when available. Returns paths, "
+                "edge costs, selected affinity dimension, snapshot size, truncation, "
+                "and exactness within the bounded snapshot."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "seed_ids": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "minItems": 2,
+                        "maxItems": 4,
+                        "description": "Known FunctionIdentity node IDs to connect",
+                    },
+                    "root_ids": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "description": "Optional candidate roots/connectors to constrain",
+                    },
+                    "domain": {
+                        "type": "string",
+                        "description": "Optional registered work domain, such as auth.login",
+                    },
+                    "change_kind": {
+                        "type": "string",
+                        "enum": ["bug_fix", "feature", "refactor", "optimization", "architecture"],
+                    },
+                    "direction": {
+                        "type": "string",
+                        "enum": ["out", "in", "all"],
+                        "default": "all",
+                    },
+                    "depth": {"type": "integer", "minimum": 1, "maximum": 6, "default": 3},
+                    "node_budget": {"type": "integer", "default": 512},
+                    "edge_budget": {"type": "integer", "default": 2048},
+                },
+                "required": ["seed_ids"],
+            },
+        },
+        {
             "name":        "trace_semantic_evolution",
             "description": "Recursively trace the semantic evolution of a function. Finds its memory history, the commits that changed it, and what other functions changed in those same commits (coupled changes), along with their specific semantic edge types. Use this to reason about why a function evolved and what else was forced to change with it.",
             "parameters": {
@@ -252,6 +297,16 @@ TOOL_MAP = {
     "explain_coupling":                 lambda p: explain_coupling(p["func_id_a"], p["func_id_b"]),
     "pipeline_status":                  lambda p: pipeline_status(),
     "find_structural_siblings":         lambda p: find_structural_siblings(p["func_id"], p.get("k", 8)),
+    "connect_functions":                lambda p: connect_functions(
+        p["seed_ids"],
+        p.get("root_ids"),
+        p.get("domain"),
+        p.get("change_kind"),
+        p.get("direction", "all"),
+        p.get("depth", 3),
+        p.get("node_budget", 512),
+        p.get("edge_budget", 2048),
+    ),
     "get_code_time_travel_diff":        lambda p: get_code_time_travel_diff(p["state_node_id"]),
     "trace_blast_radius":               lambda p: trace_blast_radius(p["function_identity_id"], p.get("depth", 3)),
     "get_temporal_vulnerability_trace": lambda p: get_temporal_vulnerability_trace(p["target_func"], p["timestamp_iso"]),
