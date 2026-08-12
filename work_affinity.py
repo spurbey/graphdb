@@ -177,9 +177,16 @@ class GitRangeAnalysis:
 
 
 class GitRangeAnalyzer:
-    def __init__(self, repo_root: str | Path, repo_id: str):
+    def __init__(
+        self,
+        repo_root: str | Path,
+        repo_id: str,
+        *,
+        path_prefix: str = "",
+    ):
         self.repo_root = Path(repo_root).resolve()
         self.repo_id = repo_id
+        self.path_prefix = path_prefix.strip("/")
         try:
             self.repo = git.Repo(self.repo_root)
         except Exception as exc:
@@ -221,6 +228,7 @@ class GitRangeAnalyzer:
 
         changed_files: list[str] = []
         path_pairs: list[tuple[str | None, str | None]] = []
+        submodule_pairs: list[tuple[str, str, str]] = []
         for line in name_status.splitlines():
             fields = line.split("\t")
             if len(fields) < 2:
@@ -236,9 +244,21 @@ class GitRangeAnalyzer:
                 old_path = new_path = fields[1]
             display_path = new_path or old_path
             if display_path:
-                changed_files.append(display_path)
+                changed_files.append(self._join_path(display_path))
             if (old_path and old_path.endswith(".py")) or (new_path and new_path.endswith(".py")):
                 path_pairs.append((old_path, new_path))
+            elif display_path:
+                try:
+                    old_entry = (base.tree / display_path) if old_path else None
+                    new_entry = (head.tree / display_path) if new_path else None
+                    if (old_entry and old_entry.type == "submodule") or (
+                        new_entry and new_entry.type == "submodule"
+                    ):
+                        old_sha = old_entry.hexsha if old_entry else ""
+                        new_sha = new_entry.hexsha if new_entry else ""
+                        submodule_pairs.append((display_path, old_sha, new_sha))
+                except (KeyError, AttributeError):
+                    pass
 
         parser = FunctionCatalog(self.repo_root, self.repo_id)
         changed: list[FunctionSpan] = []
@@ -247,12 +267,14 @@ class GitRangeAnalyzer:
         for old_path, new_path in path_pairs:
             old_source = self._blob_text(base, old_path) if old_path else ""
             new_source = self._blob_text(head, new_path) if new_path else ""
-            old_spans = parser.parse_source(old_path or new_path or "", old_source)
-            new_spans = parser.parse_source(new_path or old_path or "", new_source)
+            old_logical_path = self._join_path(old_path or new_path or "")
+            new_logical_path = self._join_path(new_path or old_path or "")
+            old_spans = parser.parse_source(old_logical_path, old_source)
+            new_spans = parser.parse_source(new_logical_path, new_source)
             old_unique, old_ambiguous = self._unique_by_name(old_spans)
             new_unique, new_ambiguous = self._unique_by_name(new_spans)
             for name in sorted(old_ambiguous | new_ambiguous):
-                ambiguous.append(f"{new_path or old_path}::{name}")
+                ambiguous.append(f"{new_logical_path}::{name}")
             for name, new_span in sorted(new_unique.items()):
                 if name in new_ambiguous or name in old_ambiguous:
                     continue
@@ -263,6 +285,20 @@ class GitRangeAnalyzer:
                 if name not in new_unique and name not in old_ambiguous and name not in new_ambiguous:
                     removed.append(old_span.node_id)
 
+        for submodule_path, old_sha, new_sha in submodule_pairs:
+            nested_path = self.repo_root / submodule_path
+            if not old_sha or not new_sha or not (nested_path / ".git").exists():
+                continue
+            nested = GitRangeAnalyzer(
+                nested_path,
+                self.repo_id,
+                path_prefix=self._join_path(submodule_path),
+            ).analyze(old_sha, new_sha)
+            changed_files.extend(nested.changed_files)
+            changed.extend(nested.changed_functions)
+            removed.extend(nested.removed_functions)
+            ambiguous.extend(nested.ambiguous_functions)
+
         deduped = {row.node_id: row for row in changed}
         return GitRangeAnalysis(
             base_revision=base.hexsha,
@@ -272,6 +308,10 @@ class GitRangeAnalyzer:
             removed_functions=tuple(sorted(set(removed))),
             ambiguous_functions=tuple(sorted(set(ambiguous))),
         )
+
+    def _join_path(self, path: str) -> str:
+        prefix = self.path_prefix.strip("/")
+        return f"{prefix}/{path}" if prefix else path
 
 
 @dataclass(frozen=True)
@@ -530,6 +570,35 @@ def build_affinity_evidence(
     return evidence, unknown_domains
 
 
+def select_affinity_targets(
+    git_changed_function_ids: Iterable[str],
+    events: Iterable[Mapping[str, Any]],
+) -> tuple[list[str], str]:
+    """Prefer exact transcript edits without losing the accepted Git scope.
+
+    A merged range can contain unrelated work, especially when an outer
+    repository advances a submodule across multiple commits.  Exact edit-like
+    transcript events identify the task-local target.  Broad file evidence is
+    deliberately excluded; when no exact intersection exists, the accepted
+    Git-changed functions remain the conservative fallback.
+    """
+
+    git_changed = sorted(set(str(value) for value in git_changed_function_ids))
+    changed_set = set(git_changed)
+    exact_edits = sorted(
+        {
+            str(event["function_id"])
+            for event in events
+            if event.get("event_kind") in {"edit", "write", "changed_patch"}
+            and str(event.get("resolution") or "").startswith("exact_")
+            and event.get("function_id") in changed_set
+        }
+    )
+    if exact_edits:
+        return exact_edits, "transcript_exact_change_intersection"
+    return git_changed, "git_changed_fallback"
+
+
 class AcceptedWorkProcessor:
     """Git + transcript deterministic analysis; Helix materialization plugs in later."""
 
@@ -583,14 +652,17 @@ class AcceptedWorkProcessor:
         catalog = FunctionCatalog(self.repo_root, self.repo_id)
         events = self.transcripts.events(transcript, catalog)
         changed_ids = [row.node_id for row in git_range.changed_functions]
+        affinity_targets, target_policy = select_affinity_targets(changed_ids, events)
         skip_reason = None
-        if len(changed_ids) > MAX_CHANGED_FUNCTIONS:
-            skip_reason = f"changed_function_limit:{len(changed_ids)}>{MAX_CHANGED_FUNCTIONS}"
+        if len(affinity_targets) > MAX_CHANGED_FUNCTIONS:
+            skip_reason = (
+                f"affinity_target_limit:{len(affinity_targets)}>{MAX_CHANGED_FUNCTIONS}"
+            )
             evidence: list[dict[str, Any]] = []
             unknown_domains = tuple(sorted(set(job.work.domains) - self.domain_registry))
         else:
             evidence, unknown_domains = build_affinity_evidence(
-                changed_ids,
+                affinity_targets,
                 events,
                 change_kind=job.work.change_kind,
                 domains=job.work.domains,
@@ -600,6 +672,10 @@ class AcceptedWorkProcessor:
             "session_id": transcript.session_id,
             "changed_file_count": len(git_range.changed_files),
             "changed_function_count": len(changed_ids),
+            "git_changed_functions": changed_ids,
+            "affinity_target_count": len(affinity_targets),
+            "affinity_target_functions": affinity_targets,
+            "affinity_target_policy": target_policy,
             "removed_function_count": len(git_range.removed_functions),
             "ambiguous_function_count": len(git_range.ambiguous_functions),
             "event_count": len(events),
@@ -631,9 +707,13 @@ class AcceptedWorkProcessor:
             "job_id": job.job_id,
             "replayed": replayed,
             "changed_functions": len(details["changed_functions"]),
+            "affinity_targets": len(
+                details.get("stats", {}).get(
+                    "affinity_target_functions", details["changed_functions"]
+                )
+            ),
             "events": len(details["events"]),
             "evidence_rows": len(details["evidence"]),
             "affinity_skipped_reason": details["affinity_skipped_reason"],
             "unknown_domains": details["unknown_domains"],
         }
-
