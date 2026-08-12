@@ -301,6 +301,25 @@ class WorkLedger:
                     created_at TEXT NOT NULL,
                     PRIMARY KEY (job_id, domain)
                 );
+
+                CREATE TABLE IF NOT EXISTS affinity_materializations (
+                    analyzer_version TEXT NOT NULL,
+                    source_function_id TEXT NOT NULL,
+                    target_function_id TEXT NOT NULL,
+                    desired_payload_json TEXT,
+                    desired_hash TEXT,
+                    applied_hash TEXT,
+                    status TEXT NOT NULL CHECK (status IN ('pending','applied')),
+                    attempts INTEGER NOT NULL DEFAULT 0,
+                    last_error TEXT,
+                    updated_at TEXT NOT NULL,
+                    applied_at TEXT,
+                    PRIMARY KEY (
+                        analyzer_version, source_function_id, target_function_id
+                    )
+                );
+                CREATE INDEX IF NOT EXISTS idx_affinity_materialization_pending
+                    ON affinity_materializations(analyzer_version, status, updated_at);
                 """
             )
 
@@ -677,8 +696,148 @@ class WorkLedger:
                             now,
                         ),
                     )
+            self._stage_materializations(
+                conn,
+                job.analyzer_version,
+                {source for source, _, _ in affected},
+                now=now,
+            )
             conn.commit()
         return True
+
+    @staticmethod
+    def _stage_materializations(
+        conn: sqlite3.Connection,
+        analyzer_version: str,
+        sources: set[str],
+        *,
+        now: str,
+        max_per_dimension: int = 32,
+        max_distinct_neighbors: int = 128,
+    ) -> None:
+        """Build compact desired pair payloads from canonical aggregates."""
+
+        for source in sorted(sources):
+            rows = conn.execute(
+                """
+                SELECT target_function_id, dimension_type, dimension_value,
+                       evidence_total, episode_count, weight
+                FROM affinity_aggregates
+                WHERE analyzer_version=? AND source_function_id=?
+                ORDER BY dimension_type, dimension_value, weight DESC,
+                         target_function_id
+                """,
+                (analyzer_version, source),
+            ).fetchall()
+            per_dimension: dict[tuple[str, str], list[sqlite3.Row]] = {}
+            for row in rows:
+                per_dimension.setdefault(
+                    (row["dimension_type"], row["dimension_value"]), []
+                ).append(row)
+
+            selected: dict[str, list[sqlite3.Row]] = {}
+            for dimension_rows in per_dimension.values():
+                for row in dimension_rows[:max_per_dimension]:
+                    selected.setdefault(row["target_function_id"], []).append(row)
+
+            if len(selected) > max_distinct_neighbors:
+                ordered_targets = sorted(
+                    selected,
+                    key=lambda target: (
+                        -max(float(row["weight"]) for row in selected[target]),
+                        target,
+                    ),
+                )[:max_distinct_neighbors]
+                selected = {target: selected[target] for target in ordered_targets}
+
+            desired: dict[str, tuple[str, str]] = {}
+            for target, target_rows in selected.items():
+                payload: dict[str, Any] = {
+                    "schema": 1,
+                    "analyzer_version": analyzer_version,
+                    "global": None,
+                    "domains": {},
+                    "change_kinds": {},
+                    "max_score": 0.0,
+                    "episode_count": 0,
+                    "evidence_total": 0.0,
+                }
+                for row in target_rows:
+                    weight = float(row["weight"])
+                    payload["max_score"] = max(payload["max_score"], weight)
+                    payload["episode_count"] = max(
+                        payload["episode_count"], int(row["episode_count"])
+                    )
+                    payload["evidence_total"] += float(row["evidence_total"])
+                    if row["dimension_type"] == "global":
+                        payload["global"] = weight
+                    elif row["dimension_type"] == "domain":
+                        payload["domains"][row["dimension_value"]] = weight
+                    elif row["dimension_type"] == "change_kind":
+                        payload["change_kinds"][row["dimension_value"]] = weight
+                payload_json = _canonical_json(payload)
+                payload_hash = hashlib.sha256(payload_json.encode("utf-8")).hexdigest()
+                desired[target] = (payload_json, payload_hash)
+
+            existing = {
+                row["target_function_id"]: row
+                for row in conn.execute(
+                    """
+                    SELECT target_function_id, desired_hash, applied_hash
+                    FROM affinity_materializations
+                    WHERE analyzer_version=? AND source_function_id=?
+                    """,
+                    (analyzer_version, source),
+                ).fetchall()
+            }
+            all_targets = sorted(set(existing) | set(desired))
+            for target in all_targets:
+                payload_json, desired_hash = desired.get(target, (None, None))
+                old = existing.get(target)
+                applied_hash = old["applied_hash"] if old else None
+                status = "applied" if desired_hash == applied_hash else "pending"
+                if desired_hash is None and applied_hash is None:
+                    if old:
+                        conn.execute(
+                            """
+                            DELETE FROM affinity_materializations
+                            WHERE analyzer_version=? AND source_function_id=?
+                              AND target_function_id=?
+                            """,
+                            (analyzer_version, source, target),
+                        )
+                    continue
+                conn.execute(
+                    """
+                    INSERT INTO affinity_materializations (
+                        analyzer_version, source_function_id, target_function_id,
+                        desired_payload_json, desired_hash, applied_hash, status,
+                        attempts, last_error, updated_at, applied_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, NULL, ?, NULL)
+                    ON CONFLICT(analyzer_version, source_function_id, target_function_id)
+                    DO UPDATE SET
+                        desired_payload_json=excluded.desired_payload_json,
+                        desired_hash=excluded.desired_hash,
+                        status=excluded.status,
+                        attempts=CASE
+                            WHEN affinity_materializations.desired_hash IS excluded.desired_hash
+                            THEN affinity_materializations.attempts ELSE 0 END,
+                        last_error=CASE
+                            WHEN affinity_materializations.desired_hash IS excluded.desired_hash
+                            THEN affinity_materializations.last_error ELSE NULL END,
+                        updated_at=excluded.updated_at
+                    """,
+                    (
+                        analyzer_version,
+                        source,
+                        target,
+                        payload_json,
+                        desired_hash,
+                        applied_hash,
+                        status,
+                        now,
+                    ),
+                )
 
     def affinity_neighbors(
         self,
@@ -708,6 +867,122 @@ class WorkLedger:
                 ),
             ).fetchall()
         return [dict(row) for row in rows]
+
+    def pending_materializations(
+        self,
+        *,
+        analyzer_version: str = ANALYZER_VERSION,
+        limit: int = 100,
+    ) -> list[dict[str, Any]]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT analyzer_version, source_function_id, target_function_id,
+                       desired_payload_json, desired_hash, applied_hash,
+                       attempts, last_error
+                FROM affinity_materializations
+                WHERE analyzer_version=? AND status='pending'
+                ORDER BY updated_at, source_function_id, target_function_id
+                LIMIT ?
+                """,
+                (analyzer_version, limit),
+            ).fetchall()
+        return [
+            {
+                **dict(row),
+                "desired_payload": json.loads(row["desired_payload_json"])
+                if row["desired_payload_json"]
+                else None,
+            }
+            for row in rows
+        ]
+
+    def mark_materialized(
+        self,
+        analyzer_version: str,
+        source_function_id: str,
+        target_function_id: str,
+        desired_hash: str | None,
+    ) -> None:
+        with self._connect() as conn:
+            row = conn.execute(
+                """
+                SELECT desired_hash FROM affinity_materializations
+                WHERE analyzer_version=? AND source_function_id=?
+                  AND target_function_id=?
+                """,
+                (analyzer_version, source_function_id, target_function_id),
+            ).fetchone()
+            if row is None:
+                raise KeyError("unknown materialization row")
+            if row["desired_hash"] != desired_hash:
+                raise RuntimeError("desired affinity changed during materialization")
+            if desired_hash is None:
+                conn.execute(
+                    """
+                    DELETE FROM affinity_materializations
+                    WHERE analyzer_version=? AND source_function_id=?
+                      AND target_function_id=?
+                    """,
+                    (analyzer_version, source_function_id, target_function_id),
+                )
+            else:
+                conn.execute(
+                    """
+                    UPDATE affinity_materializations
+                    SET applied_hash=desired_hash, status='applied', attempts=attempts+1,
+                        last_error=NULL, updated_at=?, applied_at=?
+                    WHERE analyzer_version=? AND source_function_id=?
+                      AND target_function_id=?
+                    """,
+                    (
+                        utc_now(),
+                        utc_now(),
+                        analyzer_version,
+                        source_function_id,
+                        target_function_id,
+                    ),
+                )
+
+    def mark_materialization_failed(
+        self,
+        analyzer_version: str,
+        source_function_id: str,
+        target_function_id: str,
+        error: str,
+    ) -> None:
+        with self._connect() as conn:
+            conn.execute(
+                """
+                UPDATE affinity_materializations
+                SET status='pending', attempts=attempts+1, last_error=?, updated_at=?
+                WHERE analyzer_version=? AND source_function_id=?
+                  AND target_function_id=?
+                """,
+                (
+                    str(error)[:4000],
+                    utc_now(),
+                    analyzer_version,
+                    source_function_id,
+                    target_function_id,
+                ),
+            )
+
+    def force_reconcile_materializations(
+        self, *, analyzer_version: str = ANALYZER_VERSION
+    ) -> int:
+        """Requeue all desired pair states for absolute Helix repair."""
+
+        with self._connect() as conn:
+            cursor = conn.execute(
+                """
+                UPDATE affinity_materializations
+                SET status='pending', applied_hash=NULL, last_error=NULL, updated_at=?
+                WHERE analyzer_version=?
+                """,
+                (utc_now(), analyzer_version),
+            )
+            return int(cursor.rowcount)
 
     def analysis_details(self, job_id: str) -> dict[str, Any] | None:
         with self._connect() as conn:
