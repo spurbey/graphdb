@@ -77,7 +77,7 @@ def test_worker_claims_and_marks_applied(tmp_path):
     job_id, _ = ledger.enqueue(_payload())
     worker = BackgroundWorker(ledger, owner="test-worker")
 
-    result = worker.run_once(lambda work: {"repo": work.repo_id, "changed": 2})
+    result = worker.run_once(lambda job: {"repo": job.work.repo_id, "changed": 2})
 
     assert result is not None
     assert result.job_id == job_id
@@ -100,4 +100,3 @@ def test_worker_failure_is_retryable_and_owner_is_enforced(tmp_path):
 
     with pytest.raises(RuntimeError, match="not leased"):
         ledger.mark_applied(job_id, "wrong-owner")
-

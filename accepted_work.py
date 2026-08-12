@@ -18,7 +18,7 @@ import uuid
 from dataclasses import dataclass
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Callable, Mapping
+from typing import Any, Callable, Iterable, Mapping
 
 
 ANALYZER_VERSION = "work-affinity-v1"
@@ -166,6 +166,10 @@ class Job:
     result: dict[str, Any] | None
 
 
+class PermanentWorkError(RuntimeError):
+    """Invalid input that must be quarantined rather than retried."""
+
+
 class WorkLedger:
     """SQLite queue and episode ledger.
 
@@ -223,6 +227,79 @@ class WorkLedger:
                     transcript_ref TEXT,
                     decisions_json TEXT NOT NULL,
                     created_at TEXT NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS work_analysis (
+                    job_id TEXT PRIMARY KEY REFERENCES work_jobs(job_id),
+                    analyzer_version TEXT NOT NULL,
+                    transcript_hash TEXT NOT NULL,
+                    changed_files_json TEXT NOT NULL,
+                    changed_functions_json TEXT NOT NULL,
+                    stats_json TEXT NOT NULL,
+                    affinity_skipped_reason TEXT,
+                    created_at TEXT NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS work_events (
+                    job_id TEXT NOT NULL REFERENCES work_jobs(job_id),
+                    event_index INTEGER NOT NULL,
+                    event_kind TEXT NOT NULL,
+                    tool TEXT,
+                    file_path TEXT,
+                    line_start INTEGER,
+                    line_end INTEGER,
+                    function_id TEXT,
+                    resolution TEXT NOT NULL,
+                    detail_json TEXT NOT NULL,
+                    PRIMARY KEY (job_id, event_index)
+                );
+
+                CREATE TABLE IF NOT EXISTS affinity_episode_evidence (
+                    job_id TEXT NOT NULL REFERENCES work_jobs(job_id),
+                    analyzer_version TEXT NOT NULL,
+                    source_function_id TEXT NOT NULL,
+                    target_function_id TEXT NOT NULL,
+                    dimension_type TEXT NOT NULL,
+                    dimension_value TEXT NOT NULL,
+                    role TEXT NOT NULL,
+                    evidence REAL NOT NULL CHECK (evidence >= 0.0),
+                    PRIMARY KEY (
+                        job_id, source_function_id, target_function_id,
+                        dimension_type, dimension_value
+                    )
+                );
+                CREATE INDEX IF NOT EXISTS idx_affinity_episode_source_dimension
+                    ON affinity_episode_evidence(
+                        analyzer_version, source_function_id,
+                        dimension_type, dimension_value
+                    );
+
+                CREATE TABLE IF NOT EXISTS affinity_aggregates (
+                    analyzer_version TEXT NOT NULL,
+                    source_function_id TEXT NOT NULL,
+                    target_function_id TEXT NOT NULL,
+                    dimension_type TEXT NOT NULL,
+                    dimension_value TEXT NOT NULL,
+                    evidence_total REAL NOT NULL,
+                    episode_count INTEGER NOT NULL,
+                    weight REAL NOT NULL CHECK (weight >= 0.0 AND weight <= 1.0),
+                    updated_at TEXT NOT NULL,
+                    PRIMARY KEY (
+                        analyzer_version, source_function_id, target_function_id,
+                        dimension_type, dimension_value
+                    )
+                );
+                CREATE INDEX IF NOT EXISTS idx_affinity_aggregate_source_dimension
+                    ON affinity_aggregates(
+                        analyzer_version, source_function_id,
+                        dimension_type, dimension_value, weight DESC
+                    );
+
+                CREATE TABLE IF NOT EXISTS unknown_work_domains (
+                    job_id TEXT NOT NULL REFERENCES work_jobs(job_id),
+                    domain TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    PRIMARY KEY (job_id, domain)
                 );
                 """
             )
@@ -443,6 +520,237 @@ class WorkLedger:
                 ).fetchall()
         return [self._row_to_job(row) for row in rows]
 
+    def record_analysis(
+        self,
+        job: Job,
+        owner: str,
+        *,
+        transcript_hash: str,
+        changed_files: Iterable[str],
+        changed_functions: Iterable[str],
+        stats: Mapping[str, Any],
+        events: Iterable[Mapping[str, Any]],
+        evidence: Iterable[Mapping[str, Any]],
+        unknown_domains: Iterable[str] = (),
+        affinity_skipped_reason: str | None = None,
+        normalization_prior: float = 3.0,
+    ) -> bool:
+        """Persist one deterministic analysis and rebuild affected aggregates.
+
+        Returns ``False`` when this exact job was already analyzed.  That makes
+        retries safe: later Helix materialization can resume from the existing
+        absolute SQLite state without adding the episode twice.
+        """
+
+        if normalization_prior <= 0:
+            raise ValueError("normalization_prior must be positive")
+        event_rows = [dict(row) for row in events]
+        evidence_rows = [dict(row) for row in evidence]
+        now = utc_now()
+        with self._connect() as conn:
+            conn.execute("BEGIN IMMEDIATE")
+            lease = conn.execute(
+                "SELECT status, lease_owner FROM work_jobs WHERE job_id=?", (job.job_id,)
+            ).fetchone()
+            self._check_owner(lease, job.job_id, owner)
+            if conn.execute(
+                "SELECT 1 FROM work_analysis WHERE job_id=?", (job.job_id,)
+            ).fetchone():
+                conn.commit()
+                return False
+
+            conn.execute(
+                """
+                INSERT INTO work_analysis (
+                    job_id, analyzer_version, transcript_hash, changed_files_json,
+                    changed_functions_json, stats_json, affinity_skipped_reason, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    job.job_id,
+                    job.analyzer_version,
+                    transcript_hash,
+                    _canonical_json(sorted(set(changed_files))),
+                    _canonical_json(sorted(set(changed_functions))),
+                    _canonical_json(dict(stats)),
+                    affinity_skipped_reason,
+                    now,
+                ),
+            )
+
+            for index, event in enumerate(event_rows):
+                detail = dict(event.get("detail") or {})
+                conn.execute(
+                    """
+                    INSERT INTO work_events (
+                        job_id, event_index, event_kind, tool, file_path,
+                        line_start, line_end, function_id, resolution, detail_json
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        job.job_id,
+                        index,
+                        event["event_kind"],
+                        event.get("tool"),
+                        event.get("file_path"),
+                        event.get("line_start"),
+                        event.get("line_end"),
+                        event.get("function_id"),
+                        event.get("resolution", "unresolved"),
+                        _canonical_json(detail),
+                    ),
+                )
+
+            affected: set[tuple[str, str, str]] = set()
+            for row in evidence_rows:
+                source = str(row["source_function_id"])
+                dimension_type = str(row["dimension_type"])
+                dimension_value = str(row["dimension_value"])
+                affected.add((source, dimension_type, dimension_value))
+                conn.execute(
+                    """
+                    INSERT INTO affinity_episode_evidence (
+                        job_id, analyzer_version, source_function_id,
+                        target_function_id, dimension_type, dimension_value,
+                        role, evidence
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        job.job_id,
+                        job.analyzer_version,
+                        source,
+                        str(row["target_function_id"]),
+                        dimension_type,
+                        dimension_value,
+                        str(row["role"]),
+                        float(row["evidence"]),
+                    ),
+                )
+
+            for domain in sorted(set(unknown_domains)):
+                conn.execute(
+                    "INSERT INTO unknown_work_domains(job_id, domain, created_at) VALUES (?, ?, ?)",
+                    (job.job_id, domain, now),
+                )
+
+            for source, dimension_type, dimension_value in sorted(affected):
+                grouped = conn.execute(
+                    """
+                    SELECT target_function_id, SUM(evidence) AS evidence_total,
+                           COUNT(DISTINCT job_id) AS episode_count
+                    FROM affinity_episode_evidence
+                    WHERE analyzer_version=? AND source_function_id=?
+                      AND dimension_type=? AND dimension_value=?
+                    GROUP BY target_function_id
+                    """,
+                    (job.analyzer_version, source, dimension_type, dimension_value),
+                ).fetchall()
+                outgoing_total = sum(float(row["evidence_total"]) for row in grouped)
+                conn.execute(
+                    """
+                    DELETE FROM affinity_aggregates
+                    WHERE analyzer_version=? AND source_function_id=?
+                      AND dimension_type=? AND dimension_value=?
+                    """,
+                    (job.analyzer_version, source, dimension_type, dimension_value),
+                )
+                denominator = normalization_prior + outgoing_total
+                for row in grouped:
+                    total = float(row["evidence_total"])
+                    conn.execute(
+                        """
+                        INSERT INTO affinity_aggregates (
+                            analyzer_version, source_function_id, target_function_id,
+                            dimension_type, dimension_value, evidence_total,
+                            episode_count, weight, updated_at
+                        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """,
+                        (
+                            job.analyzer_version,
+                            source,
+                            row["target_function_id"],
+                            dimension_type,
+                            dimension_value,
+                            total,
+                            int(row["episode_count"]),
+                            total / denominator,
+                            now,
+                        ),
+                    )
+            conn.commit()
+        return True
+
+    def affinity_neighbors(
+        self,
+        source_function_id: str,
+        dimension_type: str,
+        dimension_value: str,
+        *,
+        analyzer_version: str = ANALYZER_VERSION,
+        limit: int = 32,
+    ) -> list[dict[str, Any]]:
+        with self._connect() as conn:
+            rows = conn.execute(
+                """
+                SELECT target_function_id, evidence_total, episode_count, weight
+                FROM affinity_aggregates
+                WHERE analyzer_version=? AND source_function_id=?
+                  AND dimension_type=? AND dimension_value=?
+                ORDER BY weight DESC, target_function_id
+                LIMIT ?
+                """,
+                (
+                    analyzer_version,
+                    source_function_id,
+                    dimension_type,
+                    dimension_value,
+                    limit,
+                ),
+            ).fetchall()
+        return [dict(row) for row in rows]
+
+    def analysis_details(self, job_id: str) -> dict[str, Any] | None:
+        with self._connect() as conn:
+            analysis = conn.execute(
+                "SELECT * FROM work_analysis WHERE job_id=?", (job_id,)
+            ).fetchone()
+            if analysis is None:
+                return None
+            events = conn.execute(
+                "SELECT * FROM work_events WHERE job_id=? ORDER BY event_index", (job_id,)
+            ).fetchall()
+            evidence = conn.execute(
+                """
+                SELECT source_function_id, target_function_id, dimension_type,
+                       dimension_value, role, evidence
+                FROM affinity_episode_evidence
+                WHERE job_id=?
+                ORDER BY source_function_id, target_function_id,
+                         dimension_type, dimension_value
+                """,
+                (job_id,),
+            ).fetchall()
+            unknown = conn.execute(
+                "SELECT domain FROM unknown_work_domains WHERE job_id=? ORDER BY domain",
+                (job_id,),
+            ).fetchall()
+        return {
+            "transcript_hash": analysis["transcript_hash"],
+            "changed_files": json.loads(analysis["changed_files_json"]),
+            "changed_functions": json.loads(analysis["changed_functions_json"]),
+            "stats": json.loads(analysis["stats_json"]),
+            "affinity_skipped_reason": analysis["affinity_skipped_reason"],
+            "events": [
+                {
+                    **dict(row),
+                    "detail": json.loads(row["detail_json"]),
+                }
+                for row in events
+            ],
+            "evidence": [dict(row) for row in evidence],
+            "unknown_domains": [row["domain"] for row in unknown],
+        }
+
 
 class BackgroundWorker:
     """One-job worker boundary; processing is injected by later blocks."""
@@ -453,7 +761,7 @@ class BackgroundWorker:
 
     def run_once(
         self,
-        processor: Callable[[AcceptedWork], Mapping[str, Any] | None],
+        processor: Callable[[Job], Mapping[str, Any] | None],
         *,
         lease_seconds: int = 300,
     ) -> Job | None:
@@ -461,10 +769,12 @@ class BackgroundWorker:
         if job is None:
             return None
         try:
-            result = processor(job.work)
+            result = processor(job)
             self.ledger.mark_applied(job.job_id, self.owner, result)
+        except PermanentWorkError as exc:
+            self.ledger.quarantine(job.job_id, self.owner, str(exc))
+            return self.ledger.get(job.job_id)
         except Exception as exc:
             self.ledger.mark_retry(job.job_id, self.owner, repr(exc))
             raise
         return self.ledger.get(job.job_id)
-
