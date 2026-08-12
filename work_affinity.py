@@ -279,10 +279,19 @@ class GitRangeAnalyzer:
                 if name in new_ambiguous or name in old_ambiguous:
                     continue
                 old_span = old_unique.get(name)
-                if old_span is None or old_span.source != new_span.source:
+                if (
+                    old_span is None
+                    or old_span.node_id != new_span.node_id
+                    or old_span.source != new_span.source
+                ):
                     changed.append(new_span)
             for name, old_span in sorted(old_unique.items()):
-                if name not in new_unique and name not in old_ambiguous and name not in new_ambiguous:
+                new_span = new_unique.get(name)
+                if (
+                    name not in old_ambiguous
+                    and name not in new_ambiguous
+                    and (new_span is None or new_span.node_id != old_span.node_id)
+                ):
                     removed.append(old_span.node_id)
 
         for submodule_path, old_sha, new_sha in submodule_pairs:
@@ -610,12 +619,14 @@ class AcceptedWorkProcessor:
         *,
         domain_registry: Iterable[str] = (),
         transcript_root: str | Path | None = None,
+        graph_refresher: Any | None = None,
     ):
         self.ledger = ledger
         self.repo_root = Path(repo_root).resolve()
         self.repo_id = repo_id
         self.domain_registry = {str(value) for value in domain_registry}
         self.transcript_root = Path(transcript_root).resolve() if transcript_root else None
+        self.graph_refresher = graph_refresher
         self.git = GitRangeAnalyzer(self.repo_root, repo_id)
         self.transcripts = TranscriptParser()
 
@@ -636,11 +647,14 @@ class AcceptedWorkProcessor:
             raise PermanentWorkError(
                 f"job repository {job.work.repo_id!r} does not match worker repository {self.repo_id!r}"
             )
+        git_range = self.git.analyze(job.work.base_revision, job.work.head_revision)
+        graph_refresh_stats = None
+        if self.graph_refresher is not None:
+            graph_refresh_stats = self.graph_refresher.refresh(git_range).to_stats()
         existing = self.ledger.analysis_details(job.job_id)
         if existing is not None:
             return self._result(job, existing, replayed=True)
 
-        git_range = self.git.analyze(job.work.base_revision, job.work.head_revision)
         transcript = self.transcripts.parse_file(self._transcript_path(job.work.transcript_ref))
         if transcript.repository_path:
             transcript_repo = Path(transcript.repository_path).resolve(strict=False)
@@ -684,6 +698,7 @@ class AcceptedWorkProcessor:
             "evidence_row_count": len(evidence),
             "removed_functions": list(git_range.removed_functions),
             "ambiguous_functions": list(git_range.ambiguous_functions),
+            "graph_refresh": graph_refresh_stats,
         }
         self.ledger.record_analysis(
             job,
