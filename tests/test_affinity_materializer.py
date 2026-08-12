@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+
 import pytest
 
 from accepted_work import WorkLedger
@@ -133,3 +135,55 @@ def test_installed_helix_sdk_can_encode_replace_request():
         "edge_properties": True,
     }
 
+
+@pytest.mark.skipif(
+    os.environ.get("HELIX_LIVE_TEST") != "1",
+    reason="set HELIX_LIVE_TEST=1 with a disposable Helix graph",
+)
+def test_live_helix_pair_create_replace_delete():
+    from helixdb import Client, Projection, g, read_batch
+
+    url = os.environ.get("HELIX_URL", "http://127.0.0.1:6969")
+    client = Client(url)
+    functions = client.query().dynamic(
+        read_batch()
+        .var_as(
+            "functions",
+            g().n_with_label("FunctionIdentity").limit(2).project(
+                [Projection.property("node_id")]
+            ),
+        )
+        .returning(["functions"])
+        .to_dynamic_request()
+    ).send()["functions"]["properties"]
+    if len(functions) < 2:
+        pytest.skip("live graph needs two FunctionIdentity nodes")
+    source, target = (row["node_id"] for row in functions)
+    backend = HelixAffinityBackend(url)
+    payload = {
+        "schema": 1,
+        "analyzer_version": "live-test",
+        "global": 0.2,
+        "domains": {},
+        "change_kinds": {"bug_fix": 0.4},
+        "max_score": 0.4,
+        "episode_count": 2,
+        "evidence_total": 1.0,
+    }
+    updated = {**payload, "global": 0.7, "max_score": 0.7}
+    try:
+        backend.replace_pair(source, target, payload)
+        backend.replace_pair(source, target, updated)
+        edges = client.query().dynamic(
+            read_batch()
+            .var_as("edges", g().e_with_label("WORK_AFFINITY").edge_properties())
+            .returning(["edges"])
+            .to_dynamic_request()
+        ).send()["edges"]["properties"]
+        matching = [
+            row for row in edges if row.get("analyzer_version") == "live-test"
+        ]
+        assert len(matching) == 1
+        assert matching[0]["max_score"] == pytest.approx(0.7)
+    finally:
+        backend.replace_pair(source, target, None)
