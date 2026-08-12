@@ -10,6 +10,7 @@ from accepted_work import BackgroundWorker, WorkLedger
 from work_affinity import (
     AcceptedWorkProcessor,
     FunctionCatalog,
+    GitRangeAnalyzer,
     TranscriptParser,
     build_affinity_evidence,
 )
@@ -29,6 +30,13 @@ def _commit(repo: Path, message: str) -> str:
         stdout=subprocess.DEVNULL,
     )
     return _git(repo, "rev-parse", "HEAD")
+
+
+def _init_repo(repo: Path) -> None:
+    repo.mkdir()
+    subprocess.check_call(["git", "init", "-q"], cwd=repo)
+    subprocess.check_call(["git", "config", "user.name", "Test"], cwd=repo)
+    subprocess.check_call(["git", "config", "user.email", "test@example.com"], cwd=repo)
 
 
 def _session(path: Path, repo: Path, parts: list[dict]) -> None:
@@ -175,6 +183,113 @@ def test_end_to_end_git_transcript_analysis_and_local_normalization(tmp_path):
     ]
 
 
+def test_submodule_range_uses_outer_paths_and_exact_edit_targets(tmp_path):
+    origin = tmp_path / "pipecat-origin"
+    _init_repo(origin)
+    source_root = origin / "src" / "pipecat"
+    source_root.mkdir(parents=True)
+    (source_root / "tts.py").write_text(
+        "def _connect():\n    return 'old'\n\n\ndef _keepalive_task_handler():\n    return True\n",
+        encoding="utf-8",
+    )
+    (source_root / "voicemail.py").write_text(
+        "def detect_voicemail():\n    return False\n", encoding="utf-8"
+    )
+    _commit(origin, "inner base")
+
+    repo = tmp_path / "outer"
+    _init_repo(repo)
+    subprocess.check_call(
+        [
+            "git",
+            "-c",
+            "protocol.file.allow=always",
+            "submodule",
+            "add",
+            str(origin),
+            "pipecat",
+        ],
+        cwd=repo,
+        stdout=subprocess.DEVNULL,
+    )
+    base = _commit(repo, "add pipecat")
+
+    nested = repo / "pipecat"
+    nested_source = nested / "src" / "pipecat"
+    (nested_source / "tts.py").write_text(
+        "def _connect():\n    return 'reconnected'\n\n\ndef _keepalive_task_handler():\n    return True\n",
+        encoding="utf-8",
+    )
+    _commit(nested, "fix reconnect")
+    (nested_source / "voicemail.py").write_text(
+        "def detect_voicemail():\n    return True\n", encoding="utf-8"
+    )
+    _commit(nested, "fix voicemail")
+    head = _commit(repo, "advance pipecat")
+
+    analysis = GitRangeAnalyzer(repo, "demo").analyze(base, head)
+    changed_ids = {row.node_id for row in analysis.changed_functions}
+    assert "pipecat/src/pipecat/tts.py" in analysis.changed_files
+    assert "pipecat/src/pipecat/voicemail.py" in analysis.changed_files
+    assert "demo:func_pipecat_src_pipecat_tts__connect" in changed_ids
+    assert "demo:func_pipecat_src_pipecat_voicemail_detect_voicemail" in changed_ids
+    assert all(not path.startswith("pipecat/pipecat/") for path in analysis.changed_files)
+
+    transcript = tmp_path / "submodule-session.json"
+    _session(
+        transcript,
+        repo,
+        [
+            _tool(
+                "edit",
+                {
+                    "filePath": str(nested_source / "tts.py"),
+                    "oldString": "return 'old'",
+                    "newString": "return 'reconnected'",
+                },
+            ),
+            _tool(
+                "read",
+                {"filePath": str(nested_source / "tts.py")},
+                "<content>\n5: def _keepalive_task_handler():\n6:     return True\n</content>",
+            ),
+        ],
+    )
+    ledger = WorkLedger(tmp_path / "submodule-work.sqlite3")
+    job_id, _ = ledger.enqueue(
+        {
+            "repo_id": "demo",
+            "base_revision": base,
+            "head_revision": head,
+            "summary": "Fix reconnect while advancing a multi-commit submodule range",
+            "change_kind": "bug_fix",
+            "domains": ["voice.elevenlabs"],
+            "transcript_ref": str(transcript),
+        }
+    )
+    worker = BackgroundWorker(ledger, owner="worker")
+    processor = AcceptedWorkProcessor(
+        ledger, repo, "demo", domain_registry={"voice.elevenlabs"}
+    )
+
+    completed = worker.run_once(lambda job: processor.process(job, worker.owner))
+
+    assert completed is not None and completed.status == "applied"
+    details = ledger.analysis_details(job_id)
+    assert details is not None
+    assert set(details["changed_functions"]) == changed_ids
+    assert details["stats"]["affinity_target_policy"] == (
+        "transcript_exact_change_intersection"
+    )
+    assert details["stats"]["affinity_target_functions"] == [
+        "demo:func_pipecat_src_pipecat_tts__connect"
+    ]
+    assert details["evidence"]
+    assert {
+        row["target_function_id"] for row in details["evidence"]
+    } == {"demo:func_pipecat_src_pipecat_tts__connect"}
+
+
 def test_large_change_is_audited_but_skips_affinity(tmp_path):
     repo = tmp_path / "repo"
     repo.mkdir()
@@ -212,5 +327,4 @@ def test_large_change_is_audited_but_skips_affinity(tmp_path):
     assert details is not None
     assert len(details["changed_functions"]) == 21
     assert details["evidence"] == []
-    assert details["affinity_skipped_reason"] == "changed_function_limit:21>20"
-
+    assert details["affinity_skipped_reason"] == "affinity_target_limit:21>20"
