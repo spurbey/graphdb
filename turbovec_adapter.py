@@ -37,25 +37,32 @@ def stable_vector_id(node_id: str, kind: str = "code") -> int:
 
 
 class TurboVecIndex:
-    def __init__(self, name: str, dim: int = 384, bit_width: int = BIT_WIDTH):
+    def __init__(
+        self,
+        name: str,
+        dim: int = 384,
+        bit_width: int = BIT_WIDTH,
+        *,
+        root: str | Path | None = None,
+        vector_dir: str | Path | None = None,
+    ):
         self.name = name
         self.dim = dim
         self.bit_width = bit_width
-        self.index_path = VECTOR_DIR / f"{name}_{dim}_b{bit_width}.turbovec"
-        self.manifest_path = VECTOR_DIR / f"{name}_{dim}_b{bit_width}.manifest.json"
-        self.legacy_json_path = ROOT / f".turbovec_{name}.json"
+        self.root = Path(root) if root is not None else ROOT
+        self.vector_dir = Path(vector_dir) if vector_dir is not None else VECTOR_DIR
+        self.index_path = self.vector_dir / f"{name}_{dim}_b{bit_width}.turbovec"
+        self.manifest_path = self.vector_dir / f"{name}_{dim}_b{bit_width}.manifest.json"
+        self.legacy_json_path = self.root / f".turbovec_{name}.json"
         self._vectors: dict[str, list[float]] = {}
         self._vector_id_to_node_id_hint: dict[int, str] = {}
         self._index = None
         self._dirty = False
+        self._known_count = 0
         self._load()
 
     def count(self) -> int:
-        if self._vectors:
-            return len(self._vectors)
-        if self._vector_id_to_node_id_hint:
-            return len(self._vector_id_to_node_id_hint)
-        return self._manifest_count()
+        return self._known_count
 
     def insert(self, node_id: str, vector: list[float] | np.ndarray) -> int:
         vec = np.asarray(vector, dtype=np.float32)
@@ -65,24 +72,41 @@ class TurboVecIndex:
         if norm > 1e-8:
             vec = vec / norm
         vector_id = stable_vector_id(node_id, self.name)
-        self._vectors[node_id] = vec.astype(np.float32).tolist()
+        existed = False
+        if _HAS_TURBOVEC and self._index is not None:
+            existed = bool(self._index.contains(vector_id))
+            if existed:
+                self._index.remove(vector_id)
+            self._index.add_with_ids(
+                vec.reshape(1, -1), np.asarray([vector_id], dtype=np.uint64)
+            )
+        else:
+            existed = node_id in self._vectors
+            self._vectors[node_id] = vec.astype(np.float32).tolist()
         self._vector_id_to_node_id_hint[vector_id] = node_id
+        if not existed:
+            self._known_count += 1
         self._dirty = True
         return vector_id
 
     def remove(self, node_id: str) -> int:
         vector_id = stable_vector_id(node_id, self.name)
+        existed = node_id in self._vectors
         self._vectors.pop(node_id, None)
         self._vector_id_to_node_id_hint.pop(vector_id, None)
         if self._index is not None and _HAS_TURBOVEC:
             try:
-                self._index.remove(vector_id)
+                if self._index.contains(vector_id):
+                    existed = True
+                    self._index.remove(vector_id)
             except Exception:
                 # Rebuild on next search/save if direct removal is not supported
                 # for the current internal state.
                 self._dirty = True
         else:
             self._dirty = True
+        if existed:
+            self._known_count = max(0, self._known_count - 1)
         return vector_id
 
     def bulk_insert(self, items: Iterable[tuple[str, list[float] | np.ndarray]]) -> None:
@@ -114,21 +138,23 @@ class TurboVecIndex:
         return self._search_numpy(q, k)
 
     def save(self) -> None:
-        VECTOR_DIR.mkdir(parents=True, exist_ok=True)
-        self._write_manifest()
+        self.vector_dir.mkdir(parents=True, exist_ok=True)
         if _HAS_TURBOVEC:
             self._ensure_index()
             if self._index is not None:
                 self._index.write(str(self.index_path))
         else:
             self.legacy_json_path.write_text(json.dumps(self._vectors), encoding="utf-8")
+        self._write_manifest()
         self._dirty = False
 
     def _load(self) -> None:
         if _HAS_TURBOVEC and self.index_path.exists():
             self._index = turbovec.IdMapIndex.load(str(self.index_path))
+            self._known_count = self._manifest_count() or self._legacy_count()
         elif self.legacy_json_path.exists():
             self._load_legacy_vectors()
+            self._known_count = len(self._vectors)
             if _HAS_TURBOVEC and self._vectors:
                 self._dirty = True
         elif _HAS_TURBOVEC and self._vectors:
@@ -142,6 +168,19 @@ class TurboVecIndex:
         except Exception:
             return 0
         return int(raw.get("count") or 0)
+
+    def _legacy_count(self) -> int:
+        if not self.legacy_json_path.exists():
+            return 0
+        try:
+            raw = json.loads(self.legacy_json_path.read_text(encoding="utf-8"))
+        except Exception:
+            return 0
+        return sum(
+            1
+            for vector in raw.values()
+            if isinstance(vector, list) and len(vector) == self.dim
+        )
 
     def _load_legacy_vectors(self) -> None:
         try:
@@ -161,7 +200,7 @@ class TurboVecIndex:
                     "kind": self.name,
                     "dim": self.dim,
                     "bit_width": self.bit_width,
-                    "count": len(self._vectors) or len(self._vector_id_to_node_id_hint),
+                    "count": self._known_count,
                     "lookup_source": "helixdb",
                 },
                 indent=2,
@@ -172,7 +211,10 @@ class TurboVecIndex:
     def _ensure_index(self) -> None:
         if not _HAS_TURBOVEC:
             return
-        if self._index is not None and not self._dirty:
+        if self._index is not None:
+            if self._dirty:
+                self._index.prepare()
+                self._dirty = False
             return
         if not self._vectors:
             self._index = None
@@ -185,6 +227,7 @@ class TurboVecIndex:
         self._index.add_with_ids(vectors, vector_ids)
         self._index.prepare()
         self._vector_id_to_node_id_hint = {int(vector_id): node_id for vector_id, node_id in zip(vector_ids, node_ids)}
+        self._known_count = len(node_ids)
         self._dirty = False
 
     def _search_numpy(self, q: np.ndarray, k: int) -> list[dict]:
