@@ -21,7 +21,7 @@ from pathlib import Path
 from typing import Any, Callable, Iterable, Mapping
 
 
-ANALYZER_VERSION = "work-affinity-v1"
+ANALYZER_VERSION = "work-affinity-v2"
 CHANGE_KINDS = frozenset(
     {"bug_fix", "feature", "refactor", "optimization", "architecture"}
 )

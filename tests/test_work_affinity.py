@@ -7,6 +7,7 @@ from pathlib import Path
 import pytest
 
 from accepted_work import BackgroundWorker, WorkLedger
+from transcript_adapters import NormalizedActivity, NormalizedTranscript
 from work_affinity import (
     AcceptedWorkProcessor,
     FunctionCatalog,
@@ -88,6 +89,129 @@ def test_catalog_resolves_only_exact_function_scope(tmp_path):
     whole, resolution = catalog.resolve("a.py", line_start=1, line_end=6)
     assert whole is None
     assert resolution == "ambiguous_line_range"
+
+
+def test_catalog_qualifies_same_named_methods_by_class(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / "service.py").write_text(
+        "class Websocket:\n"
+        "    def run(self):\n"
+        "        return 'ws'\n\n"
+        "class Http:\n"
+        "    def run(self):\n"
+        "        return 'http'\n",
+        encoding="utf-8",
+    )
+    catalog = FunctionCatalog(repo, "demo")
+
+    spans = catalog.functions("service.py")
+
+    assert [span.qualified_name for span in spans] == ["Websocket.run", "Http.run"]
+    assert [span.node_id for span in spans] == [
+        "demo:func_service_Websocket_run",
+        "demo:func_service_Http_run",
+    ]
+
+
+def test_edit_resolves_unique_symbol_when_final_source_differs_from_edit_snippet(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / "service.py").write_text(
+        "class Service:\n"
+        "    async def reconnect(self):\n"
+        "        self.task = None\n"
+        "        return await self.open()\n",
+        encoding="utf-8",
+    )
+    transcript = tmp_path / "session.json"
+    _session(
+        transcript,
+        repo,
+        [
+            _tool(
+                "edit",
+                {
+                    "filePath": str(repo / "service.py"),
+                    "oldString": "async def reconnect(self):\n    return await self.open()",
+                    "newString": "async def reconnect(self):\n    if self.task.done():\n        self.task = None\n    return await self.open()",
+                },
+            )
+        ],
+    )
+    parsed = TranscriptParser().parse_file(transcript)
+
+    events = TranscriptParser().events(parsed, FunctionCatalog(repo, "demo"))
+
+    assert events[0]["function_id"] == "demo:func_service_Service_reconnect"
+    assert events[0]["resolution"] == "exact_symbol"
+
+
+def test_numbered_read_disambiguates_same_named_methods_by_line_range(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / "service.py").write_text(
+        "class Websocket:\n"
+        "    def run(self):\n"
+        "        return 'ws'\n\n"
+        "class Http:\n"
+        "    def run(self):\n"
+        "        return 'http'\n",
+        encoding="utf-8",
+    )
+    transcript = tmp_path / "session.json"
+    _session(
+        transcript,
+        repo,
+        [
+            _tool(
+                "read",
+                {"filePath": str(repo / "service.py")},
+                "<content>\n2:     def run(self):\n3:         return 'ws'\n</content>",
+            )
+        ],
+    )
+    parsed = TranscriptParser().parse_file(transcript)
+
+    events = TranscriptParser().events(parsed, FunctionCatalog(repo, "demo"))
+
+    assert events[0]["function_id"] == "demo:func_service_Websocket_run"
+    assert events[0]["resolution"] == "exact_symbol_line_range"
+
+
+def test_codex_patch_hunk_resolves_changed_function(tmp_path):
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    (repo / "service.py").write_text(
+        "class Service:\n"
+        "    def reconnect(self):\n"
+        "        return 'old'\n",
+        encoding="utf-8",
+    )
+    transcript = NormalizedTranscript(
+        provider="codex",
+        session_id="codex-test",
+        repository_path=str(repo),
+        content_hash="hash",
+        activities=(
+            NormalizedActivity(
+                provider="codex",
+                session_id="codex-test",
+                kind="patch",
+                tool="apply_patch",
+                outcome="success",
+                path="service.py",
+                old_text="    def reconnect(self):\n        return 'old'",
+                new_text="    def reconnect(self):\n        return 'new'",
+            ),
+        ),
+    )
+
+    events = TranscriptParser().events(transcript, FunctionCatalog(repo, "demo"))
+
+    assert events[0]["event_kind"] == "changed_patch"
+    assert events[0]["function_id"] == "demo:func_service_Service_reconnect"
+    assert events[0]["resolution"] == "exact_symbol"
 
 
 def test_positive_evidence_uses_strongest_role_and_known_dimensions():
@@ -226,6 +350,11 @@ def test_submodule_range_uses_outer_paths_and_exact_edit_targets(tmp_path):
     )
     _commit(nested, "fix voicemail")
     head = _commit(repo, "advance pipecat")
+
+    (nested_source / "tts.py").write_text(
+        "def later_checkout_only():\n    return 'not accepted'\n", encoding="utf-8"
+    )
+    _commit(nested, "later checkout")
 
     analysis = GitRangeAnalyzer(repo, "demo").analyze(base, head)
     changed_ids = {row.node_id for row in analysis.changed_functions}

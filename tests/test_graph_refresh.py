@@ -136,6 +136,56 @@ def test_renamed_file_upserts_new_identity_and_deactivates_old(tmp_path):
     assert "demo:func_old_target" in backend.inactive
 
 
+def test_class_qualified_identity_resolves_self_calls_without_method_collisions(tmp_path):
+    repo = tmp_path / "repo"
+    _init(repo)
+    (repo / "service.py").write_text(
+        "class Websocket:\n"
+        "    def reconnect(self):\n"
+        "        return self.run()\n\n"
+        "    def run(self):\n"
+        "        return 'ws'\n\n"
+        "class Http:\n"
+        "    def run(self):\n"
+        "        return 'http'\n",
+        encoding="utf-8",
+    )
+    base = _commit(repo, "base")
+    (repo / "service.py").write_text(
+        "class Websocket:\n"
+        "    def reconnect(self):\n"
+        "        return self.run() + '!'\n\n"
+        "    def run(self):\n"
+        "        return 'ws'\n\n"
+        "class Http:\n"
+        "    def run(self):\n"
+        "        return 'http'\n",
+        encoding="utf-8",
+    )
+    head = _commit(repo, "change reconnect")
+    analysis = GitRangeAnalyzer(repo, "demo").analyze(base, head)
+    backend = FakeBackend()
+
+    result = ChangedScopeGraphRefresher(
+        repo, "demo", backend, embedder=FakeEmbedder()
+    ).refresh(analysis)
+
+    assert set(result.refreshed_functions) == {
+        "demo:func_service_Websocket_reconnect",
+        "demo:func_service_Websocket_run",
+        "demo:func_service_Http_run",
+    }
+    assert result.refreshed_edges == (
+        (
+            "demo:func_service_Websocket_reconnect",
+            "demo:func_service_Websocket_run",
+            "CALLS",
+        ),
+    )
+    assert "demo:func_service_reconnect" in result.migrated_legacy_functions
+    assert "demo:func_service_run" not in result.migrated_legacy_functions
+
+
 def test_submodule_snapshot_uses_accepted_pointer_not_later_checkout(tmp_path):
     inner = tmp_path / "inner"
     _init(inner)
@@ -248,6 +298,8 @@ def test_live_helix_function_and_calls_lifecycle():
     source = FunctionRefreshRecord(
         source_id,
         f"source_{suffix}",
+        f"source_{suffix}",
+        None,
         "live/source.py",
         "def source():\n    return target()\n",
         "source-hash",
@@ -257,6 +309,8 @@ def test_live_helix_function_and_calls_lifecycle():
     target = FunctionRefreshRecord(
         target_id,
         f"target_{suffix}",
+        f"target_{suffix}",
+        None,
         "live/target.py",
         "def target():\n    return 1\n",
         "target-hash",
