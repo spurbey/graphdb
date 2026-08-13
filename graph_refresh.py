@@ -7,12 +7,16 @@ import hashlib
 import textwrap
 from collections import defaultdict
 from dataclasses import asdict, dataclass
-from pathlib import Path, PurePosixPath
+from pathlib import Path
 from typing import Any, Iterable, Protocol
 
-import git
-
-from work_affinity import FunctionCatalog, FunctionSpan, GitRangeAnalysis
+from work_affinity import (
+    FunctionCatalog,
+    FunctionSpan,
+    GitRangeAnalysis,
+    GitSnapshotReader,
+    function_id,
+)
 
 
 STRUCTURAL_LABELS = ("CALLS",)
@@ -39,6 +43,8 @@ class GraphRefreshBackend(Protocol):
 class FunctionRefreshRecord:
     node_id: str
     name: str
+    qualified_name: str
+    owner_qualified_name: str | None
     file_path: str
     source: str
     code_hash: str
@@ -52,6 +58,7 @@ class GraphRefreshResult:
     refreshed_functions: tuple[str, ...]
     refreshed_edges: tuple[tuple[str, str, str], ...]
     inactive_functions: tuple[str, ...]
+    migrated_legacy_functions: tuple[str, ...]
     ambiguous_functions: tuple[str, ...]
     unresolved_calls: tuple[tuple[str, str], ...]
     structural_labels: tuple[str, ...] = STRUCTURAL_LABELS
@@ -92,73 +99,47 @@ class SentenceTransformerEmbedder:
         return [vector.tolist() for vector in vectors]
 
 
-class GitSnapshotReader:
-    """Read logical outer-repository paths at an exact accepted revision."""
-
-    def __init__(self, repo_root: str | Path):
-        self.repo_root = Path(repo_root).resolve()
-        self.repo = git.Repo(self.repo_root)
-
-    def read_text(self, revision: str, logical_path: str) -> str:
-        commit = self.repo.commit(revision)
-        checkout = self.repo_root
-        remaining = list(PurePosixPath(logical_path).parts)
-        while remaining:
-            relative = "/".join(remaining)
-            try:
-                entry = commit.tree / relative
-            except KeyError:
-                entry = None
-            if entry is not None and entry.type == "blob":
-                return entry.data_stream.read().decode("utf-8", errors="replace")
-
-            submodule_index = None
-            submodule_entry = None
-            for index in range(1, len(remaining) + 1):
-                prefix = "/".join(remaining[:index])
-                try:
-                    candidate = commit.tree / prefix
-                except KeyError:
-                    break
-                if candidate.type == "submodule":
-                    submodule_index = index
-                    submodule_entry = candidate
-                    break
-            if submodule_index is None or submodule_entry is None:
-                raise FileNotFoundError(
-                    f"{logical_path} is unavailable at accepted revision {revision}"
-                )
-            checkout = checkout.joinpath(*remaining[:submodule_index])
-            try:
-                nested_repo = git.Repo(checkout)
-                commit = nested_repo.commit(submodule_entry.hexsha)
-            except Exception as exc:
-                raise FileNotFoundError(
-                    f"submodule checkout for {logical_path} lacks {submodule_entry.hexsha}"
-                ) from exc
-            remaining = remaining[submodule_index:]
-        raise FileNotFoundError(logical_path)
-
-
 def _call_references(source: str) -> tuple[tuple[str, str], ...]:
     try:
         tree = ast.parse(textwrap.dedent(source))
     except SyntaxError:
         return ()
+    roots = [
+        node
+        for node in tree.body
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+    ]
+    if len(roots) != 1:
+        return ()
+    root = roots[0]
     references: set[tuple[str, str]] = set()
-    for node in ast.walk(tree):
-        if not isinstance(node, ast.Call):
-            continue
-        if isinstance(node.func, ast.Name):
-            references.add((node.func.id, "direct"))
-        elif isinstance(node.func, ast.Attribute):
-            if isinstance(node.func.value, ast.Name) and node.func.value.id in {
-                "self",
-                "cls",
-            }:
-                references.add((node.func.attr, "same_file"))
-            else:
-                references.add((node.func.attr, "dynamic_attribute"))
+
+    class CallVisitor(ast.NodeVisitor):
+        def visit_Call(self, node: ast.Call) -> None:
+            if isinstance(node.func, ast.Name):
+                references.add((node.func.id, "direct"))
+            elif isinstance(node.func, ast.Attribute):
+                if isinstance(node.func.value, ast.Name) and node.func.value.id in {
+                    "self",
+                    "cls",
+                }:
+                    references.add((node.func.attr, "same_file"))
+                else:
+                    references.add((node.func.attr, "dynamic_attribute"))
+            self.generic_visit(node)
+
+        def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+            if node is root:
+                self.generic_visit(node)
+
+        def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+            if node is root:
+                self.generic_visit(node)
+
+        def visit_ClassDef(self, node: ast.ClassDef) -> None:
+            return None
+
+    CallVisitor().visit(root)
     return tuple(sorted(references))
 
 
@@ -221,6 +202,8 @@ class ChangedScopeGraphRefresher:
             FunctionRefreshRecord(
                 node_id=span.node_id,
                 name=span.name,
+                qualified_name=span.qualified_name,
+                owner_qualified_name=span.owner_qualified_name,
                 file_path=span.file_path,
                 source=span.source,
                 code_hash=hashlib.sha1(span.source.encode("utf-8")).hexdigest()[:12],
@@ -231,11 +214,15 @@ class ChangedScopeGraphRefresher:
         ]
 
         by_file_name: dict[tuple[str, str], list[str]] = defaultdict(list)
+        by_file_owner_name: dict[tuple[str, str | None, str], list[str]] = defaultdict(list)
         by_name: dict[str, list[str]] = defaultdict(list)
         call_names: set[str] = set()
         calls_by_source: dict[str, tuple[tuple[str, str], ...]] = {}
         for record in records:
             by_file_name[(record.file_path, record.name)].append(record.node_id)
+            by_file_owner_name[
+                (record.file_path, record.owner_qualified_name, record.name)
+            ].append(record.node_id)
             by_name[record.name].append(record.node_id)
             calls = _call_references(record.source)
             calls_by_source[record.node_id] = calls
@@ -254,7 +241,12 @@ class ChangedScopeGraphRefresher:
                 if resolution == "dynamic_attribute":
                     unresolved.add((source_id, f"attribute:{name}"))
                     continue
-                same_file = by_file_name.get((source.file_path, name), [])
+                if resolution == "same_file":
+                    same_file = by_file_owner_name.get(
+                        (source.file_path, source.owner_qualified_name, name), []
+                    )
+                else:
+                    same_file = by_file_name.get((source.file_path, name), [])
                 candidates = same_file if len(same_file) == 1 else []
                 if not candidates and resolution == "direct":
                     local = by_name.get(name, [])
@@ -274,10 +266,30 @@ class ChangedScopeGraphRefresher:
             )
 
         refreshed_ids = {record.node_id for record in records}
-        inactive = sorted(set(git_range.removed_functions) - refreshed_ids)
-        for function_id in inactive:
-            self.backend.replace_outgoing_calls(function_id, ())
-            self.backend.mark_inactive(function_id)
+        top_level_names = {
+            record.name for record in records if record.owner_qualified_name is None
+        }
+        method_name_counts: dict[str, int] = defaultdict(int)
+        for record in records:
+            if record.owner_qualified_name is not None:
+                method_name_counts[record.name] += 1
+        migrated_legacy = sorted(
+            {
+                function_id(self.repo_id, record.file_path, record.name)
+                for record in records
+                if record.owner_qualified_name is not None
+                and record.name not in top_level_names
+                and method_name_counts[record.name] == 1
+                and function_id(self.repo_id, record.file_path, record.name)
+                != record.node_id
+            }
+        )
+        inactive = sorted(
+            (set(git_range.removed_functions) | set(migrated_legacy)) - refreshed_ids
+        )
+        for inactive_id in inactive:
+            self.backend.replace_outgoing_calls(inactive_id, ())
+            self.backend.mark_inactive(inactive_id)
         self.backend.finalize()
 
         return GraphRefreshResult(
@@ -285,6 +297,7 @@ class ChangedScopeGraphRefresher:
             refreshed_functions=tuple(sorted(refreshed_ids)),
             refreshed_edges=tuple(sorted(edges)),
             inactive_functions=tuple(inactive),
+            migrated_legacy_functions=tuple(migrated_legacy),
             ambiguous_functions=tuple(sorted(set(ambiguous))),
             unresolved_calls=tuple(sorted(unresolved)),
         )
@@ -366,6 +379,8 @@ class HelixGraphRefreshBackend:
         return {
             "node_id": PropertyInput.value(function.node_id),
             "name": PropertyInput.value(function.name),
+            "qualified_name": PropertyInput.value(function.qualified_name),
+            "identity_schema": PropertyInput.value(PropertyValue.i64(2)),
             "file": PropertyInput.value(function.file_path),
             "active": PropertyInput.value(True),
             "code_hash": PropertyInput.value(function.code_hash),

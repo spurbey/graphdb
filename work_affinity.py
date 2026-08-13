@@ -3,18 +3,18 @@
 from __future__ import annotations
 
 import ast
-import hashlib
-import json
 import re
 import shlex
+import textwrap
 from collections import Counter
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import Any, Iterable, Mapping
+from typing import Any, Callable, Iterable, Mapping
 
 import git
 
-from accepted_work import ANALYZER_VERSION, Job, PermanentWorkError, WorkLedger
+from accepted_work import Job, PermanentWorkError, WorkLedger
+from transcript_adapters import NormalizedActivity, NormalizedTranscript, parse_transcript_file
 
 
 MAX_CHANGED_FUNCTIONS = 20
@@ -25,9 +25,6 @@ ROLE_STRENGTH = {
     "repeated_read": 0.25,
     "single_read": 0.1,
 }
-_ANSI_RE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
-_JSON_START_RE = re.compile(r"(?m)^\s*([\{\[])")
-_OUTPUT_LINE_RE = re.compile(r"(?m)^\s*(\d+):")
 _PYTHON_REF_RE = re.compile(
     r"(?P<path>(?:[A-Za-z]:[\\/])?[^\s\"']+?\.py)(?:::(?P<symbol>[A-Za-z_]\w*))?"
 )
@@ -57,15 +54,24 @@ def normalize_repo_path(path: str | Path, repo_root: Path) -> str | None:
     return raw
 
 
-def function_id(repo_id: str, file_path: str, name: str) -> str:
+def function_id(
+    repo_id: str,
+    file_path: str,
+    name: str,
+    *,
+    qualified_name: str | None = None,
+) -> str:
     safe = file_path.replace("/", "_").replace("\\", "_").replace(".py", "")
-    return f"{repo_id}:func_{safe}_{name}"
+    safe_symbol = (qualified_name or name).replace(".", "_")
+    return f"{repo_id}:func_{safe}_{safe_symbol}"
 
 
 @dataclass(frozen=True)
 class FunctionSpan:
     file_path: str
     name: str
+    qualified_name: str
+    owner_qualified_name: str | None
     start_line: int
     end_line: int
     source: str
@@ -75,9 +81,16 @@ class FunctionSpan:
 class FunctionCatalog:
     """Lazy current-source function lookup for only the files an episode touches."""
 
-    def __init__(self, repo_root: str | Path, repo_id: str):
+    def __init__(
+        self,
+        repo_root: str | Path,
+        repo_id: str,
+        *,
+        source_loader: Callable[[str], str] | None = None,
+    ):
         self.repo_root = Path(repo_root).resolve()
         self.repo_id = repo_id
+        self.source_loader = source_loader
         self._cache: dict[str, list[FunctionSpan]] = {}
 
     def parse_source(self, file_path: str, source: str) -> list[FunctionSpan]:
@@ -87,21 +100,52 @@ class FunctionCatalog:
             return []
         lines = source.splitlines(keepends=True)
         spans: list[FunctionSpan] = []
-        for node in ast.walk(tree):
-            if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-                continue
-            end_line = int(getattr(node, "end_lineno", node.lineno))
-            snippet = "".join(lines[node.lineno - 1 : end_line])
-            spans.append(
-                FunctionSpan(
-                    file_path=file_path,
-                    name=node.name,
-                    start_line=int(node.lineno),
-                    end_line=end_line,
-                    source=snippet,
-                    node_id=function_id(self.repo_id, file_path, node.name),
+
+        class Visitor(ast.NodeVisitor):
+            def __init__(self):
+                self.scope: list[str] = []
+
+            def _visit_function(
+                self, node: ast.FunctionDef | ast.AsyncFunctionDef
+            ) -> None:
+                owner = ".".join(self.scope) or None
+                qualified_name = ".".join((*self.scope, node.name))
+                end_line = int(getattr(node, "end_lineno", node.lineno))
+                snippet = "".join(lines[node.lineno - 1 : end_line])
+                spans.append(
+                    FunctionSpan(
+                        file_path=file_path,
+                        name=node.name,
+                        qualified_name=qualified_name,
+                        owner_qualified_name=owner,
+                        start_line=int(node.lineno),
+                        end_line=end_line,
+                        source=snippet,
+                        node_id=function_id(
+                            self_outer.repo_id,
+                            file_path,
+                            node.name,
+                            qualified_name=qualified_name,
+                        ),
+                    )
                 )
-            )
+                self.scope.append(node.name)
+                self.generic_visit(node)
+                self.scope.pop()
+
+            def visit_FunctionDef(self, node: ast.FunctionDef) -> None:
+                self._visit_function(node)
+
+            def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:
+                self._visit_function(node)
+
+            def visit_ClassDef(self, node: ast.ClassDef) -> None:
+                self.scope.append(node.name)
+                self.generic_visit(node)
+                self.scope.pop()
+
+        self_outer = self
+        Visitor().visit(tree)
         return sorted(spans, key=lambda row: (row.start_line, row.end_line, row.name))
 
     def functions(self, file_path: str) -> list[FunctionSpan]:
@@ -109,9 +153,13 @@ class FunctionCatalog:
         if normalized is None or not normalized.endswith(".py"):
             return []
         if normalized not in self._cache:
-            path = self.repo_root / Path(normalized)
             try:
-                source = path.read_text(encoding="utf-8")
+                if self.source_loader is not None:
+                    source = self.source_loader(normalized)
+                else:
+                    source = (self.repo_root / Path(normalized)).read_text(
+                        encoding="utf-8"
+                    )
             except (OSError, UnicodeError):
                 self._cache[normalized] = []
             else:
@@ -128,22 +176,29 @@ class FunctionCatalog:
         snippets: Iterable[str] = (),
     ) -> tuple[FunctionSpan | None, str]:
         functions = self.functions(file_path)
+        candidates = functions
+        ambiguous_symbol = False
         if symbol:
             named = [row for row in functions if row.name == symbol]
             if len(named) == 1:
                 return named[0], "exact_symbol"
             if len(named) > 1:
-                return None, "ambiguous_symbol"
+                candidates = named
+                ambiguous_symbol = True
 
         if line_start is not None:
             end = line_end if line_end is not None else line_start
             overlaps = [
                 row
-                for row in functions
+                for row in candidates
                 if row.start_line <= end and row.end_line >= line_start
             ]
             if len(overlaps) == 1:
-                return overlaps[0], "exact_line_range"
+                return overlaps[0], (
+                    "exact_symbol_line_range"
+                    if ambiguous_symbol
+                    else "exact_line_range"
+                )
             if len(overlaps) > 1:
                 containing = [
                     row
@@ -158,11 +213,13 @@ class FunctionCatalog:
             snippet = snippet.strip()
             if not snippet:
                 continue
-            matches = [row for row in functions if snippet in row.source]
+            matches = [row for row in candidates if snippet in row.source]
             if len(matches) == 1:
                 return matches[0], "exact_snippet"
             if len(matches) > 1:
                 return None, "ambiguous_snippet"
+        if ambiguous_symbol:
+            return None, "ambiguous_symbol"
         return None, "file_only"
 
 
@@ -174,6 +231,54 @@ class GitRangeAnalysis:
     changed_functions: tuple[FunctionSpan, ...]
     removed_functions: tuple[str, ...]
     ambiguous_functions: tuple[str, ...]
+
+
+class GitSnapshotReader:
+    """Read logical outer-repository paths at an exact accepted revision."""
+
+    def __init__(self, repo_root: str | Path):
+        self.repo_root = Path(repo_root).resolve()
+        self.repo = git.Repo(self.repo_root)
+
+    def read_text(self, revision: str, logical_path: str) -> str:
+        commit = self.repo.commit(revision)
+        checkout = self.repo_root
+        remaining = list(PurePosixPath(logical_path).parts)
+        while remaining:
+            relative = "/".join(remaining)
+            try:
+                entry = commit.tree / relative
+            except KeyError:
+                entry = None
+            if entry is not None and entry.type == "blob":
+                return entry.data_stream.read().decode("utf-8", errors="replace")
+
+            submodule_index = None
+            submodule_entry = None
+            for index in range(1, len(remaining) + 1):
+                prefix = "/".join(remaining[:index])
+                try:
+                    candidate = commit.tree / prefix
+                except KeyError:
+                    break
+                if candidate.type == "submodule":
+                    submodule_index = index
+                    submodule_entry = candidate
+                    break
+            if submodule_index is None or submodule_entry is None:
+                raise FileNotFoundError(
+                    f"{logical_path} is unavailable at accepted revision {revision}"
+                )
+            checkout = checkout.joinpath(*remaining[:submodule_index])
+            try:
+                nested_repo = git.Repo(checkout)
+                commit = nested_repo.commit(submodule_entry.hexsha)
+            except Exception as exc:
+                raise FileNotFoundError(
+                    f"submodule checkout for {logical_path} lacks {submodule_entry.hexsha}"
+                ) from exc
+            remaining = remaining[submodule_index:]
+        raise FileNotFoundError(logical_path)
 
 
 class GitRangeAnalyzer:
@@ -204,7 +309,7 @@ class GitRangeAnalyzer:
     def _unique_by_name(spans: Iterable[FunctionSpan]) -> tuple[dict[str, FunctionSpan], set[str]]:
         grouped: dict[str, list[FunctionSpan]] = {}
         for span in spans:
-            grouped.setdefault(span.name, []).append(span)
+            grouped.setdefault(span.qualified_name, []).append(span)
         unique = {name: rows[0] for name, rows in grouped.items() if len(rows) == 1}
         ambiguous = {name for name, rows in grouped.items() if len(rows) > 1}
         return unique, ambiguous
@@ -323,88 +428,61 @@ class GitRangeAnalyzer:
         return f"{prefix}/{path}" if prefix else path
 
 
-@dataclass(frozen=True)
-class Transcript:
-    session_id: str
-    repository_path: str | None
-    content_hash: str
-    payload: dict[str, Any]
-
-
 class TranscriptParser:
-    def parse_file(self, path: str | Path) -> Transcript:
-        source_path = Path(path)
-        try:
-            raw = source_path.read_bytes()
-        except OSError as exc:
-            raise PermanentWorkError(f"transcript unavailable: {source_path}: {exc}") from exc
-        text = raw.decode("utf-8-sig", errors="replace")
-        clean = _ANSI_RE.sub("", text)
-        match = _JSON_START_RE.search(clean)
-        if match is None:
-            raise PermanentWorkError(f"transcript has no JSON payload: {source_path}")
-        try:
-            payload = json.loads(clean[match.start() :])
-        except json.JSONDecodeError as exc:
-            raise PermanentWorkError(f"malformed transcript JSON: {source_path}: {exc}") from exc
-        if not isinstance(payload, dict) or not isinstance(payload.get("info"), dict):
-            raise PermanentWorkError("transcript must contain an info object")
-        if not isinstance(payload.get("messages"), list) or not payload["messages"]:
-            raise PermanentWorkError("transcript must contain non-empty messages")
-        session_id = payload["info"].get("id")
-        if not isinstance(session_id, str) or not session_id:
-            raise PermanentWorkError("transcript info.id is missing")
-        repository_path = payload["info"].get("directory")
-        return Transcript(
-            session_id=session_id,
-            repository_path=repository_path if isinstance(repository_path, str) else None,
-            content_hash=hashlib.sha256(raw).hexdigest(),
-            payload=payload,
-        )
+    """Shared function resolver over provider-normalized activities."""
 
-    def events(self, transcript: Transcript, catalog: FunctionCatalog) -> list[dict[str, Any]]:
+    def parse_file(self, path: str | Path) -> NormalizedTranscript:
+        try:
+            return parse_transcript_file(path)
+        except ValueError as exc:
+            raise PermanentWorkError(str(exc)) from exc
+
+    def events(
+        self, transcript: NormalizedTranscript, catalog: FunctionCatalog
+    ) -> list[dict[str, Any]]:
         events: list[dict[str, Any]] = []
-        for message in transcript.payload.get("messages", []):
-            if not isinstance(message, dict):
+        for activity in transcript.activities:
+            if activity.outcome != "success":
+                events.append(self._audit_activity(activity, catalog))
                 continue
-            for part in message.get("parts", []):
-                if not isinstance(part, dict):
-                    continue
-                if part.get("type") == "patch":
-                    for path in part.get("files", []):
-                        normalized = normalize_repo_path(path, catalog.repo_root)
-                        events.append(
-                            self._event("changed_patch", "patch", normalized, resolution="audit_only")
-                        )
-                    continue
-                if part.get("type") != "tool":
-                    continue
-                tool = str(part.get("tool") or "")
-                state = part.get("state") or {}
-                if state.get("status") != "completed":
-                    continue
-                inputs = state.get("input") or {}
-                if not isinstance(inputs, dict):
-                    inputs = {}
-                output = state.get("output")
-                if tool == "read":
-                    events.append(self._read_event(tool, inputs, output, catalog))
-                elif tool == "edit":
-                    events.append(self._edit_event(tool, inputs, catalog))
-                elif tool == "write":
-                    events.append(self._write_event(tool, inputs, catalog))
-                elif tool == "bash":
-                    events.extend(self._bash_events(tool, inputs, catalog))
-                elif tool in {"grep", "glob", "graphdb_search_code_semantics"}:
-                    events.append(
-                        self._event(
-                            "search",
-                            tool,
-                            normalize_repo_path(inputs.get("path", ""), catalog.repo_root),
-                            resolution="audit_only",
-                        )
-                    )
+            if activity.kind == "read":
+                events.append(self._read_event(activity, catalog))
+            elif activity.kind == "edit":
+                events.append(self._edit_event(activity, catalog))
+            elif activity.kind == "write":
+                events.append(self._write_event(activity, catalog))
+            elif activity.kind in {"shell", "test", "commit"}:
+                events.extend(self._shell_events(activity, catalog))
+            elif activity.kind == "patch":
+                events.append(self._patch_event(activity, catalog))
+            else:
+                events.append(self._audit_activity(activity, catalog))
         return events
+
+    @staticmethod
+    def _detail(activity: NormalizedActivity) -> dict[str, Any]:
+        detail = {
+            "provider": activity.provider,
+            "call_id": activity.call_id,
+            "status": activity.status,
+            "outcome": activity.outcome,
+        }
+        detail.update(activity.provider_detail)
+        return {key: value for key, value in detail.items() if value is not None}
+
+    def _audit_activity(
+        self, activity: NormalizedActivity, catalog: FunctionCatalog
+    ) -> dict[str, Any]:
+        detail = self._detail(activity)
+        if activity.command:
+            detail["command"] = activity.command[:1000]
+        return self._event(
+            activity.kind if activity.kind != "unknown" else "unknown",
+            activity.tool,
+            normalize_repo_path(activity.path or "", catalog.repo_root),
+            resolution="audit_only",
+            detail=detail,
+        )
 
     @staticmethod
     def _event(
@@ -430,47 +508,122 @@ class TranscriptParser:
         }
 
     def _read_event(
-        self, tool: str, inputs: Mapping[str, Any], output: Any, catalog: FunctionCatalog
+        self, activity: NormalizedActivity, catalog: FunctionCatalog
     ) -> dict[str, Any]:
-        path = normalize_repo_path(inputs.get("filePath", ""), catalog.repo_root)
-        numbered = [int(value) for value in _OUTPUT_LINE_RE.findall(str(output or ""))]
-        line_start = min(numbered) if numbered else None
-        line_end = max(numbered) if numbered else None
+        path = normalize_repo_path(activity.path or "", catalog.repo_root)
+        line_start = activity.line_start
+        line_end = activity.line_end
+        symbols = {
+            match.group(1)
+            for match in re.finditer(
+                r"^\s*(?:\d+:\s*)?(?:async\s+)?def\s+([A-Za-z_]\w*)\s*\(",
+                activity.result_text or "",
+                flags=re.MULTILINE,
+            )
+        }
+        if len(symbols) == 1:
+            function, resolution = catalog.resolve(
+                path or "",
+                symbol=next(iter(symbols)),
+                line_start=line_start,
+                line_end=line_end,
+            )
+            return self._event(
+                "read",
+                activity.tool,
+                path,
+                line_start=line_start,
+                line_end=line_end,
+                function=function,
+                resolution=resolution,
+                detail=self._detail(activity),
+            )
         function, resolution = catalog.resolve(
             path or "", line_start=line_start, line_end=line_end
         )
         return self._event(
             "read",
-            tool,
+            activity.tool,
             path,
             line_start=line_start,
             line_end=line_end,
             function=function,
             resolution=resolution,
+            detail=self._detail(activity),
         )
 
     def _edit_event(
-        self, tool: str, inputs: Mapping[str, Any], catalog: FunctionCatalog
+        self, activity: NormalizedActivity, catalog: FunctionCatalog
     ) -> dict[str, Any]:
-        path = normalize_repo_path(inputs.get("filePath", ""), catalog.repo_root)
-        snippets = [str(inputs.get("newString") or ""), str(inputs.get("oldString") or "")]
-        function, resolution = catalog.resolve(path or "", snippets=snippets)
+        path = normalize_repo_path(activity.path or "", catalog.repo_root)
+        snippets = [activity.new_text or "", activity.old_text or ""]
+        symbols: set[str] = set()
+        for snippet in snippets:
+            try:
+                tree = ast.parse(textwrap.dedent(snippet))
+            except SyntaxError:
+                continue
+            symbols.update(
+                node.name
+                for node in ast.walk(tree)
+                if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))
+            )
+        function = None
+        resolution = "file_only"
+        if len(symbols) == 1:
+            function, resolution = catalog.resolve(
+                path or "", symbol=next(iter(symbols))
+            )
+        if function is None and resolution != "ambiguous_symbol":
+            function, resolution = catalog.resolve(path or "", snippets=snippets)
         return self._event(
-            "edit", tool, path, function=function, resolution=resolution
+            "edit",
+            activity.tool,
+            path,
+            function=function,
+            resolution=resolution,
+            detail=self._detail(activity),
         )
 
     def _write_event(
-        self, tool: str, inputs: Mapping[str, Any], catalog: FunctionCatalog
+        self, activity: NormalizedActivity, catalog: FunctionCatalog
     ) -> dict[str, Any]:
-        path = normalize_repo_path(inputs.get("filePath", ""), catalog.repo_root)
-        return self._event("write", tool, path, resolution="file_only")
+        path = normalize_repo_path(activity.path or "", catalog.repo_root)
+        function, resolution = catalog.resolve(
+            path or "", snippets=(activity.written_content or "",)
+        )
+        return self._event(
+            "write",
+            activity.tool,
+            path,
+            function=function,
+            resolution=resolution,
+            detail=self._detail(activity),
+        )
 
-    def _bash_events(
-        self, tool: str, inputs: Mapping[str, Any], catalog: FunctionCatalog
+    def _patch_event(
+        self, activity: NormalizedActivity, catalog: FunctionCatalog
+    ) -> dict[str, Any]:
+        if activity.old_text or activity.new_text:
+            resolved = self._edit_event(activity, catalog)
+            resolved["event_kind"] = "changed_patch"
+            return resolved
+        return self._event(
+            "changed_patch",
+            activity.tool,
+            normalize_repo_path(activity.path or "", catalog.repo_root),
+            resolution="audit_only",
+            detail=self._detail(activity),
+        )
+
+    def _shell_events(
+        self, activity: NormalizedActivity, catalog: FunctionCatalog
     ) -> list[dict[str, Any]]:
-        command = str(inputs.get("command") or "")
-        lower = command.lower()
-        is_test = any(marker in lower for marker in ("pytest", "unittest", " test"))
+        command = activity.command or ""
+        is_test = activity.kind == "test"
+        event_kind = "commit" if activity.kind == "commit" else (
+            "test" if is_test else "operation"
+        )
         results: list[dict[str, Any]] = []
         seen: set[tuple[str | None, str | None]] = set()
         for match in _PYTHON_REF_RE.finditer(command):
@@ -483,12 +636,12 @@ class TranscriptParser:
             function, resolution = catalog.resolve(path or "", symbol=symbol)
             results.append(
                 self._event(
-                    "test" if is_test else "operation",
-                    tool,
+                    event_kind,
+                    activity.tool,
                     path,
                     function=function,
                     resolution=resolution if symbol else "file_only",
-                    detail={"command": command[:1000]},
+                    detail={**self._detail(activity), "command": command[:1000]},
                 )
             )
         if not results:
@@ -498,11 +651,11 @@ class TranscriptParser:
                 pass
             results.append(
                 self._event(
-                    "test" if is_test else "operation",
-                    tool,
+                    event_kind,
+                    activity.tool,
                     None,
                     resolution="audit_only",
-                    detail={"command": command[:1000]},
+                    detail={**self._detail(activity), "command": command[:1000]},
                 )
             )
         return results
@@ -628,6 +781,7 @@ class AcceptedWorkProcessor:
         self.transcript_root = Path(transcript_root).resolve() if transcript_root else None
         self.graph_refresher = graph_refresher
         self.git = GitRangeAnalyzer(self.repo_root, repo_id)
+        self.snapshot = GitSnapshotReader(self.repo_root)
         self.transcripts = TranscriptParser()
 
     def _transcript_path(self, reference: str | None) -> Path:
@@ -663,7 +817,13 @@ class AcceptedWorkProcessor:
                     f"transcript repository {transcript_repo} does not match {self.repo_root}"
                 )
 
-        catalog = FunctionCatalog(self.repo_root, self.repo_id)
+        catalog = FunctionCatalog(
+            self.repo_root,
+            self.repo_id,
+            source_loader=lambda path: self.snapshot.read_text(
+                git_range.head_revision, path
+            ),
+        )
         events = self.transcripts.events(transcript, catalog)
         changed_ids = [row.node_id for row in git_range.changed_functions]
         affinity_targets, target_policy = select_affinity_targets(changed_ids, events)
@@ -684,6 +844,7 @@ class AcceptedWorkProcessor:
             )
         stats = {
             "session_id": transcript.session_id,
+            "transcript_provider": transcript.provider,
             "changed_file_count": len(git_range.changed_files),
             "changed_function_count": len(changed_ids),
             "git_changed_functions": changed_ids,
