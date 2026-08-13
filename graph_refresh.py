@@ -386,9 +386,6 @@ class HelixGraphRefreshBackend:
             "code_hash": PropertyInput.value(function.code_hash),
             "indexed_revision": PropertyInput.value(function.head_revision),
             "code_vector_source_node_id": PropertyInput.value(vector_id),
-            "code_vec": PropertyInput.value(
-                PropertyValue.f32_array(function.code_vector)
-            ),
         }
 
     def upsert_function(self, function: FunctionRefreshRecord) -> None:

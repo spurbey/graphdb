@@ -186,6 +186,25 @@ def test_class_qualified_identity_resolves_self_calls_without_method_collisions(
     assert "demo:func_service_run" not in result.migrated_legacy_functions
 
 
+def test_helix_properties_store_vector_reference_not_duplicate_vector():
+    function = FunctionRefreshRecord(
+        "demo:func_app_target",
+        "target",
+        "target",
+        None,
+        "app.py",
+        "def target():\n    return 1\n",
+        "hash",
+        (1.0, 0.0),
+        "head",
+    )
+
+    properties = HelixGraphRefreshBackend._properties(function)
+
+    assert "code_vector_source_node_id" in properties
+    assert "code_vec" not in properties
+
+
 def test_submodule_snapshot_uses_accepted_pointer_not_later_checkout(tmp_path):
     inner = tmp_path / "inner"
     _init(inner)
